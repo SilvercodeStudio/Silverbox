@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Xcode per-user state
+xcuserdata/
+
+# Build output
+build/
+DerivedData/
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# Swift Package Manager
+.build/
+
+# Claude Code per-user files
+.claude/settings.local.json
+CLAUDE.local.md
