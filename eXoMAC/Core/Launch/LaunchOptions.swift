@@ -90,3 +90,43 @@ nonisolated public struct LaunchOptions: Hashable, Sendable, Codable {
         quietStartup = try c.decodeIfPresent(Bool.self, forKey: .quietStartup) ?? true
     }
 }
+
+/// Per-game choices that replace the global ``LaunchOptions`` fields.
+nonisolated public struct LaunchOverrides: Hashable, Sendable, Codable {
+    public var fullscreen: Bool?
+    public var windowSize: LaunchOptions.WindowSize?
+    public var aspect: LaunchOptions.AspectMode?
+    public var shader: LaunchOptions.Shader?
+
+    public init(fullscreen: Bool? = nil, windowSize: LaunchOptions.WindowSize? = nil,
+                aspect: LaunchOptions.AspectMode? = nil, shader: LaunchOptions.Shader? = nil) {
+        self.fullscreen = fullscreen
+        self.windowSize = windowSize
+        self.aspect = aspect
+        self.shader = shader
+    }
+
+    public var isEmpty: Bool {
+        fullscreen == nil && windowSize == nil && aspect == nil && shader == nil
+    }
+
+    /// The overrides needed to turn `base` into `chosen`.
+    public init(base: LaunchOptions, chosen: LaunchOptions) {
+        fullscreen = chosen.fullscreen == base.fullscreen ? nil : chosen.fullscreen
+        windowSize = chosen.windowSize == base.windowSize ? nil : chosen.windowSize
+        aspect = chosen.aspect == base.aspect ? nil : chosen.aspect
+        shader = chosen.shader == base.shader ? nil : chosen.shader
+    }
+}
+
+nonisolated extension LaunchOptions {
+    public func applying(_ overrides: LaunchOverrides?) -> LaunchOptions {
+        guard let overrides else { return self }
+        var result = self
+        if let value = overrides.fullscreen { result.fullscreen = value }
+        if let value = overrides.windowSize { result.windowSize = value }
+        if let value = overrides.aspect { result.aspect = value }
+        if let value = overrides.shader { result.shader = value }
+        return result
+    }
+}

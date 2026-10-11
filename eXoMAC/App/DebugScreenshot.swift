@@ -20,20 +20,26 @@ enum DebugScreenshot {
         }
     }
 
+    /// Renders every visible window: the first to `url`, the others (sheets,
+    /// panels) to `<name>-2.png`, `<name>-3.png` and so on.
     static func capture(to url: URL) {
-        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }),
-              let view = window.contentView,
-              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+        let windows = NSApp.windows.filter { $0.isVisible && $0.contentView != nil && $0.frame.width > 100 }
+        guard !windows.isEmpty else {
             FileHandle.standardError.write(Data("screenshot: no visible window\n".utf8))
             return
         }
-        view.cacheDisplay(in: view.bounds, to: rep)
-        guard let data = rep.representation(using: .png, properties: [:]) else { return }
-        do {
-            try data.write(to: url)
-            FileHandle.standardError.write(Data("screenshot: wrote \(url.path) (\(rep.pixelsWide)x\(rep.pixelsHigh))\n".utf8))
-        } catch {
-            FileHandle.standardError.write(Data("screenshot: \(error)\n".utf8))
+        for (offset, window) in windows.enumerated() {
+            guard let view = window.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }
+            view.cacheDisplay(in: view.bounds, to: rep)
+            guard let data = rep.representation(using: .png, properties: [:]) else { continue }
+            let target = offset == 0 ? url
+                : url.deletingPathExtension().appendingPathExtension("\(offset + 1).png")
+            do {
+                try data.write(to: target)
+                FileHandle.standardError.write(Data("screenshot: wrote \(target.path) (\(rep.pixelsWide)x\(rep.pixelsHigh)) \(window.title)\n".utf8))
+            } catch {
+                FileHandle.standardError.write(Data("screenshot: \(error)\n".utf8))
+            }
         }
     }
 }

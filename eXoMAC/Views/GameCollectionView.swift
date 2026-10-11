@@ -280,7 +280,7 @@ struct GameContextMenu: View {
         Divider()
         Button("Show in Finder") { model.revealInFinder(game) }
         if installed, game.isDOSGame {
-            Button("Uninstall…") { model.uninstall(game) }
+            Button("Uninstall…") { model.pendingUninstall = game }
         }
     }
 }

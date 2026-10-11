@@ -1,10 +1,11 @@
-# eXoMAC
+# eXo Client for Mac (eXoMAC)
 
-eXoMAC is an emulation front-end for the Mac, built for the eXoDOS and
-eXoWin9x game preservation projects. It reads an existing eXoDOS installation
-(the LaunchBox XML metadata, box art, screenshots, manuals, music and videos)
-in place and launches games in DOSBox Staging or DOSBox-X with a config
-translated from eXoDOS's Windows launch scripts.
+eXo Client is an emulation front-end for the Mac, built for the eXoDOS and
+eXoWin9x game preservation projects by the eXo team (https://www.retro-exo.com).
+It reads an existing eXoDOS collection (the LaunchBox XML metadata, box art,
+screenshots, manuals, music and videos) in place and launches games in DOSBox
+Staging or DOSBox-X with a config translated from eXoDOS's Windows launch
+scripts. `eXoMAC` is the project's internal name.
 
 The games, media and emulators are not part of this project.
 
@@ -30,7 +31,8 @@ Swift package at the repo root:
 swift test
 ```
 
-On first launch, choose your eXoDOS folder. The app never modifies the
-LaunchBox files; installing a game unpacks its archive into `eXo/eXoDOS`
-exactly as eXoDOS does on Windows, and favorites and play history are kept in
-`~/Library/Application Support/eXoMAC`.
+On first launch, choose your eXoDOS folder. It can be read-only (an external
+drive or a network share): the app never modifies it. Installed games, save
+backups, edited configs, favorites and play history are kept in a local data
+folder, by default `~/Library/Application Support/eXoMAC`. Installing games in
+place inside `eXo/eXoDOS`, as eXoDOS does on Windows, is available in Settings.

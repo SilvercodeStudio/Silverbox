@@ -5,6 +5,12 @@ macOS. It reads an eXoDOS installation (LaunchBox XML, images, manuals, music,
 videos, game archives) in place and launches games in DOSBox Staging or
 DOSBox-X with a translated config. See `AGENTS.md` for the project goal.
 
+Names: `eXoMAC` is the internal name (project, module, bundle id, folders).
+The display name is "eXo Client" ("eXo Client for Mac" in the About box); it is
+set once in `AppInfo` (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
+`INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
+`eXo Client.app`. Do not describe the app as a collection of classic Mac games.
+
 ## Layout
 
 - `eXoMAC/Core/` — the portable core: Foundation only, no AppKit/SwiftUI.
@@ -37,11 +43,22 @@ build settings. Do not edit `project.pbxproj` by hand. New files under
 - Keep core code free of Apple-only frameworks so it can later back a
   SwiftCrossUI client on Linux. Platform-specific work (unzip binary paths,
   emulator locations) stays behind small helpers with `#if os(...)`.
-- The app never writes to the eXoDOS folder except when installing or
-  uninstalling a game (unpacking `eXo/eXoDOS/<name>.zip`). User changes such as
-  favorites and play history live in `~/Library/Application Support/eXoMAC/`.
-- Generated DOSBox configs go to `~/Library/Application Support/eXoMAC/Launch/`
-  and emulator output to `.../Logs/`.
+- Two roots. The library (eXoDOS folder) is read-only as far as the app is
+  concerned; it may live on a read-only volume. Everything the app writes goes
+  to the local data folder (`LocalStore`, default
+  `~/Library/Application Support/eXoMAC/`): `Games/eXoDOS/` (unpacked games),
+  `Saves/` (backups of changed files made on uninstall), `Overrides/<gameID>/`
+  (edited configs), `Overlay/eXoDOS/` (writable overlay mounts for games
+  unpacked inside a read-only library), `Launch/`, `Logs/`, `MediaIndex/`,
+  `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
+- Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
+  for locally installed games, adds overlay mounts for library-installed games
+  on read-only volumes, prefers an edited config from `Overrides/`, and layers
+  the global `LaunchOptions` plus per-game `LaunchOverrides` (remembered from
+  the launch options dialog) on top of the translated config.
+- Help pages are Markdown files in `eXoMAC/Help/` (ordered by their numeric
+  prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
+  Help window. Add or edit pages there.
 - Reference material: a read-only eXoDOS v6 copy at `/Volumes/eXoDOS_ro`,
   LaunchBox screenshots in `Launchbox Screenshots/`, and the design prototypes
   linked from `prompt.md`.
@@ -51,11 +68,13 @@ build settings. Do not edit `project.pbxproj` by hand. New files under
 - Launch arguments (debug builds): `-libraryPath <folder>` and `-musicEnabled 0`
   override saved settings for one run; `-searchText ultima` and
   `-selectTitle "Ultima V: Warriors of Destiny"` preset the view;
-  `-screenshotPath out.png [-screenshotDelay 10]` renders the main window to a
-  PNG from the view hierarchy and quits. Example:
+  `-screenshotPath out.png [-screenshotDelay 10]` renders every visible window
+  (main window, then sheets as `out.2.png`, …) from the view hierarchy and
+  quits; `-autoPlay 1` presses Play on the selected game after loading, which
+  opens the launch options dialog. Example:
 
   ```
-  "$BUILT_PRODUCTS_DIR/eXoMAC.app/Contents/MacOS/eXoMAC" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
+  "$BUILT_PRODUCTS_DIR/eXo Client.app/Contents/MacOS/eXo Client" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
       -searchText ultima -selectTitle "Ultima V: Warriors of Destiny" -screenshotPath /tmp/shot.png
   ```
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.

@@ -29,6 +29,11 @@ struct GeneralSettingsView: View {
                 Text("Ogg Vorbis tracks are not supported by macOS and are skipped.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section("Playing") {
+                Toggle("Show launch options before each game", isOn: $model.settings.showLaunchOptions)
+                Text("The dialog offers the game's versions, full screen or window, shader and emulator, like the menus eXoDOS shows in its console window.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section("Library view") {
                 Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
             }
@@ -41,8 +46,10 @@ struct GeneralSettingsView: View {
 struct LibrarySettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var showingPicker = false
+    @State private var showingLocalPicker = false
 
     var body: some View {
+        @Bindable var model = model
         Form {
             Section("eXoDOS folder") {
                 HStack {
@@ -69,6 +76,25 @@ struct LibrarySettingsView: View {
                     }
                 }
             }
+            Section("Local data folder") {
+                HStack {
+                    Text(model.localStore.directory.path)
+                        .font(Theme.mono)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Button("Choose…") { showingLocalPicker = true }
+                    if model.settings.localStorePath != nil {
+                        Button("Use Default") { model.settings.localStorePath = nil }
+                    }
+                    Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.localStore.directory]) }
+                }
+                Text("Installed games, save backups, edited configs and logs are kept here, so the eXoDOS folder can stay read-only.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Picker("Install games to", selection: $model.settings.installLocation) {
+                    ForEach(InstallLocation.allCases) { Text($0.displayName).tag($0) }
+                }
+            }
             Section {
                 HStack {
                     if let library = model.library {
@@ -86,6 +112,9 @@ struct LibrarySettingsView: View {
         .padding(.vertical, 8)
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { model.setLibrary(url: url) }
+        }
+        .fileImporter(isPresented: $showingLocalPicker, allowedContentTypes: [.folder]) { result in
+            if case .success(let url) = result { model.settings.localStorePath = url.path }
         }
     }
 }

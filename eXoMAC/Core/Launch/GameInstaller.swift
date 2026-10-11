@@ -8,12 +8,22 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
     public var destinationDirectory: URL
     public var installedFolderURL: URL
     public var updateArchiveURL: URL?
+    /// An existing save backup that can be restored after unpacking.
+    public var saveArchiveURL: URL?
+    /// Where a save backup is written on uninstall.
+    public var saveBackupURL: URL
+    public var location: InstallLocation
 
     public var archiveExists: Bool { FileManager.default.fileExists(atPath: archiveURL.path) }
     public var isInstalled: Bool { FileManager.default.fileExists(atPath: installedFolderURL.path) }
 
     public var archiveSize: Int64? {
         (try? FileManager.default.attributesOfItem(atPath: archiveURL.path)[.size] as? Int64) ?? nil
+    }
+
+    public var saveArchiveDate: Date? {
+        guard let saveArchiveURL else { return nil }
+        return (try? FileManager.default.attributesOfItem(atPath: saveArchiveURL.path)[.modificationDate] as? Date) ?? nil
     }
 }
 
@@ -69,12 +79,15 @@ nonisolated public struct CommandResult: Sendable, Hashable {
 
 /// Runs a command to completion and collects its output.
 nonisolated public enum CommandRunner {
-    public static func run(executable: URL, arguments: [String], workingDirectory: URL? = nil) async throws -> CommandResult {
+    public static func run(executable: URL, arguments: [String], workingDirectory: URL? = nil, standardInput: URL? = nil) async throws -> CommandResult {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             process.executableURL = executable
             process.arguments = arguments
             if let workingDirectory { process.currentDirectoryURL = workingDirectory }
+            if let standardInput, let handle = FileHandle(forReadingAtPath: standardInput.path) {
+                process.standardInput = handle
+            }
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = pipe
@@ -94,37 +107,76 @@ nonisolated public enum CommandRunner {
 
 nonisolated public struct GameInstaller: Sendable {
     public let snapshot: LibrarySnapshot
+    public let installLocation: InstallLocation
 
-    public init(snapshot: LibrarySnapshot) {
+    public init(snapshot: LibrarySnapshot, installLocation: InstallLocation = .localStore) {
         self.snapshot = snapshot
+        self.installLocation = installLocation
     }
 
     public func plan(for game: Game) -> InstallPlan? {
         guard game.isDOSGame, let folderName = game.gameFolderName else { return nil }
         let root = snapshot.root
+        let localStore = snapshot.localStore
         let archive = root.gamesDirectory.appendingPathComponent("\(game.launcherBaseName).zip")
         let update = root.updateDirectory.appendingPathComponent("!dos", isDirectory: true)
             .appendingPathComponent("\(game.launcherBaseName).zip")
+
+        let destination: URL
+        let location: InstallLocation
+        if let existing = snapshot.installedLocation(for: game) {
+            destination = existing.url.deletingLastPathComponent()
+            location = existing.isLocal ? .localStore : .inPlace
+        } else if installLocation == .localStore, let localStore {
+            destination = localStore.gamesDirectory
+            location = .localStore
+        } else {
+            destination = root.gamesDirectory
+            location = .inPlace
+        }
+
+        let librarySave = root.gamesDirectory.appendingPathComponent("!save", isDirectory: true)
+            .appendingPathComponent("\(game.launcherBaseName).zip")
+        let backupTarget = localStore?.saveArchiveURL(for: game) ?? librarySave
+        let existingSave = [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
+            .first { FileManager.default.fileExists(atPath: $0.path) }
+
         return InstallPlan(
             game: game,
             archiveURL: archive,
-            destinationDirectory: root.gamesDirectory,
-            installedFolderURL: root.gamesDirectory.appendingPathComponent(folderName, isDirectory: true),
-            updateArchiveURL: FileManager.default.fileExists(atPath: update.path) ? update : nil
+            destinationDirectory: destination,
+            installedFolderURL: destination.appendingPathComponent(folderName, isDirectory: true),
+            updateArchiveURL: FileManager.default.fileExists(atPath: update.path) ? update : nil,
+            saveArchiveURL: existingSave,
+            saveBackupURL: backupTarget,
+            location: location
         )
     }
 
-    public func install(_ plan: InstallPlan, extractor: any ArchiveExtractor = UnzipCommandExtractor()) async throws {
+    public func install(_ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor()) async throws {
         guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
+        try FileManager.default.createDirectory(at: plan.destinationDirectory, withIntermediateDirectories: true)
         try await extractor.extract(archive: plan.archiveURL, into: plan.destinationDirectory)
         if let update = plan.updateArchiveURL {
             try await extractor.extract(archive: update, into: plan.destinationDirectory)
         }
+        if restoreSaves, let save = plan.saveArchiveURL {
+            try await extractor.extract(archive: save, into: plan.destinationDirectory)
+        }
         guard plan.isInstalled else { throw InstallError.folderMissingAfterExtract(plan.installedFolderURL) }
     }
 
-    public func uninstall(_ plan: InstallPlan) throws {
+    /// Removes the game folder. With `backupSaves`, files that are new or
+    /// changed since the original archive are zipped first. Returns the
+    /// number of files backed up.
+    @discardableResult
+    public func uninstall(_ plan: InstallPlan, backupSaves: Bool) async throws -> Int {
         guard plan.isInstalled else { throw InstallError.notInstalled }
+        var saved = 0
+        if backupSaves, plan.archiveExists {
+            saved = try await SaveArchiver.backup(folder: plan.installedFolderURL, originalArchive: plan.archiveURL, to: plan.saveBackupURL)
+        }
         try FileManager.default.removeItem(at: plan.installedFolderURL)
+        return saved
     }
 }

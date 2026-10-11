@@ -30,6 +30,12 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingInfoGame) { game in
             GameInfoSheet(game: game)
         }
+        .sheet(item: $model.pendingLaunch) { pending in
+            LaunchOptionsSheet(pending: pending)
+        }
+        .sheet(item: $model.pendingUninstall) { game in
+            UninstallSheet(game: game)
+        }
         .alert(model.alert?.title ?? "", isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } }),
                presenting: model.alert) { _ in
             Button("OK") {}
@@ -153,7 +159,7 @@ struct LibrarySetupView: View {
                 .foregroundStyle(Theme.accent)
             Text(error == nil ? "Choose your eXoDOS folder" : "The library could not be loaded")
                 .font(.title2.weight(.semibold))
-            Text(error ?? "Pick the folder that holds eXo, Data, Images, Manuals, Music and Videos. eXoMAC reads it in place and never changes the LaunchBox files.")
+            Text(error ?? "Pick the folder that holds eXo, Data, Images, Manuals, Music and Videos. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: 440)

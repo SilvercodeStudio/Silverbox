@@ -22,6 +22,7 @@ final class AppModel {
             if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
                 refreshVisibleGames()
             }
+            if settings.localStorePath != oldValue.localStorePath { reloadLibrary() }
         }
     }
 
@@ -41,8 +42,17 @@ final class AppModel {
     var selectedGameID: String? { didSet { updateMusic() } }
     var openedGameID: String?
     var pendingInstall: Game?
+    var pendingUninstall: Game?
     var pendingInfoGame: Game?
+    var pendingLaunch: PendingLaunch?
     var alert: AppAlert?
+
+    /// A game waiting in the launch options dialog.
+    struct PendingLaunch: Identifiable {
+        let id = UUID()
+        let game: Game
+        let variants: [LaunchVariant]
+    }
 
     let thumbnails = ThumbnailCache()
     let music = MenuMusicPlayer()
@@ -78,6 +88,7 @@ final class AppModel {
     // MARK: - Library loading
 
     var libraryRoot: LibraryRoot? { settings.libraryRoot }
+    var localStore: LocalStore { settings.localStore }
 
     func setLibrary(url: URL) {
         settings.libraryPath = url.path
@@ -95,6 +106,8 @@ final class AppModel {
             return
         }
         rootReport = root.inspect()
+        let localStore = settings.localStore
+        try? localStore.ensureDirectories()
         loadState = .loading(LibraryLoadProgress(stage: "Starting", fraction: 0, gamesLoaded: 0))
         let report: @Sendable (LibraryLoadProgress) -> Void = { progress in
             Task { @MainActor in self.reportLoadProgress(progress) }
@@ -102,7 +115,7 @@ final class AppModel {
         loadTask = Task { [weak self] in
             do {
                 let snapshot = try await Task.detached(priority: .userInitiated) {
-                    try LibraryLoader(root: root).load(progress: report)
+                    try LibraryLoader(root: root, localStore: localStore).load(progress: report)
                 }.value
                 let index = await Task.detached(priority: .utility) { LibrarySearchIndex(snapshot: snapshot) }.value
                 guard let self, !Task.isCancelled else { return }
@@ -156,6 +169,9 @@ final class AppModel {
         if let title = pendingSelectTitle, let match = games.first(where: { $0.title == title }) {
             pendingSelectTitle = nil
             selectedGameID = match.id
+            if UserDefaults.standard.bool(forKey: "autoPlay") {
+                Task { @MainActor in self.play(match) }
+            }
         }
         if let selectedGameID, !games.contains(where: { $0.id == selectedGameID }) {
             self.selectedGameID = games.first?.id
@@ -226,6 +242,11 @@ final class AppModel {
 
     func emulatorKind(for game: Game) -> EmulatorKind {
         if let override = userState.state(for: game.id).emulatorOverride { return override }
+        return defaultEmulatorKind(for: game)
+    }
+
+    /// The emulator the settings policy picks, ignoring per-game overrides.
+    func defaultEmulatorKind(for game: Game) -> EmulatorKind {
         switch settings.emulatorPolicy {
         case .alwaysStaging: return .dosboxStaging
         case .alwaysDOSBoxX: return .dosboxX
@@ -244,7 +265,22 @@ final class AppModel {
         library?.dosboxIndex.build(forLauncherBaseName: game.launcherBaseName)
     }
 
-    /// Plays the game, installing it first when needed.
+    /// The global launch options with this game's remembered choices applied.
+    func effectiveLaunchOptions(for game: Game) -> LaunchOptions {
+        settings.launchOptions.applying(userState.state(for: game.id).launchOverrides)
+    }
+
+    func preferredVariant(for game: Game, in variants: [LaunchVariant]) -> LaunchVariant? {
+        guard !variants.isEmpty else { return nil }
+        if let preferred = userState.state(for: game.id).preferredVariantID,
+           let variant = variants.first(where: { $0.id == preferred }) {
+            return variant
+        }
+        return variants.first { !$0.needsWindowsHelper } ?? variants.first
+    }
+
+    /// Plays the game: opens non-game items, offers installation, shows the
+    /// launch options dialog, or starts the emulator right away.
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
         guard game.isDOSGame else {
@@ -255,16 +291,26 @@ final class AppModel {
             pendingInstall = game
             return
         }
-        let kind = emulatorKind(for: game)
+        let variants = launchVariants(for: game)
+        if settings.showLaunchOptions, variant == nil {
+            pendingLaunch = PendingLaunch(game: game, variants: variants)
+            return
+        }
+        launch(game, variant: variant ?? preferredVariant(for: game, in: variants),
+               options: effectiveLaunchOptions(for: game), emulatorKind: emulatorKind(for: game))
+    }
+
+    /// Starts the emulator with explicit choices.
+    func launch(_ game: Game, variant: LaunchVariant?, options: LaunchOptions, emulatorKind kind: EmulatorKind) {
+        guard let library else { return }
         guard let emulator = settings.emulatorInstallation(kind), emulator.exists else {
             alert = AppAlert(title: "\(kind.displayName) not found",
                              message: "Choose the \(kind.displayName) application in Settings › Emulators.")
             return
         }
         let planner = LaunchPlanner(snapshot: library, scratchDirectory: AppPaths.launchConfigs)
-        let chosenVariant = variant ?? preferredVariant(for: game, planner: planner)
         do {
-            let plan = try planner.plan(game: game, variant: chosenVariant, emulator: emulator, options: settings.launchOptions)
+            let plan = try planner.plan(game: game, variant: variant, emulator: emulator, options: options)
             try plan.writeConfig()
             music.pause()
             try launcher.launch(plan)
@@ -274,14 +320,51 @@ final class AppModel {
         }
     }
 
-    private func preferredVariant(for game: Game, planner: LaunchPlanner) -> LaunchVariant? {
-        let variants = planner.variants(for: game)
-        guard !variants.isEmpty else { return nil }
-        if let preferred = userState.state(for: game.id).preferredVariantID,
-           let variant = variants.first(where: { $0.id == preferred }) {
-            return variant
+    /// Keeps the launch dialog's choices for next time.
+    func rememberLaunchChoices(for game: Game, options: LaunchOptions, variant: LaunchVariant?, emulatorKind kind: EmulatorKind) {
+        let overrides = LaunchOverrides(base: settings.launchOptions, chosen: options)
+        let defaultKind = defaultEmulatorKind(for: game)
+        userState.update(game.id) { state in
+            state.launchOverrides = overrides.isEmpty ? nil : overrides
+            state.preferredVariantID = variant?.id
+            state.emulatorOverride = kind == defaultKind ? nil : kind
         }
-        return variants.first { !$0.needsWindowsHelper } ?? variants.first
+    }
+
+    func forgetLaunchChoices(for game: Game) {
+        userState.update(game.id) { state in
+            state.launchOverrides = nil
+            state.preferredVariantID = nil
+            state.emulatorOverride = nil
+        }
+    }
+
+    // MARK: - Config overrides
+
+    func overrideConfigURL(for game: Game) -> URL? {
+        guard let library else { return nil }
+        return LaunchPlanner(snapshot: library, scratchDirectory: AppPaths.launchConfigs).overrideConfigURL(for: game, variant: nil)
+    }
+
+    /// Copies the game's config into the local store (once) and opens it.
+    func editConfig(for game: Game) {
+        guard let library, let folder = game.rootFolder else { return }
+        let source = library.root.url(forWindowsRelativePath: folder).appendingPathComponent("dosbox.conf")
+        let target = localStore.overrideConfigURL(for: game, configName: "dosbox.conf")
+        do {
+            if !FileManager.default.fileExists(atPath: target.path) {
+                try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: source, to: target)
+            }
+            NSWorkspace.shared.open(target)
+        } catch {
+            alert = AppAlert(title: "Could not copy the config", message: error.localizedDescription)
+        }
+    }
+
+    func revertConfig(for game: Game) {
+        let target = localStore.overrideConfigURL(for: game, configName: "dosbox.conf")
+        try? FileManager.default.removeItem(at: target)
     }
 
     private func openNonGameItem(_ game: Game) {
@@ -307,12 +390,15 @@ final class AppModel {
 
     // MARK: - Installing
 
-    func install(_ game: Game, playAfter: Bool) async {
-        guard let library else { return }
-        let installer = GameInstaller(snapshot: library)
-        guard let plan = installer.plan(for: game) else { return }
+    func installer() -> GameInstaller? {
+        guard let library else { return nil }
+        return GameInstaller(snapshot: library, installLocation: settings.installLocation)
+    }
+
+    func install(_ game: Game, playAfter: Bool, restoreSaves: Bool) async {
+        guard let installer = installer(), let plan = installer.plan(for: game) else { return }
         do {
-            try await installer.install(plan)
+            try await installer.install(plan, restoreSaves: restoreSaves)
             await refreshInstalledFolders()
             if playAfter { play(game) }
         } catch {
@@ -320,30 +406,33 @@ final class AppModel {
         }
     }
 
-    func uninstall(_ game: Game) {
-        guard let library else { return }
-        let installer = GameInstaller(snapshot: library)
-        guard let plan = installer.plan(for: game) else { return }
+    func uninstall(_ game: Game, backupSaves: Bool) async {
+        guard let installer = installer(), let plan = installer.plan(for: game) else { return }
         do {
-            try installer.uninstall(plan)
-            Task { await refreshInstalledFolders() }
+            let saved = try await installer.uninstall(plan, backupSaves: backupSaves)
+            await refreshInstalledFolders()
+            if saved > 0 {
+                alert = AppAlert(title: "\(game.title) uninstalled",
+                                 message: "\(saved) changed file\(saved == 1 ? "" : "s") were backed up to \(plan.saveBackupURL.path).")
+            }
         } catch {
             alert = AppAlert(title: "Could not uninstall \(game.title)", message: error.localizedDescription)
         }
     }
 
-    /// Re-reads `eXo/eXoDOS/` without reparsing the XML.
+    /// Re-reads the installed game folders without reparsing the XML.
     func refreshInstalledFolders() async {
         guard let library else { return }
         let gamesDirectory = library.root.gamesDirectory
-        let names = await Task.detached { LibraryLoader.installedFolderNames(in: gamesDirectory) }.value
-        self.library = LibrarySnapshot(
-            root: library.root, games: library.games, platforms: library.platforms, categories: library.categories,
-            platformFolders: library.platformFolders, playlists: library.playlists, parents: library.parents,
-            alternateNames: library.alternateNames.values.flatMap { $0 },
-            additionalApplications: library.additionalApplications.values.flatMap { $0 },
-            dosboxIndex: library.dosboxIndex, installedFolderNames: names, loadedAt: library.loadedAt)
-        if let snapshot = self.library { media = MediaCatalog(snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes)) }
+        let localGames = library.localStore?.gamesDirectory
+        let (names, local) = await Task.detached {
+            (LibraryLoader.installedFolderNames(in: gamesDirectory),
+             localGames.map { LibraryLoader.installedFolderNames(in: $0) } ?? [])
+        }.value
+        self.library = library.replacingInstalledFolders(library: names, local: local)
+        if let snapshot = self.library {
+            media = MediaCatalog(snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
+        }
         refreshVisibleGames()
     }
 
@@ -374,8 +463,8 @@ final class AppModel {
     func revealInFinder(_ game: Game) {
         guard let library else { return }
         var url = library.root.url(forWindowsRelativePath: game.rootFolder ?? game.applicationPath)
-        if library.isInstalled(game), let name = game.gameFolderName {
-            url = library.root.gamesDirectory.appendingPathComponent(name, isDirectory: true)
+        if let location = library.installedLocation(for: game) {
+            url = location.url
         }
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }

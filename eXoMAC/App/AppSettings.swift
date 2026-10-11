@@ -24,6 +24,9 @@ enum LibraryViewMode: String, Codable, CaseIterable {
 /// Everything the user configures. Saved as JSON in UserDefaults.
 struct AppSettings: Codable, Equatable {
     var libraryPath: String?
+    var localStorePath: String?
+    var installLocation: InstallLocation = .localStore
+    var showLaunchOptions = true
     var stagingExecutablePath: String?
     var dosboxXExecutablePath: String?
     var emulatorPolicy: EmulatorPolicy = .recommended
@@ -45,6 +48,9 @@ struct AppSettings: Codable, Equatable {
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         libraryPath = try c.decodeIfPresent(String.self, forKey: .libraryPath)
+        localStorePath = try c.decodeIfPresent(String.self, forKey: .localStorePath)
+        installLocation = try c.decodeIfPresent(InstallLocation.self, forKey: .installLocation) ?? .localStore
+        showLaunchOptions = try c.decodeIfPresent(Bool.self, forKey: .showLaunchOptions) ?? true
         stagingExecutablePath = try c.decodeIfPresent(String.self, forKey: .stagingExecutablePath)
         dosboxXExecutablePath = try c.decodeIfPresent(String.self, forKey: .dosboxXExecutablePath)
         emulatorPolicy = try c.decodeIfPresent(EmulatorPolicy.self, forKey: .emulatorPolicy) ?? .recommended
@@ -79,6 +85,14 @@ struct AppSettings: Codable, Equatable {
         if let data = try? JSONEncoder().encode(self) {
             defaults.set(data, forKey: Self.defaultsKey)
         }
+    }
+
+    /// The writable companion folder; Application Support unless chosen.
+    var localStore: LocalStore {
+        if let localStorePath, !localStorePath.isEmpty {
+            return LocalStore(directory: URL(fileURLWithPath: localStorePath, isDirectory: true))
+        }
+        return LocalStore(directory: AppPaths.applicationSupport)
     }
 
     var libraryRoot: LibraryRoot? {

@@ -90,6 +90,34 @@ struct AutoexecRewriterTests {
         ])
         #expect(result.notes.count == 2)
     }
+
+    @Test func mapsPathsIntoLocalStoreAndAddsOverlays() {
+        let mapping = PathMapping(from: URL(fileURLWithPath: "/lib/eXo/eXoDOS"), to: URL(fileURLWithPath: "/local/Games/eXoDOS"))
+        let mapped = AutoexecRewriter(baseDirectory: base, mappings: [mapping]).rewrite([
+            "@mount c .\\eXoDOS\\",
+            "imgmount d \".\\eXoDOS\\7thguest\\cd\\T7G1.cue\" -t cdrom",
+            "mount e .\\mt32",
+        ])
+        #expect(mapped.lines == [
+            "@mount c \"/local/Games/eXoDOS\"",
+            "imgmount d \"/local/Games/eXoDOS/7thguest/cd/T7G1.cue\" -t cdrom",
+            "mount e \"/lib/eXo/mt32\"",
+        ])
+
+        let overlay = OverlayMount(base: URL(fileURLWithPath: "/lib/eXo/eXoDOS"), directory: URL(fileURLWithPath: "/local/Overlay/eXoDOS"))
+        let overlaid = AutoexecRewriter(baseDirectory: base, overlay: overlay).rewrite([
+            "@mount c .\\eXoDOS\\SuperTet",
+            "mount a .\\eXoDOS\\SuperTet\\floppy -t floppy",
+            "imgmount d .\\eXoDOS\\SuperTet\\cd\\x.cue -t cdrom",
+        ])
+        #expect(overlaid.lines == [
+            "@mount c \"/lib/eXo/eXoDOS/SuperTet\"",
+            "@mount c \"/local/Overlay/eXoDOS/SuperTet\" -t overlay",
+            "mount a \"/lib/eXo/eXoDOS/SuperTet/floppy\" -t floppy",
+            "imgmount d \"/lib/eXo/eXoDOS/SuperTet/cd/x.cue\" -t cdrom",
+        ])
+        #expect(overlaid.overlayFolders == [URL(fileURLWithPath: "/local/Overlay/eXoDOS/SuperTet")])
+    }
 }
 
 @Suite("Config translation")
@@ -330,7 +358,117 @@ struct LaunchPlannerTests {
         #expect(plan.archiveExists)
         try await installer.install(plan)
         #expect(fm.fileExists(atPath: plan.installedFolderURL.appendingPathComponent("GAME.EXE").path))
-        try installer.uninstall(plan)
+        try await installer.uninstall(plan, backupSaves: false)
         #expect(!plan.isInstalled)
+    }
+
+    @Test func installsToLocalStoreAndBacksUpSaves() async throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let root = LibraryRoot(url: scratch.appendingPathComponent("library", isDirectory: true))
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        let fm = FileManager.default
+        try fm.createDirectory(at: root.gamesDirectory, withIntermediateDirectories: true)
+        let staging = scratch.appendingPathComponent("stage/MiniGame", isDirectory: true)
+        try fm.createDirectory(at: staging, withIntermediateDirectories: true)
+        try "hello".write(to: staging.appendingPathComponent("GAME.EXE"), atomically: true, encoding: .utf8)
+        try "cfg".write(to: staging.appendingPathComponent("GAME.CFG"), atomically: true, encoding: .utf8)
+        let zipURL = root.gamesDirectory.appendingPathComponent("Mini Game (1990).zip")
+        let zip = try await CommandRunner.run(executable: URL(fileURLWithPath: "/usr/bin/zip"),
+                                              arguments: ["-q", "-r", zipURL.path, "MiniGame"],
+                                              workingDirectory: scratch.appendingPathComponent("stage"))
+        #expect(zip.status == 0, Comment(rawValue: zip.output))
+
+        let game = Game(id: "mini", title: "Mini Game", platform: "MS-DOS",
+                        applicationPath: "eXo\\eXoDOS\\!dos\\MiniGame\\Mini Game (1990).bat",
+                        rootFolder: "eXo\\eXoDOS\\!dos\\MiniGame")
+        func snapshot() -> LibrarySnapshot {
+            LibrarySnapshot(root: root, games: [game], platforms: [], categories: [], platformFolders: [],
+                            playlists: [], parents: [], alternateNames: [], additionalApplications: [],
+                            dosboxIndex: DOSBoxIndex(), installedFolderNames: LibraryLoader.installedFolderNames(in: root.gamesDirectory),
+                            localStore: localStore, locallyInstalledFolderNames: LibraryLoader.installedFolderNames(in: localStore.gamesDirectory))
+        }
+        let installer = GameInstaller(snapshot: snapshot(), installLocation: .localStore)
+        let plan = try #require(installer.plan(for: game))
+        #expect(plan.location == .localStore)
+        #expect(plan.destinationDirectory == localStore.gamesDirectory)
+        #expect(plan.saveArchiveURL == nil)
+        try await installer.install(plan)
+        let installed = localStore.gamesDirectory.appendingPathComponent("MiniGame", isDirectory: true)
+        #expect(fm.fileExists(atPath: installed.appendingPathComponent("GAME.EXE").path))
+        #expect(!fm.fileExists(atPath: root.gamesDirectory.appendingPathComponent("MiniGame").path))
+        #expect(snapshot().installedLocation(for: game) == .local(installed))
+
+        // Play: a save appears and a config changes; the untouched file is not backed up.
+        try "progress".write(to: installed.appendingPathComponent("SAVE.DAT"), atomically: true, encoding: .utf8)
+        try "cfg2".write(to: installed.appendingPathComponent("GAME.CFG"), atomically: true, encoding: .utf8)
+        let changed = try await SaveArchiver.changedFiles(in: installed, comparedTo: zipURL)
+        #expect(changed == ["MiniGame/GAME.CFG", "MiniGame/SAVE.DAT"])
+
+        let installerAfterInstall = GameInstaller(snapshot: snapshot(), installLocation: .localStore)
+        let planAfterInstall = try #require(installerAfterInstall.plan(for: game))
+        #expect(planAfterInstall.isInstalled)
+        let saved = try await installerAfterInstall.uninstall(planAfterInstall, backupSaves: true)
+        #expect(saved == 2)
+        #expect(!fm.fileExists(atPath: installed.path))
+        let backup = localStore.saveArchiveURL(for: game)
+        #expect(fm.fileExists(atPath: backup.path))
+
+        // Reinstall and restore the backup.
+        let installerAgain = GameInstaller(snapshot: snapshot(), installLocation: .localStore)
+        let planAgain = try #require(installerAgain.plan(for: game))
+        #expect(planAgain.saveArchiveURL == backup)
+        try await installerAgain.install(planAgain, restoreSaves: true)
+        #expect(try String(contentsOf: installed.appendingPathComponent("SAVE.DAT"), encoding: .utf8) == "progress")
+        #expect(try String(contentsOf: installed.appendingPathComponent("GAME.CFG"), encoding: .utf8) == "cfg2")
+        #expect(try String(contentsOf: installed.appendingPathComponent("GAME.EXE"), encoding: .utf8) == "hello")
+    }
+
+    @Test func plansLocalStoreLaunchWithMappedPaths() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        let localGame = localStore.gamesDirectory.appendingPathComponent("ultima5", isDirectory: true)
+        try FileManager.default.createDirectory(at: localGame, withIntermediateDirectories: true)
+        try "x".write(to: localGame.appendingPathComponent("ULTIMA.EXE"), atomically: true, encoding: .utf8)
+        let snapshot = try LibraryLoader(root: FixtureLibrary.root, localStore: localStore).load()
+        let ultima = try #require(snapshot.game(id: FixtureLibrary.ultimaID))
+        #expect(snapshot.installedLocation(for: ultima) == .local(localGame))
+
+        let emulator = try FixtureLibrary.fakeEmulator(.dosboxStaging, in: scratch)
+        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
+        let plan = try planner.plan(game: ultima, variant: nil, emulator: emulator, options: LaunchOptions())
+        let doc = DOSBoxConfigDocument.parse(plan.configText)
+        #expect(doc.autoexecLines.first == "@mount c \"\(localStore.gamesDirectory.path)\"")
+        #expect(doc.value("mt32", "romdir") == FixtureLibrary.root.mt32Directory.path)
+        #expect(plan.directoriesToCreate.isEmpty)
+    }
+
+    @Test func prefersEditedConfigOverride() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        let snapshot = try LibraryLoader(root: FixtureLibrary.root, localStore: localStore).load()
+        let ultima = try #require(snapshot.game(id: FixtureLibrary.ultimaID))
+        let override = localStore.overrideConfigURL(for: ultima, configName: "dosbox.conf")
+        try FileManager.default.createDirectory(at: override.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try "[cpu]\ncycles=12345\n[autoexec]\nexit\n".write(to: override, atomically: true, encoding: .utf8)
+        let emulator = try FixtureLibrary.fakeEmulator(.dosboxStaging, in: scratch)
+        let plan = try LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
+            .plan(game: ultima, variant: nil, emulator: emulator, options: LaunchOptions())
+        #expect(plan.sourceConfigURL == override)
+        #expect(DOSBoxConfigDocument.parse(plan.configText).value("cpu", "cpu_cycles") == "12345")
+    }
+}
+
+@Suite("Launch overrides")
+struct LaunchOverridesTests {
+    @Test func mergesAndDiffs() {
+        let base = LaunchOptions(fullscreen: false, windowSize: .default, aspect: .gameConfig, shader: .crtAuto)
+        var chosen = base
+        chosen.fullscreen = true
+        chosen.shader = .sharp
+        let overrides = LaunchOverrides(base: base, chosen: chosen)
+        #expect(overrides == LaunchOverrides(fullscreen: true, shader: .sharp))
+        #expect(base.applying(overrides) == chosen)
+        #expect(LaunchOverrides(base: base, chosen: base).isEmpty)
+        #expect(base.applying(nil) == base)
     }
 }

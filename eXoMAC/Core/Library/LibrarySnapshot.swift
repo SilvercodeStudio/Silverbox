@@ -15,8 +15,12 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public let additionalApplications: [String: [AdditionalApplication]]
     public let dosboxIndex: DOSBoxIndex
     /// Names of folders directly inside `eXo/eXoDOS/`: a game whose
-    /// ``Game/gameFolderName`` is listed here is installed.
+    /// ``Game/gameFolderName`` is listed here is installed in the library.
     public let installedFolderNames: Set<String>
+    /// The writable companion folder, when configured.
+    public let localStore: LocalStore?
+    /// Names of game folders unpacked in the local store.
+    public let locallyInstalledFolderNames: Set<String>
     public let loadedAt: Date
 
     private let indexByID: [String: Int]
@@ -24,7 +28,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public init(root: LibraryRoot, games: [Game], platforms: [Platform], categories: [PlatformCategory],
                 platformFolders: [PlatformFolder], playlists: [Playlist], parents: [ParentLink],
                 alternateNames: [AlternateName], additionalApplications: [AdditionalApplication],
-                dosboxIndex: DOSBoxIndex, installedFolderNames: Set<String>, loadedAt: Date = Date()) {
+                dosboxIndex: DOSBoxIndex, installedFolderNames: Set<String>, localStore: LocalStore? = nil,
+                locallyInstalledFolderNames: Set<String> = [], loadedAt: Date = Date()) {
         self.root = root
         self.games = games
         self.platforms = platforms
@@ -37,6 +42,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
         self.additionalApplications = Dictionary(grouping: additionalApplications, by: \.gameID)
         self.dosboxIndex = dosboxIndex
         self.installedFolderNames = installedFolderNames
+        self.localStore = localStore
+        self.locallyInstalledFolderNames = locallyInstalledFolderNames
         self.loadedAt = loadedAt
         var index: [String: Int] = [:]
         index.reserveCapacity(games.count)
@@ -57,10 +64,32 @@ nonisolated public struct LibrarySnapshot: Sendable {
         platforms.first { $0.name == name }
     }
 
-    /// True when the game's folder exists under `eXo/eXoDOS/`.
+    /// True when the game's folder exists in the local store or the library.
     public func isInstalled(_ game: Game) -> Bool {
-        guard game.isDOSGame, let folder = game.gameFolderName else { return !game.isDOSGame }
-        return installedFolderNames.contains(folder) || installedFolderNames.contains(folder.lowercased())
+        guard game.isDOSGame else { return true }
+        return installedLocation(for: game) != nil
+    }
+
+    /// The installed game folder, local store first.
+    public func installedLocation(for game: Game) -> GameLocation? {
+        guard game.isDOSGame, let folder = game.gameFolderName else { return nil }
+        if let localStore, locallyInstalledFolderNames.contains(folder) {
+            return .local(localStore.gamesDirectory.appendingPathComponent(folder, isDirectory: true))
+        }
+        if installedFolderNames.contains(folder) {
+            return .library(root.gamesDirectory.appendingPathComponent(folder, isDirectory: true))
+        }
+        return nil
+    }
+
+    /// A copy with fresh installed-folder sets, after installing or removing a game.
+    public func replacingInstalledFolders(library: Set<String>, local: Set<String>) -> LibrarySnapshot {
+        LibrarySnapshot(root: root, games: games, platforms: platforms, categories: categories, platformFolders: platformFolders,
+                        playlists: playlists, parents: parents,
+                        alternateNames: alternateNames.values.flatMap { $0 },
+                        additionalApplications: additionalApplications.values.flatMap { $0 },
+                        dosboxIndex: dosboxIndex, installedFolderNames: library, localStore: localStore,
+                        locallyInstalledFolderNames: local, loadedAt: loadedAt)
     }
 
     /// The media folder LaunchBox configured for `mediaType` on `platform`,

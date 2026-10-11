@@ -2,9 +2,18 @@ import SwiftUI
 
 struct AppCommands: Commands {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            Button("About \(AppInfo.displayName)") { AboutPanel.show() }
+        }
         CommandGroup(replacing: .newItem) {}
+        CommandGroup(replacing: .help) {
+            Button("\(AppInfo.displayName) Help") { openWindow(id: "help") }
+                .keyboardShortcut("?", modifiers: .command)
+            Link("eXo Project Website", destination: AboutPanel.projectURL)
+        }
 
         CommandMenu("Game") {
             Button("Play") { if let game = model.selectedGame { model.play(game) } }
@@ -12,6 +21,8 @@ struct AppCommands: Commands {
                 .disabled(model.selectedGame == nil)
             Button("Install…") { if let game = model.selectedGame { model.pendingInstall = game } }
                 .disabled(model.selectedGame.map { !$0.isDOSGame || model.isInstalled($0) } ?? true)
+            Button("Uninstall…") { if let game = model.selectedGame { model.pendingUninstall = game } }
+                .disabled(model.selectedGame.map { !$0.isDOSGame || !model.isInstalled($0) } ?? true)
             Divider()
             Button("Open Game Page") { model.openedGameID = model.selectedGameID }
                 .keyboardShortcut(.downArrow, modifiers: .command)

@@ -12,7 +12,7 @@ struct eXoMACApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("eXoMAC") {
+        WindowGroup(AppInfo.displayName) {
             LibraryWindow()
                 .environment(model)
         }
@@ -23,5 +23,16 @@ struct eXoMACApp: App {
             SettingsView()
                 .environment(model)
         }
+
+        Window("\(AppInfo.displayName) Help", id: "help") {
+            HelpView()
+        }
+        .defaultSize(width: 900, height: 620)
     }
+}
+
+/// Names shown to the user. Internal names stay `eXoMAC`.
+enum AppInfo {
+    static let displayName = "eXo Client"
+    static let fullName = "eXo Client for Mac"
 }

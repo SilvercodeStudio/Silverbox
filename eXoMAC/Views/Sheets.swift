@@ -6,16 +6,19 @@ struct InstallSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var playAfter = true
+    @State private var restoreSaves = true
     @State private var installing = false
 
     var body: some View {
-        let plan = model.library.flatMap { GameInstaller(snapshot: $0).plan(for: game) }
+        let plan = model.installer()?.plan(for: game)
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Install \(game.title)?").font(.headline)
-                    Text("This game must be installed before it can run for the first time. The archive is unpacked into eXo/eXoDOS, exactly as eXoDOS does on Windows.")
+                    Text(plan?.location == .inPlace
+                         ? "This game must be installed before it can run for the first time. The archive is unpacked into eXo/eXoDOS, exactly as eXoDOS does on Windows."
+                         : "This game must be installed before it can run for the first time. The archive is unpacked into the local data folder; the eXoDOS folder is not changed.")
                         .foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -37,6 +40,9 @@ struct InstallSheet: View {
                     }
                 }
             }
+            if let plan, plan.saveArchiveURL != nil {
+                Toggle("Restore saved progress from the backup made \(Formatters.date(plan.saveArchiveDate))", isOn: $restoreSaves)
+            }
             Toggle("Play when installation finishes", isOn: $playAfter)
             HStack {
                 if installing {
@@ -50,7 +56,7 @@ struct InstallSheet: View {
                 Button("Install") {
                     installing = true
                     Task {
-                        await model.install(game, playAfter: playAfter)
+                        await model.install(game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
                         installing = false
                         dismiss()
                     }
@@ -95,6 +101,27 @@ struct GameInfoSheet: View {
                             LabeledContent("DOSBox config") { PathText(root + "\\dosbox.conf") }
                         }
                         LabeledContent("eXoDOS build") { Text(build?.displayName ?? "Unknown") }
+                        if let location = model.library?.installedLocation(for: game) {
+                            LabeledContent(location.isLocal ? "Installed in local data" : "Installed in library") {
+                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                            }
+                        }
+                        LabeledContent("Edited config") {
+                            HStack {
+                                if model.overrideConfigURL(for: game) != nil {
+                                    Text("In use").foregroundStyle(Theme.accent)
+                                    Button("Open") { model.editConfig(for: game) }
+                                    Button("Revert") { model.revertConfig(for: game) }
+                                } else {
+                                    Button("Edit a Copy…") { model.editConfig(for: game) }
+                                }
+                            }
+                        }
+                        if !(model.userState.state(for: game.id).launchOverrides?.isEmpty ?? true) {
+                            LabeledContent("Remembered launch options") {
+                                Button("Forget") { model.forgetLaunchChoices(for: game) }
+                            }
+                        }
                         Picker("Emulator", selection: emulatorBinding) {
                             Text("Automatic (\(model.settings.emulatorPolicy == .recommended ? (build?.recommendedEmulator ?? .dosboxStaging).displayName : "per Settings"))").tag(EmulatorKind?.none)
                             ForEach(EmulatorKind.allCases) { kind in
@@ -122,8 +149,8 @@ struct GameInfoSheet: View {
                     Toggle("Broken", isOn: flag(\.broken, fallback: game.broken))
                     if game.isDOSGame, model.isInstalled(game) {
                         Button("Uninstall…", role: .destructive) {
-                            model.uninstall(game)
                             dismiss()
+                            model.pendingUninstall = game
                         }
                     }
                 }
@@ -131,7 +158,7 @@ struct GameInfoSheet: View {
             .formStyle(.grouped)
             Divider()
             HStack {
-                Text("Changes are kept by eXoMAC; the LaunchBox files are not modified.")
+                Text("Changes are kept in the local data folder; the eXoDOS files are not modified.")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
                 Spacer()
@@ -178,5 +205,172 @@ struct PathText: View {
             .foregroundStyle(Theme.textSecondary)
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+/// Confirms removal of an installed game, with an optional save backup.
+struct UninstallSheet: View {
+    let game: Game
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var backup = true
+    @State private var working = false
+
+    var body: some View {
+        let plan = model.installer()?.plan(for: game)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 14) {
+                BoxArtView(game: game, width: 56, maxPixelSize: 160)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Uninstall \(game.title)?").font(.headline)
+                    Text("The game folder is removed. The archive stays in the collection, so you can install the game again at any time.")
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let plan {
+                Text(plan.installedFolderURL.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                Toggle("Back up saved games and changed files first", isOn: $backup)
+                    .disabled(!plan.archiveExists)
+                Text(backup && plan.archiveExists
+                     ? "Only files that are new or changed since installation are saved, to \(plan.saveBackupURL.path)."
+                     : "Saved games in the folder will be lost.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack {
+                if working {
+                    ProgressView().controlSize(.small)
+                    Text("Backing up…").foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                    .disabled(working)
+                Button("Uninstall", role: .destructive) {
+                    working = true
+                    Task {
+                        await model.uninstall(game, backupSaves: backup && plan?.archiveExists == true)
+                        working = false
+                        dismiss()
+                    }
+                }
+                .disabled(working || plan == nil)
+            }
+        }
+        .padding(20)
+        .frame(width: 460)
+    }
+}
+
+/// The native stand-in for eXoDOS's console menus: version, display and
+/// emulator choices before a game starts.
+struct LaunchOptionsSheet: View {
+    let pending: AppModel.PendingLaunch
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var options: LaunchOptions
+    @State private var variantID: String?
+    @State private var emulator: EmulatorKind
+    @State private var remember: Bool
+
+    init(pending: AppModel.PendingLaunch) {
+        self.pending = pending
+        _options = State(initialValue: LaunchOptions())
+        _variantID = State(initialValue: nil)
+        _emulator = State(initialValue: .dosboxStaging)
+        _remember = State(initialValue: false)
+    }
+
+    var body: some View {
+        @Bindable var model = model
+        let game = pending.game
+        let build = model.eXoDOSBuild(for: game)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 14) {
+                BoxArtView(game: game, width: 56, maxPixelSize: 160)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(game.title).font(.headline)
+                    Text(build.map { "eXoDOS runs this game with \($0.displayName)." } ?? "Launch options")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+            }
+            .padding(16)
+            Divider()
+            Form {
+                if pending.variants.count > 1 {
+                    Section("Version") {
+                        Picker("Play", selection: $variantID) {
+                            ForEach(pending.variants) { variant in
+                                Text(variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : ""))
+                                    .tag(String?.some(variant.id))
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                    }
+                }
+                Section("Display") {
+                    Toggle("Full screen", isOn: $options.fullscreen)
+                    Picker("Window size", selection: $options.windowSize) {
+                        ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
+                    }
+                    .disabled(options.fullscreen)
+                    Picker("Aspect ratio correction", selection: $options.aspect) {
+                        ForEach(LaunchOptions.AspectMode.allCases) { Text($0.displayName).tag($0) }
+                    }
+                    if emulator == .dosboxStaging {
+                        Picker("CRT shader", selection: $options.shader) {
+                            ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
+                        }
+                    }
+                }
+                Section("Emulator") {
+                    Picker("Emulator", selection: $emulator) {
+                        ForEach(EmulatorKind.allCases) { kind in
+                            Text(kind.displayName + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : "")).tag(kind)
+                        }
+                    }
+                    .pickerStyle(.radioGroup)
+                }
+                Section {
+                    Toggle("Remember these choices for this game", isOn: $remember)
+                    Toggle("Show this dialog before each game", isOn: $model.settings.showLaunchOptions)
+                }
+            }
+            .formStyle(.grouped)
+            Divider()
+            HStack {
+                Button("Configure…") {
+                    dismiss()
+                    model.pendingInfoGame = game
+                }
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Play") {
+                    let variant = pending.variants.first { $0.id == variantID }
+                    if remember {
+                        model.rememberLaunchChoices(for: game, options: options, variant: variant, emulatorKind: emulator)
+                    }
+                    dismiss()
+                    model.launch(game, variant: variant, options: options, emulatorKind: emulator)
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
+            }
+            .padding(16)
+        }
+        .frame(width: 520)
+        .onAppear {
+            options = model.effectiveLaunchOptions(for: game)
+            emulator = model.emulatorKind(for: game)
+            variantID = model.preferredVariant(for: game, in: pending.variants)?.id
+            let state = model.userState.state(for: game.id)
+            remember = !(state.launchOverrides?.isEmpty ?? true) || state.preferredVariantID != nil || state.emulatorOverride != nil
+        }
     }
 }

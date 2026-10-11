@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		04788C55307BEF960061AE3E /* eXoMAC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eXoMAC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		04788C55307BEF960061AE3E /* eXo Client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "eXo Client.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		04788C64307BEF960061AE3E /* eXoMACTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -79,7 +79,7 @@
 		04788C56307BEF960061AE3E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04788C55307BEF960061AE3E /* eXoMAC.app */,
+				04788C55307BEF960061AE3E /* eXo Client.app */,
 				04788C64307BEF960061AE3E /* eXoMACTests.xctest */,
 				04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */,
 			);
@@ -104,7 +104,7 @@
 			);
 			name = eXoMAC;
 			productName = eXoMAC;
-			productReference = 04788C55307BEF960061AE3E /* eXoMAC.app */;
+			productReference = 04788C55307BEF960061AE3E /* eXo Client.app */;
 			productType = "com.apple.product-type.application";
 		};
 		04788C63307BEF960061AE3E /* eXoMACTests */ = {
@@ -372,6 +372,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "eXo Client";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -386,7 +387,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				OTHER_LDFLAGS = (
 					"-framework",
 					AVKit,
@@ -394,9 +395,12 @@
 					AVFoundation,
 					"-framework",
 					QuickLook,
+					"-framework",
+					WebKit,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMAC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = eXoMAC;
+				PRODUCT_NAME = "eXo Client";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -424,6 +428,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "eXo Client";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -438,7 +443,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				OTHER_LDFLAGS = (
 					"-framework",
 					AVKit,
@@ -446,9 +451,12 @@
 					AVFoundation,
 					"-framework",
 					QuickLook,
+					"-framework",
+					WebKit,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMAC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = eXoMAC;
+				PRODUCT_NAME = "eXo Client";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -484,7 +492,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXoMAC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXoMAC";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXo Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXo Client";
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Debug;
@@ -510,7 +518,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXoMAC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXoMAC";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXo Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXo Client";
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;

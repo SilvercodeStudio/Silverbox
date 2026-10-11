@@ -22,9 +22,11 @@ nonisolated public enum LibraryLoadError: Error, Sendable {
 /// MS-DOS file, so call it off the main thread.
 nonisolated public struct LibraryLoader: Sendable {
     public let root: LibraryRoot
+    public let localStore: LocalStore?
 
-    public init(root: LibraryRoot) {
+    public init(root: LibraryRoot, localStore: LocalStore? = nil) {
         self.root = root
+        self.localStore = localStore
     }
 
     public func load(progress: (@Sendable (LibraryLoadProgress) -> Void)? = nil) throws -> LibrarySnapshot {
@@ -94,6 +96,7 @@ nonisolated public struct LibraryLoader: Sendable {
         progress?(LibraryLoadProgress(stage: "Reading DOSBox index", fraction: 0.96, gamesLoaded: games.count))
         let dosboxIndex = (try? DOSBoxIndex(contentsOf: root.dosboxIndexFile)) ?? DOSBoxIndex()
         let installed = Self.installedFolderNames(in: root.gamesDirectory)
+        let local = localStore.map { Self.installedFolderNames(in: $0.gamesDirectory) } ?? []
 
         progress?(LibraryLoadProgress(stage: "Done", fraction: 1, gamesLoaded: games.count))
         return LibrarySnapshot(
@@ -107,7 +110,9 @@ nonisolated public struct LibraryLoader: Sendable {
             alternateNames: alternates,
             additionalApplications: extraApps,
             dosboxIndex: dosboxIndex,
-            installedFolderNames: installed
+            installedFolderNames: installed,
+            localStore: localStore,
+            locallyInstalledFolderNames: local
         )
     }
 

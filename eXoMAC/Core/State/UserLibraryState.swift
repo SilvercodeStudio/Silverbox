@@ -12,10 +12,12 @@ nonisolated public struct GameUserState: Hashable, Sendable, Codable {
     public var lastPlayed: Date?
     public var emulatorOverride: EmulatorKind?
     public var preferredVariantID: String?
+    public var launchOverrides: LaunchOverrides?
 
     public init(favorite: Bool? = nil, completed: Bool? = nil, hidden: Bool? = nil, broken: Bool? = nil,
                 playCount: Int = 0, playTimeSeconds: Int = 0, lastPlayed: Date? = nil,
-                emulatorOverride: EmulatorKind? = nil, preferredVariantID: String? = nil) {
+                emulatorOverride: EmulatorKind? = nil, preferredVariantID: String? = nil,
+                launchOverrides: LaunchOverrides? = nil) {
         self.favorite = favorite
         self.completed = completed
         self.hidden = hidden
@@ -25,12 +27,14 @@ nonisolated public struct GameUserState: Hashable, Sendable, Codable {
         self.lastPlayed = lastPlayed
         self.emulatorOverride = emulatorOverride
         self.preferredVariantID = preferredVariantID
+        self.launchOverrides = launchOverrides
     }
 
     public var isEmpty: Bool {
         favorite == nil && completed == nil && hidden == nil && broken == nil
             && playCount == 0 && playTimeSeconds == 0 && lastPlayed == nil
             && emulatorOverride == nil && preferredVariantID == nil
+            && (launchOverrides?.isEmpty ?? true)
     }
 }
 
