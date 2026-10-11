@@ -41,7 +41,7 @@ struct LaunchBoxXMLTests {
     @Test func mapsGameFields() throws {
         let records = try LaunchBoxXMLParser.parseAll(url: FixtureLibrary.root.platformFile(named: "MS-DOS"))
         let game = try #require(Game(record: records[0]))
-        #expect(game.id == FixtureLibrary.ultimaID)
+        #expect(game.launchBoxID == FixtureLibrary.ultimaID)
         #expect(game.title == "Ultima V: Warriors of Destiny")
         #expect(game.sortTitle == "Ultima 5")
         #expect(game.developer == "ORIGIN Systems, Inc.")

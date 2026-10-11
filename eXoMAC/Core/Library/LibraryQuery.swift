@@ -3,7 +3,7 @@ import Foundation
 /// Which games a sidebar selection shows.
 nonisolated public enum LibraryScope: Hashable, Sendable {
     case all
-    case node(LibraryEntityRef)
+    case node(collectionID: UUID, ref: LibraryEntityRef)
     case favorites
     case installed
     case recentlyPlayed
@@ -19,12 +19,16 @@ nonisolated public enum GameSortOrder: String, CaseIterable, Sendable, Codable {
     case communityRating
 }
 
-/// Pure query helpers over a ``LibrarySnapshot``.
+/// Pure query helpers over a ``Library``.
 nonisolated public struct LibraryQuery: Sendable {
-    public let snapshot: LibrarySnapshot
+    public let library: Library
+
+    public init(library: Library) {
+        self.library = library
+    }
 
     public init(snapshot: LibrarySnapshot) {
-        self.snapshot = snapshot
+        self.library = Library(snapshots: [snapshot])
     }
 
     /// The games in a scope, before searching and sorting. `overlay` supplies
@@ -32,17 +36,18 @@ nonisolated public struct LibraryQuery: Sendable {
     public func games(in scope: LibraryScope, overlay: UserLibraryState? = nil) -> [Game] {
         switch scope {
         case .all:
-            return snapshot.games
+            return library.games
         case .favorites:
-            return snapshot.games.filter { overlay?.state(for: $0.id).favorite ?? $0.favorite }
+            return library.games.filter { overlay?.state(for: $0.launchBoxID).favorite ?? $0.favorite }
         case .installed:
-            return snapshot.games.filter { snapshot.isInstalled($0) }
+            return library.games.filter { library.isInstalled($0) }
         case .recentlyPlayed:
             guard let overlay else { return [] }
-            return snapshot.games
-                .filter { overlay.state(for: $0.id).lastPlayed != nil }
-                .sorted { (overlay.state(for: $0.id).lastPlayed ?? .distantPast) > (overlay.state(for: $1.id).lastPlayed ?? .distantPast) }
-        case .node(let ref):
+            return library.games
+                .filter { overlay.state(for: $0.launchBoxID).lastPlayed != nil }
+                .sorted { (overlay.state(for: $0.launchBoxID).lastPlayed ?? .distantPast) > (overlay.state(for: $1.launchBoxID).lastPlayed ?? .distantPast) }
+        case .node(let collectionID, let ref):
+            guard let snapshot = library.snapshot(id: collectionID) else { return [] }
             switch ref {
             case .platform(let name):
                 return snapshot.games.filter { $0.platform == name }
@@ -73,9 +78,7 @@ nonisolated public struct LibraryQuery: Sendable {
 
     public func searchText(for game: Game) -> String {
         var parts = [game.title, game.sortTitle ?? "", game.developer ?? "", game.publisher ?? ""]
-        if let alternates = snapshot.alternateNames[game.id] {
-            parts.append(contentsOf: alternates.map(\.name))
-        }
+        parts.append(contentsOf: library.alternateNames(for: game).map(\.name))
         return parts.joined(separator: "\n").folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
     }
 
@@ -97,8 +100,8 @@ nonisolated public struct LibraryQuery: Sendable {
             }
         case .lastPlayed:
             sorted = games.sorted {
-                let a = overlay?.state(for: $0.id).lastPlayed ?? $0.lastPlayed ?? .distantPast
-                let b = overlay?.state(for: $1.id).lastPlayed ?? $1.lastPlayed ?? .distantPast
+                let a = overlay?.state(for: $0.launchBoxID).lastPlayed ?? $0.lastPlayed ?? .distantPast
+                let b = overlay?.state(for: $1.launchBoxID).lastPlayed ?? $1.lastPlayed ?? .distantPast
                 return a == b ? Self.titleLess($0, $1) : a > b
             }
         case .dateAdded:
@@ -108,8 +111,8 @@ nonisolated public struct LibraryQuery: Sendable {
             }
         case .playCount:
             sorted = games.sorted {
-                let a = $0.playCount + (overlay?.state(for: $0.id).playCount ?? 0)
-                let b = $1.playCount + (overlay?.state(for: $1.id).playCount ?? 0)
+                let a = $0.playCount + (overlay?.state(for: $0.launchBoxID).playCount ?? 0)
+                let b = $1.playCount + (overlay?.state(for: $1.launchBoxID).playCount ?? 0)
                 return a == b ? Self.titleLess($0, $1) : a > b
             }
         case .communityRating:
@@ -222,21 +225,25 @@ nonisolated public struct PlaylistResolver: Sendable {
         case "MaxPlayers": return [game.maxPlayers.map { String($0) } ?? ""]
         case "Notes": return [game.notes ?? ""]
         case "AlternateName", "AlternateNames":
-            return snapshot.alternateNames[game.id]?.map(\.name) ?? []
+            return snapshot.alternateNames[game.launchBoxID]?.map(\.name) ?? []
         default: return []
         }
     }
 }
 
-/// Folded search text for every game, built once per snapshot.
+/// Folded search text for every game, built once per library.
 nonisolated public struct LibrarySearchIndex: Sendable {
     public let keys: [String: String]
 
-    public init(snapshot: LibrarySnapshot) {
-        let query = LibraryQuery(snapshot: snapshot)
+    public init(library: Library) {
+        let query = LibraryQuery(library: library)
         var keys: [String: String] = [:]
-        keys.reserveCapacity(snapshot.games.count)
-        for game in snapshot.games { keys[game.id] = query.searchText(for: game) }
+        keys.reserveCapacity(library.games.count)
+        for game in library.games { keys[game.id] = query.searchText(for: game) }
         self.keys = keys
+    }
+
+    public init(snapshot: LibrarySnapshot) {
+        self.init(library: Library(snapshots: [snapshot]))
     }
 }

@@ -3,6 +3,7 @@ import Foundation
 /// An immutable, fully loaded view of a library. Built once by
 /// ``LibraryLoader`` and shared with the UI.
 nonisolated public struct LibrarySnapshot: Sendable {
+    public let collection: LibraryCollection
     public let root: LibraryRoot
     public let games: [Game]
     public let platforms: [Platform]
@@ -14,6 +15,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public let alternateNames: [String: [AlternateName]]
     public let additionalApplications: [String: [AdditionalApplication]]
     public let dosboxIndex: DOSBoxIndex
+    public let emulators: [LaunchBoxEmulator]
+    public let emulatorPlatforms: [LaunchBoxEmulatorPlatform]
     /// Names of folders directly inside `eXo/eXoDOS/`: a game whose
     /// ``Game/gameFolderName`` is listed here is installed in the library.
     public let installedFolderNames: Set<String>
@@ -25,13 +28,22 @@ nonisolated public struct LibrarySnapshot: Sendable {
 
     private let indexByID: [String: Int]
 
-    public init(root: LibraryRoot, games: [Game], platforms: [Platform], categories: [PlatformCategory],
+    public init(root: LibraryRoot, collection: LibraryCollection? = nil, games: [Game], platforms: [Platform], categories: [PlatformCategory],
                 platformFolders: [PlatformFolder], playlists: [Playlist], parents: [ParentLink],
                 alternateNames: [AlternateName], additionalApplications: [AdditionalApplication],
-                dosboxIndex: DOSBoxIndex, installedFolderNames: Set<String>, localStore: LocalStore? = nil,
+                dosboxIndex: DOSBoxIndex, emulators: [LaunchBoxEmulator] = [], emulatorPlatforms: [LaunchBoxEmulatorPlatform] = [],
+                installedFolderNames: Set<String>, localStore: LocalStore? = nil,
                 locallyInstalledFolderNames: Set<String> = [], loadedAt: Date = Date()) {
+        let resolvedCollection = collection ?? LibraryCollection(name: LibraryCollection.suggestedName(for: root.url), rootPath: root.url.path,
+                                                                  substitutions: root.substitutions)
+        self.collection = resolvedCollection
         self.root = root
-        self.games = games
+        self.games = games.map { game in
+            guard game.collectionID == Game.unassignedCollection else { return game }
+            var stamped = game
+            stamped.collectionID = resolvedCollection.id
+            return stamped
+        }
         self.platforms = platforms
         self.categories = categories
         self.platformFolders = platformFolders
@@ -41,18 +53,22 @@ nonisolated public struct LibrarySnapshot: Sendable {
         self.alternateNames = Dictionary(grouping: alternateNames, by: \.gameID)
         self.additionalApplications = Dictionary(grouping: additionalApplications, by: \.gameID)
         self.dosboxIndex = dosboxIndex
+        self.emulators = emulators
+        self.emulatorPlatforms = emulatorPlatforms
         self.installedFolderNames = installedFolderNames
         self.localStore = localStore
         self.locallyInstalledFolderNames = locallyInstalledFolderNames
         self.loadedAt = loadedAt
         var index: [String: Int] = [:]
         index.reserveCapacity(games.count)
-        for (offset, game) in games.enumerated() { index[game.id] = offset }
+        for (offset, game) in self.games.enumerated() where index[game.launchBoxID] == nil { index[game.launchBoxID] = offset }
         self.indexByID = index
     }
 
+    /// Looks a game up by its LaunchBox GUID, or by its collection-scoped id.
     public func game(id: String) -> Game? {
-        guard let offset = indexByID[id] else { return nil }
+        let key = id.contains("/") ? String(id.split(separator: "/", maxSplits: 1).last ?? "") : id
+        guard let offset = indexByID[key] else { return nil }
         return games[offset]
     }
 
@@ -84,11 +100,12 @@ nonisolated public struct LibrarySnapshot: Sendable {
 
     /// A copy with fresh installed-folder sets, after installing or removing a game.
     public func replacingInstalledFolders(library: Set<String>, local: Set<String>) -> LibrarySnapshot {
-        LibrarySnapshot(root: root, games: games, platforms: platforms, categories: categories, platformFolders: platformFolders,
+        LibrarySnapshot(root: root, collection: collection, games: games, platforms: platforms, categories: categories, platformFolders: platformFolders,
                         playlists: playlists, parents: parents,
                         alternateNames: alternateNames.values.flatMap { $0 },
                         additionalApplications: additionalApplications.values.flatMap { $0 },
-                        dosboxIndex: dosboxIndex, installedFolderNames: library, localStore: localStore,
+                        dosboxIndex: dosboxIndex, emulators: emulators, emulatorPlatforms: emulatorPlatforms,
+                        installedFolderNames: library, localStore: localStore,
                         locallyInstalledFolderNames: local, loadedAt: loadedAt)
     }
 
@@ -107,6 +124,15 @@ nonisolated public struct LibrarySnapshot: Sendable {
                 .appendingPathComponent(platform, isDirectory: true)
                 .appendingPathComponent(mediaType, isDirectory: true)
         }
+    }
+
+    /// LaunchBox's emulator assignment for a platform, default first.
+    public func emulatorAssignment(for platform: String) -> (emulator: LaunchBoxEmulator, platform: LaunchBoxEmulatorPlatform)? {
+        let candidates = emulatorPlatforms.filter { $0.platform == platform }.sorted { $0.isDefault && !$1.isDefault }
+        for candidate in candidates {
+            if let emulator = emulators.first(where: { $0.id == candidate.emulatorID }) { return (emulator, candidate) }
+        }
+        return nil
     }
 
     public func node(for ref: LibraryEntityRef) -> LibraryNode? {

@@ -53,27 +53,27 @@ struct LibraryQueryTests {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
         #expect(query.games(in: .all).count == 4)
-        #expect(query.games(in: .node(.platform("MS-DOS"))).count == 3)
-        #expect(query.games(in: .node(.category("Computers"))).count == 4)
-        #expect(query.games(in: .node(.category("Literature"))).map(\.title) == ["Programmer's Guide to MS-DOS"])
-        #expect(query.games(in: .favorites).map(\.id) == [FixtureLibrary.ultimaID])
-        #expect(query.games(in: .installed).map(\.id) == [FixtureLibrary.ultimaID, "bbbbbbbb-0000-0000-0000-000000000001"])
+        #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))).count == 3)
+        #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Computers"))).count == 4)
+        #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Literature"))).map(\.title) == ["Programmer's Guide to MS-DOS"])
+        #expect(query.games(in: .favorites).map(\.launchBoxID) == [FixtureLibrary.ultimaID])
+        #expect(query.games(in: .installed).map(\.launchBoxID) == [FixtureLibrary.ultimaID, "bbbbbbbb-0000-0000-0000-000000000001"])
     }
 
     @Test func playlistsResolve() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
-        let mt32 = query.games(in: .node(.playlist("e64fb51c-ff5d-4fbe-919c-aa2249d78117")))
-        #expect(Set(mt32.map(\.id)) == [FixtureLibrary.ultimaID, FixtureLibrary.tetrisID])
-        let explicit = query.games(in: .node(.playlist("11111111-2222-3333-4444-555555555555")))
-        #expect(explicit.map(\.id) == [FixtureLibrary.tetrisID])
+        let mt32 = query.games(in: .node(collectionID: snapshot.collection.id, ref: .playlist("e64fb51c-ff5d-4fbe-919c-aa2249d78117")))
+        #expect(Set(mt32.map(\.launchBoxID)) == [FixtureLibrary.ultimaID, FixtureLibrary.tetrisID])
+        let explicit = query.games(in: .node(collectionID: snapshot.collection.id, ref: .playlist("11111111-2222-3333-4444-555555555555")))
+        #expect(explicit.map(\.launchBoxID) == [FixtureLibrary.tetrisID])
     }
 
     @Test func searchMatchesAlternateNames() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
         let all = query.games(in: .all)
-        #expect(query.filter(all, search: "quintus").map(\.id) == [FixtureLibrary.ultimaID])
+        #expect(query.filter(all, search: "quintus").map(\.launchBoxID) == [FixtureLibrary.ultimaID])
         #expect(query.filter(all, search: "ULTIMA warriors").count == 1)
         #expect(query.filter(all, search: "sharedata").count == 1)
         #expect(query.filter(all, search: "   ").count == 4)
@@ -82,9 +82,9 @@ struct LibraryQueryTests {
     @Test func sortsByTitleUsingSortTitle() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
-        let titles = query.sort(query.games(in: .node(.platform("MS-DOS"))), by: .title).map(\.title)
+        let titles = query.sort(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .title).map(\.title)
         #expect(titles == ["Jeopardy! (1987)", "Super Tetris", "Ultima V: Warriors of Destiny"])
-        let years = query.sort(query.games(in: .node(.platform("MS-DOS"))), by: .releaseYear).map(\.releaseYear)
+        let years = query.sort(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .releaseYear).map(\.releaseYear)
         #expect(years == [1987, 1988, 1991])
     }
 
@@ -94,7 +94,7 @@ struct LibraryQueryTests {
         state.update(FixtureLibrary.tetrisID) { $0.favorite = true }
         state.update(FixtureLibrary.ultimaID) { $0.favorite = false }
         let favorites = LibraryQuery(snapshot: snapshot).games(in: .favorites, overlay: state)
-        #expect(favorites.map(\.id) == [FixtureLibrary.tetrisID])
+        #expect(favorites.map(\.launchBoxID) == [FixtureLibrary.tetrisID])
     }
 }
 

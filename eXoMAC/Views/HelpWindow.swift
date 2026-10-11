@@ -22,9 +22,28 @@ enum HelpLibrary {
     }
 }
 
+/// Lets other windows ask the Help window to show a page.
+@Observable
+final class HelpState {
+    static let shared = HelpState()
+
+    struct Request: Equatable {
+        let id = UUID()
+        /// The numeric prefix of the page file, for example "03".
+        let topicPrefix: String
+    }
+
+    private(set) var request: Request?
+
+    func show(topicPrefix: String) {
+        request = Request(topicPrefix: topicPrefix)
+    }
+}
+
 struct HelpView: View {
     @State private var topics = HelpLibrary.topics()
     @State private var selection: String?
+    private let helpState = HelpState.shared
 
     var body: some View {
         NavigationSplitView {
@@ -42,7 +61,16 @@ struct HelpView: View {
         }
         .preferredColorScheme(.dark)
         .frame(minWidth: 700, minHeight: 480)
-        .onAppear { if selection == nil { selection = topics.first?.id } }
+        .onAppear { select(helpState.request) }
+        .onChange(of: helpState.request) { _, request in select(request) }
+    }
+
+    private func select(_ request: HelpState.Request?) {
+        if let request, let topic = topics.first(where: { $0.id.hasPrefix(request.topicPrefix) }) {
+            selection = topic.id
+        } else if selection == nil {
+            selection = topics.first?.id
+        }
     }
 }
 

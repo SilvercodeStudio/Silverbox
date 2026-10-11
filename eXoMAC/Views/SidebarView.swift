@@ -11,11 +11,11 @@ struct SidebarView: View {
                 Label("Installed", systemImage: "internaldrive").tag(LibraryScope.installed)
                 Label("Recently Played", systemImage: "clock").tag(LibraryScope.recentlyPlayed)
             }
-            if let tree = model.library?.tree, !tree.isEmpty {
-                Section("Platforms") {
-                    OutlineGroup(tree, children: \.outlineChildren) { node in
+            ForEach(model.library?.snapshots ?? [], id: \.collection.id) { snapshot in
+                Section(snapshot.collection.name) {
+                    OutlineGroup(snapshot.tree, children: \.outlineChildren) { node in
                         Label(node.title, systemImage: node.systemImage)
-                            .tag(LibraryScope.node(node.ref))
+                            .tag(LibraryScope.node(collectionID: snapshot.collection.id, ref: node.ref))
                     }
                 }
             }

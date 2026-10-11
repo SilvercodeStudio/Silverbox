@@ -242,6 +242,9 @@ struct ConfigTranslatorTests {
         #expect(doc.value("sdl", "fullscreen") == "false")
         #expect(doc.value("sdl", "mapperfile") == nil)
         #expect(doc.value("render", "scaler") == "normal2x")
+        let filtered = ConfigTranslator(root: root, emulator: .dosboxX, options: LaunchOptions(scaler: .hq2x)).translate(source).document
+        #expect(filtered.value("render", "scaler") == "hq2x")
+        #expect(filtered.value("sdl", "windowresolution") == source.value("sdl", "windowresolution"))
         #expect(doc.value("cpu", "cycles") == "5000")
         #expect(doc.value("midi", "mididevice") == "mt32")
         #expect(doc.value("midi", "mt32.romdir") == root.mt32Directory.path)
@@ -465,8 +468,9 @@ struct LaunchOverridesTests {
         var chosen = base
         chosen.fullscreen = true
         chosen.shader = .sharp
+        chosen.scaler = .hq3x
         let overrides = LaunchOverrides(base: base, chosen: chosen)
-        #expect(overrides == LaunchOverrides(fullscreen: true, shader: .sharp))
+        #expect(overrides == LaunchOverrides(fullscreen: true, shader: .sharp, scaler: .hq3x))
         #expect(base.applying(overrides) == chosen)
         #expect(LaunchOverrides(base: base, chosen: base).isEmpty)
         #expect(base.applying(nil) == base)

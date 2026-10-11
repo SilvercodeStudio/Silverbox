@@ -6,7 +6,7 @@ import Foundation
 /// Ultima V - Warriors of Destiny (1988):ece4230\dosbox.exe
 /// Ultima I - The First Age of Darkness (1986):staging0.81.0a\dosbox.exe
 /// ```
-nonisolated public struct DOSBoxIndex: Sendable, Hashable {
+nonisolated public struct DOSBoxIndex: Sendable, Hashable, Codable {
     public private(set) var buildByGame: [String: String]
 
     public init(buildByGame: [String: String] = [:]) {

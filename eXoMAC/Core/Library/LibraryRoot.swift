@@ -4,9 +4,12 @@ import Foundation
 /// well-known places inside it.
 nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     public let url: URL
+    /// Windows prefixes in the library's paths that live elsewhere on this Mac.
+    public let substitutions: [PathSubstitution]
 
-    public init(url: URL) {
+    public init(url: URL, substitutions: [PathSubstitution] = []) {
         self.url = url.standardizedFileURL
+        self.substitutions = substitutions
     }
 
     public var dataDirectory: URL { url.appendingPathComponent("Data", isDirectory: true) }
@@ -14,6 +17,7 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     public var playlistsDirectory: URL { dataDirectory.appendingPathComponent("Playlists", isDirectory: true) }
     public var platformsFile: URL { dataDirectory.appendingPathComponent("Platforms.xml") }
     public var parentsFile: URL { dataDirectory.appendingPathComponent("Parents.xml") }
+    public var emulatorsFile: URL { dataDirectory.appendingPathComponent("Emulators.xml") }
     public var imagesDirectory: URL { url.appendingPathComponent("Images", isDirectory: true) }
     public var videosDirectory: URL { url.appendingPathComponent("Videos", isDirectory: true) }
     public var manualsDirectory: URL { url.appendingPathComponent("Manuals", isDirectory: true) }
@@ -32,12 +36,28 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     /// `eXo/util/dosbox.txt`: maps each game to the DOSBox build eXoDOS uses.
     public var dosboxIndexFile: URL { utilDirectory.appendingPathComponent("dosbox.txt") }
 
-    /// Resolves a LaunchBox path such as `Manuals\MS-DOS\Foo.pdf` to a file URL.
+    /// Resolves a LaunchBox path such as `Manuals\MS-DOS\Foo.pdf` to a file
+    /// URL. Substitutions are tried first, so `X:\Emulation\...` or a relocated
+    /// `Games\...` folder can point anywhere on this Mac.
     public func url(forWindowsRelativePath path: String) -> URL {
+        for substitution in substitutions {
+            if let rest = substitution.remainder(of: path) {
+                var target = URL(fileURLWithPath: substitution.macPath, isDirectory: true)
+                for component in rest {
+                    target = component == ".." ? target.deletingLastPathComponent() : target.appendingPathComponent(component)
+                }
+                return target.standardizedFileURL
+            }
+        }
         if WindowsPath.isAbsolute(path) {
             return URL(fileURLWithPath: WindowsPath.posix(path)).standardizedFileURL
         }
         return WindowsPath.resolve(path, against: url)
+    }
+
+    /// True when this looks like an eXoDOS or eXoWin9x install.
+    public var hasEXoDOS: Bool {
+        FileManager.default.fileExists(atPath: eXoDirectory.path)
     }
 
     public func platformFile(named platform: String) -> URL {
@@ -47,25 +67,30 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     /// Checks which of the expected folders and files exist.
     public func inspect() -> LibraryRootReport {
         let fm = FileManager.default
-        func check(_ label: String, _ target: URL) -> LibraryRootReport.Item {
+        func check(_ label: String, _ target: URL, required: Bool = false) -> LibraryRootReport.Item {
             var isDirectory: ObjCBool = false
             let exists = fm.fileExists(atPath: target.path, isDirectory: &isDirectory)
             let relative = target.path.replacingOccurrences(of: url.path + "/", with: "")
-            return LibraryRootReport.Item(label: label, relativePath: relative, exists: exists)
+            return LibraryRootReport.Item(label: label, relativePath: relative, exists: exists, isRequired: required)
         }
-        let items = [
-            check("Platform list", platformsFile),
-            check("Game metadata", platformsDirectory),
+        var items = [
+            check("Platform list", platformsFile, required: true),
+            check("Game metadata", platformsDirectory, required: true),
             check("Playlists", playlistsDirectory),
+            check("Emulator settings", emulatorsFile),
             check("Box art and screenshots", imagesDirectory),
             check("Videos", videosDirectory),
             check("Manuals", manualsDirectory),
             check("Menu music", musicDirectory),
-            check("Game archives and folders", gamesDirectory),
-            check("Game launch configs", gameConfigsDirectory),
-            check("DOSBox build index", dosboxIndexFile),
-            check("MT-32 ROMs and SoundFont", mt32Directory),
         ]
+        if hasEXoDOS {
+            items += [
+                check("eXoDOS game archives and folders", gamesDirectory),
+                check("eXoDOS game launch configs", gameConfigsDirectory),
+                check("eXoDOS DOSBox build index", dosboxIndexFile),
+                check("MT-32 ROMs and SoundFont", mt32Directory),
+            ]
+        }
         return LibraryRootReport(root: self, items: items)
     }
 }
@@ -75,6 +100,7 @@ nonisolated public struct LibraryRootReport: Hashable, Sendable {
         public var label: String
         public var relativePath: String
         public var exists: Bool
+        public var isRequired: Bool
         public var id: String { relativePath }
     }
 
@@ -83,7 +109,6 @@ nonisolated public struct LibraryRootReport: Hashable, Sendable {
 
     /// The minimum needed to show a library: the platform list and game metadata.
     public var isUsable: Bool {
-        items.first(where: { $0.label == "Platform list" })?.exists == true
-            && items.first(where: { $0.label == "Game metadata" })?.exists == true
+        items.filter(\.isRequired).allSatisfy(\.exists)
     }
 }

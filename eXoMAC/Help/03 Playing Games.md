@@ -8,14 +8,16 @@ The first time you play a game, eXo Client unpacks its archive into the local da
 
 ## The launch options dialog
 
-Before a game starts, eXo Client shows its launch options:
+Before a game starts, eXo Client shows its launch options. On Windows, eXoDOS asks the same questions in a console window when you play or configure a game. The dialog starts from the defaults in Settings › Display & Sound.
 
-- **Version** — some games come in several editions, for example CGA, EGA and VGA releases, or original and patched versions. This matches the menus eXoDOS shows in its console window.
-- **Full screen** or a window, and the window size.
-- **Aspect ratio correction** and the **CRT shader** (DOSBox Staging).
-- **Emulator** — DOSBox Staging or DOSBox-X.
+- **Version** — some games come in several editions, for example CGA, EGA and VGA releases, or original and patched versions. Games that show their version menu inside DOSBox, such as A-10 Tank Killer, still do so.
+- **Full screen** or a window. In full screen the emulator scales the picture to your display.
+- **Window size** — eXoDOS asks for your desktop resolution (less than 1080p, 1080p, or 4K) and sizes the window to match. Automatic lets DOSBox Staging choose a size for your screen; DOSBox-X uses the size in the game's config, which eXoDOS sets for a 1080p desktop. If the window is too large or too small, pick the next size down or up.
+- **Aspect ratio correction** — DOS games were made for 4:3 monitors. With correction on, the picture keeps its original shape, and a widescreen display shows black bars at the sides. With it off, the picture is stretched to fill the screen, so circles become ovals. "As configured per game" keeps the game's own setting: on for almost every game, off for the few that do not work with it.
+- **CRT shader** (DOSBox Staging) or **Graphics filter** (DOSBox-X). eXoDOS lets you pick a DOSBox scaler per game: none, Normal 2x/3x (nearest neighbour), HQ2x/3x (smoothed edges), 2xSaI and Super 2xSaI (heavy smoothing), AdvMAME 2x/3x (EPX) and TV 2x (scanlines). DOSBox Staging has no scalers; its shaders take that role, and the CRT shaders imitate a monitor of the period.
+- **Emulator** — DOSBox Staging or DOSBox-X. The default follows the DOSBox build eXoDOS uses for the game and the policy in Settings › Emulators.
 
-Turn on "Remember these choices for this game" to keep them for next time. To skip the dialog, turn off "Show launch options before each game" in Settings › General; the Configure button and Edit Game Info keep per-game choices reachable.
+Turn on "Remember these choices for this game" to keep them for next time. **Configure…** in a game's context menu or the inspector opens the same dialog to save choices without starting the game, also before the game is installed. "Use Defaults" removes the saved choices. To skip the dialog, turn off "Show launch options before each game" in Settings › General.
 
 ## Uninstalling
 

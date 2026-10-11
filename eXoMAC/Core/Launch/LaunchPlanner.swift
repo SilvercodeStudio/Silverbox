@@ -167,7 +167,7 @@ nonisolated public struct LaunchPlanner: Sendable {
 
         let variantSuffix = variant.map { "-" + $0.configURL.deletingPathExtension().lastPathComponent } ?? ""
         let configURL = scratchDirectory
-            .appendingPathComponent("\(Self.safeFileName(game.id))\(variantSuffix)-\(emulator.kind.rawValue).conf")
+            .appendingPathComponent("\(Self.safeFileName(game.launchBoxID))\(variantSuffix)-\(emulator.kind.rawValue).conf")
         let workingDirectory = snapshot.root.eXoDirectory
 
         let arguments: [String]

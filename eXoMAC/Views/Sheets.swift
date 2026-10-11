@@ -10,7 +10,7 @@ struct InstallSheet: View {
     @State private var installing = false
 
     var body: some View {
-        let plan = model.installer()?.plan(for: game)
+        let plan = model.installer(for: game)?.plan(for: game)
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
@@ -25,7 +25,7 @@ struct InstallSheet: View {
             }
             if let plan {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(WindowsPath.posix(plan.archiveURL.path.replacingOccurrences(of: model.libraryRoot?.url.path ?? "", with: "")))
+                    Text(plan.archiveURL.path.replacingOccurrences(of: (model.snapshot(for: game)?.root.url.path ?? "") + "/", with: ""))
                         .font(Theme.mono)
                         .foregroundStyle(Theme.textSecondary)
                     if plan.archiveExists, let size = plan.archiveSize {
@@ -117,7 +117,7 @@ struct GameInfoSheet: View {
                                 }
                             }
                         }
-                        if !(model.userState.state(for: game.id).launchOverrides?.isEmpty ?? true) {
+                        if !(model.userState.state(for: game.launchBoxID).launchOverrides?.isEmpty ?? true) {
                             LabeledContent("Remembered launch options") {
                                 Button("Forget") { model.forgetLaunchChoices(for: game) }
                             }
@@ -172,23 +172,23 @@ struct GameInfoSheet: View {
 
     private var emulatorBinding: Binding<EmulatorKind?> {
         Binding(
-            get: { model.userState.state(for: game.id).emulatorOverride },
-            set: { value in model.userState.update(game.id) { $0.emulatorOverride = value } }
+            get: { model.userState.state(for: game.launchBoxID).emulatorOverride },
+            set: { value in model.userState.update(game.launchBoxID) { $0.emulatorOverride = value } }
         )
     }
 
     private var variantBinding: Binding<String?> {
         Binding(
-            get: { model.userState.state(for: game.id).preferredVariantID },
-            set: { value in model.userState.update(game.id) { $0.preferredVariantID = value } }
+            get: { model.userState.state(for: game.launchBoxID).preferredVariantID },
+            set: { value in model.userState.update(game.launchBoxID) { $0.preferredVariantID = value } }
         )
     }
 
     private func flag(_ keyPath: WritableKeyPath<GameUserState, Bool?>, fallback: Bool) -> Binding<Bool> {
         Binding(
-            get: { model.userState.state(for: game.id)[keyPath: keyPath] ?? fallback },
+            get: { model.userState.state(for: game.launchBoxID)[keyPath: keyPath] ?? fallback },
             set: { value in
-                model.userState.update(game.id) { $0[keyPath: keyPath] = value == fallback ? nil : value }
+                model.userState.update(game.launchBoxID) { $0[keyPath: keyPath] = value == fallback ? nil : value }
                 model.refreshVisibleGames()
             }
         )
@@ -217,7 +217,7 @@ struct UninstallSheet: View {
     @State private var working = false
 
     var body: some View {
-        let plan = model.installer()?.plan(for: game)
+        let plan = model.installer(for: game)?.plan(for: game)
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
@@ -270,6 +270,7 @@ struct LaunchOptionsSheet: View {
     let pending: AppModel.PendingLaunch
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openWindow) private var openWindow
     @State private var options: LaunchOptions
     @State private var variantID: String?
     @State private var emulator: EmulatorKind
@@ -292,11 +293,19 @@ struct LaunchOptionsSheet: View {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(game.title).font(.headline)
-                    Text(build.map { "eXoDOS runs this game with \($0.displayName)." } ?? "Launch options")
+                    Text(subtitle(build: build))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
+                Button {
+                    HelpState.shared.show(topicPrefix: "03")
+                    openWindow(id: "help")
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                }
+                .buttonStyle(.borderless)
+                .help("Explain these options")
             }
             .padding(16)
             Divider()
@@ -325,6 +334,10 @@ struct LaunchOptionsSheet: View {
                         Picker("CRT shader", selection: $options.shader) {
                             ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
                         }
+                    } else {
+                        Picker("Graphics filter", selection: $options.scaler) {
+                            ForEach(LaunchOptions.Scaler.allCases) { Text($0.displayName).tag($0) }
+                        }
                     }
                 }
                 Section("Emulator") {
@@ -336,31 +349,42 @@ struct LaunchOptionsSheet: View {
                     .pickerStyle(.radioGroup)
                 }
                 Section {
-                    Toggle("Remember these choices for this game", isOn: $remember)
+                    if !pending.configureOnly {
+                        Toggle("Remember these choices for this game", isOn: $remember)
+                    }
                     Toggle("Show this dialog before each game", isOn: $model.settings.showLaunchOptions)
                 }
             }
             .formStyle(.grouped)
             Divider()
             HStack {
-                Button("Configure…") {
+                Button("Game Info…") {
                     dismiss()
                     model.pendingInfoGame = game
+                }
+                if pending.configureOnly, remember {
+                    Button("Use Defaults") {
+                        dismiss()
+                        model.forgetLaunchChoices(for: game)
+                    }
+                    .help("Forget the choices saved for this game")
                 }
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Play") {
+                Button(pending.configureOnly ? "Save" : "Play") {
                     let variant = pending.variants.first { $0.id == variantID }
-                    if remember {
+                    if remember || pending.configureOnly {
                         model.rememberLaunchChoices(for: game, options: options, variant: variant, emulatorKind: emulator)
                     }
                     dismiss()
-                    model.launch(game, variant: variant, options: options, emulatorKind: emulator)
+                    if !pending.configureOnly {
+                        model.launch(game, variant: variant, options: options, emulatorKind: emulator)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
+                .disabled(!pending.configureOnly && pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
             }
             .padding(16)
         }
@@ -369,8 +393,16 @@ struct LaunchOptionsSheet: View {
             options = model.effectiveLaunchOptions(for: game)
             emulator = model.emulatorKind(for: game)
             variantID = model.preferredVariant(for: game, in: pending.variants)?.id
-            let state = model.userState.state(for: game.id)
+            let state = model.userState.state(for: game.launchBoxID)
             remember = !(state.launchOverrides?.isEmpty ?? true) || state.preferredVariantID != nil || state.emulatorOverride != nil
         }
+    }
+
+    private func subtitle(build: EXoDOSBuild?) -> String {
+        let runs = build.map { "eXoDOS runs this game with \($0.displayName)." }
+        if pending.configureOnly {
+            return "These choices are saved for this game and used each time it starts." + (runs.map { " " + $0 } ?? "")
+        }
+        return runs ?? "Launch options"
     }
 }

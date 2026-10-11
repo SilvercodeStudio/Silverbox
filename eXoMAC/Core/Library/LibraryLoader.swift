@@ -21,18 +21,34 @@ nonisolated public enum LibraryLoadError: Error, Sendable {
 /// Loading is synchronous and can take a few seconds for the 7,600-game
 /// MS-DOS file, so call it off the main thread.
 nonisolated public struct LibraryLoader: Sendable {
+    public let collection: LibraryCollection
     public let root: LibraryRoot
     public let localStore: LocalStore?
+    public let cache: LibraryCache?
+
+    public init(collection: LibraryCollection, localStore: LocalStore? = nil, cache: LibraryCache? = nil) {
+        self.collection = collection
+        self.root = collection.root
+        self.localStore = localStore
+        self.cache = cache
+    }
 
     public init(root: LibraryRoot, localStore: LocalStore? = nil) {
-        self.root = root
-        self.localStore = localStore
+        self.init(collection: LibraryCollection(name: LibraryCollection.suggestedName(for: root.url), rootPath: root.url.path,
+                                                substitutions: root.substitutions),
+                  localStore: localStore)
     }
 
     public func load(progress: (@Sendable (LibraryLoadProgress) -> Void)? = nil) throws -> LibrarySnapshot {
         let fm = FileManager.default
         guard fm.fileExists(atPath: root.platformsFile.path) else {
             throw LibraryLoadError.missingPlatformList(root.platformsFile)
+        }
+
+        let fingerprint = cache.map { _ in LibraryCache.fingerprint(for: root) }
+        if let cache, let fingerprint, let payload = cache.load(collectionID: collection.id, fingerprint: fingerprint) {
+            progress?(LibraryLoadProgress(stage: "Loading saved library", fraction: 0.9, gamesLoaded: payload.games.count))
+            return snapshot(from: payload)
         }
 
         progress?(LibraryLoadProgress(stage: "Reading platforms", fraction: 0, gamesLoaded: 0))
@@ -93,23 +109,52 @@ nonisolated public struct LibraryLoader: Sendable {
             doneSize += size
         }
 
-        progress?(LibraryLoadProgress(stage: "Reading DOSBox index", fraction: 0.96, gamesLoaded: games.count))
+        progress?(LibraryLoadProgress(stage: "Reading emulators", fraction: 0.96, gamesLoaded: games.count))
+        var emulators: [LaunchBoxEmulator] = []
+        var emulatorPlatforms: [LaunchBoxEmulatorPlatform] = []
+        if fm.fileExists(atPath: root.emulatorsFile.path) {
+            try? LaunchBoxXMLParser.parse(url: root.emulatorsFile) { record in
+                switch record.element {
+                case "Emulator": if let e = LaunchBoxEmulator(record: record) { emulators.append(e) }
+                case "EmulatorPlatform": if let e = LaunchBoxEmulatorPlatform(record: record) { emulatorPlatforms.append(e) }
+                default: break
+                }
+            }
+        }
         let dosboxIndex = (try? DOSBoxIndex(contentsOf: root.dosboxIndexFile)) ?? DOSBoxIndex()
-        let installed = Self.installedFolderNames(in: root.gamesDirectory)
-        let local = localStore.map { Self.installedFolderNames(in: $0.gamesDirectory) } ?? []
 
+        let payload = LibraryCache.Payload(
+            version: LibraryCache.version, fingerprint: fingerprint ?? "",
+            games: games.map { var g = $0; g.collectionID = collection.id; return g },
+            platforms: platforms, categories: categories, platformFolders: folders, playlists: playlists, parents: parents,
+            alternateNames: alternates, additionalApplications: extraApps, dosboxIndex: dosboxIndex,
+            emulators: emulators, emulatorPlatforms: emulatorPlatforms)
+        if let cache, fingerprint != nil {
+            progress?(LibraryLoadProgress(stage: "Saving library cache", fraction: 0.98, gamesLoaded: games.count))
+            cache.save(payload, collectionID: collection.id)
+        }
         progress?(LibraryLoadProgress(stage: "Done", fraction: 1, gamesLoaded: games.count))
+        return snapshot(from: payload)
+    }
+
+    /// Builds the snapshot, reading the installed-folder sets fresh.
+    func snapshot(from payload: LibraryCache.Payload) -> LibrarySnapshot {
+        let installed = root.hasEXoDOS ? Self.installedFolderNames(in: root.gamesDirectory) : []
+        let local = localStore.map { Self.installedFolderNames(in: $0.gamesDirectory) } ?? []
         return LibrarySnapshot(
             root: root,
-            games: games,
-            platforms: platforms,
-            categories: categories,
-            platformFolders: folders,
-            playlists: playlists,
-            parents: parents,
-            alternateNames: alternates,
-            additionalApplications: extraApps,
-            dosboxIndex: dosboxIndex,
+            collection: collection,
+            games: payload.games,
+            platforms: payload.platforms,
+            categories: payload.categories,
+            platformFolders: payload.platformFolders,
+            playlists: payload.playlists,
+            parents: payload.parents,
+            alternateNames: payload.alternateNames,
+            additionalApplications: payload.additionalApplications,
+            dosboxIndex: payload.dosboxIndex,
+            emulators: payload.emulators,
+            emulatorPlatforms: payload.emulatorPlatforms,
             installedFolderNames: installed,
             localStore: localStore,
             locallyInstalledFolderNames: local

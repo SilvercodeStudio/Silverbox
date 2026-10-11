@@ -108,7 +108,7 @@ struct MediaGalleryView: View {
         }
         .task(id: game.id) {
             index = 0
-            guard let media = model.media else { items = []; return }
+            guard let media = model.media(for: game) else { items = []; return }
             items = await media.gallery(for: game)
         }
     }

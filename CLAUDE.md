@@ -29,10 +29,14 @@ set once in `AppInfo` (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 ## Build and test
 
 ```
-swift build                      # core only
-swift test                       # core tests (fast; real-library tests if mounted)
-xcodebuild -project eXoMAC.xcodeproj -scheme eXoMAC -destination 'platform=macOS' build
+make run [ARGS='...']            # xcodebuild the app, then start it in the foreground
+make build                       # app only (CONFIG=Release for a release build)
+make test                        # swift test: core tests (fast; real-library tests if mounted)
+make core                        # swift build: core only
 ```
+
+`make run` resolves the built app through `xcodebuild -showBuildSettings`,
+so it shares Xcode's DerivedData.
 
 The Xcode MCP server is available; use it to build, read diagnostics and change
 build settings. Do not edit `project.pbxproj` by hand. New files under
@@ -43,7 +47,15 @@ build settings. Do not edit `project.pbxproj` by hand. New files under
 - Keep core code free of Apple-only frameworks so it can later back a
   SwiftCrossUI client on Linux. Platform-specific work (unzip binary paths,
   emulator locations) stays behind small helpers with `#if os(...)`.
-- Two roots. The library (eXoDOS folder) is read-only as far as the app is
+- Collections. The app loads several `LibraryCollection`s (LaunchBox-format
+  libraries: eXoDOS mirrors, the console LaunchBox install) into one `Library`
+  aggregate of `LibrarySnapshot`s. `Game.id` is collection-scoped
+  (`<collectionID>/<launchBoxID>`) because the same GUIDs appear in several
+  copies of a library; user state is keyed by `launchBoxID`. Each collection
+  has path substitutions (Windows prefix to Mac folder) for relocated `Games`
+  folders and drive-letter paths. Parsed libraries are cached as JSON under
+  `LibraryCache/` keyed by the data files' sizes and dates; "Rescan" clears it.
+- Two roots. Every library (collection folder) is read-only as far as the app is
   concerned; it may live on a read-only volume. Everything the app writes goes
   to the local data folder (`LocalStore`, default
   `~/Library/Application Support/eXoMAC/`): `Games/eXoDOS/` (unpacked games),
@@ -65,13 +77,14 @@ build settings. Do not edit `project.pbxproj` by hand. New files under
 
 ## Debugging aids
 
-- Launch arguments (debug builds): `-libraryPath <folder>` and `-musicEnabled 0`
-  override saved settings for one run; `-searchText ultima` and
+- Launch arguments (debug builds): `-libraryPath "<folder>|<folder>"` (one or
+  more collections) and `-musicEnabled 0` override saved settings for one run; `-searchText ultima` and
   `-selectTitle "Ultima V: Warriors of Destiny"` preset the view;
   `-screenshotPath out.png [-screenshotDelay 10]` renders every visible window
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and
   quits; `-autoPlay 1` presses Play on the selected game after loading, which
-  opens the launch options dialog. Example:
+  opens the launch options dialog; `-autoConfigure 1` opens the same dialog
+  in its Configure (save only) mode. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/eXo Client.app/Contents/MacOS/eXo Client" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

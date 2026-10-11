@@ -110,7 +110,7 @@ struct MediaGridView: View {
         }
         .quickLookPreview($previewURL)
         .task(id: game.id) {
-            guard let media = model.media else { return }
+            guard let media = model.media(for: game) else { return }
             items = await media.gallery(for: game)
         }
     }
@@ -140,7 +140,7 @@ struct RelatedGamesView: View {
     }
 
     private func relatedGames() -> [Game] {
-        guard let library = model.library else { return [] }
+        guard let library = model.snapshot(for: game) else { return [] }
         let series = Set(game.seriesNames)
         var result: [Game] = []
         if !series.isEmpty {

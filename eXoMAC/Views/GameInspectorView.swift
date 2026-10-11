@@ -73,7 +73,7 @@ struct GameInspectorContent: View {
                         ExtrasList(game: game, limit: 6)
                     }
                     FilesSection(game: game)
-                    if let alternates = model.library?.alternateNames[game.id], !alternates.isEmpty {
+                    if let alternates = model.library.map({ $0.alternateNames(for: game) }), !alternates.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             SectionTitle("Also known as")
                             ForEach(alternates, id: \.name) { alternate in
@@ -139,7 +139,7 @@ struct PlayButtonRow: View {
                 .tint(Theme.accent)
             } else {
                 Button { model.play(game) } label: {
-                    Label(game.isDOSGame ? "Play" : "Open", systemImage: "play.fill")
+                    Label(model.isDocumentItem(game) ? "Open" : "Play", systemImage: "play.fill")
                         .frame(maxWidth: .infinity)
                         .frame(height: large ? 40 : 30)
                 }
@@ -160,7 +160,8 @@ struct PlayButtonRow: View {
                     .help("Choose a version to play")
                 }
             }
-            Button("Configure") { model.pendingInfoGame = game }
+            Button("Configure") { model.configure(game) }
+                .help("Save launch choices for this game")
                 .frame(height: large ? 40 : 30)
             Menu {
                 GameContextMenu(game: game)

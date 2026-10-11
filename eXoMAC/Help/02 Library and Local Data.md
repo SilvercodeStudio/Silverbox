@@ -1,12 +1,14 @@
-# The library and the local data folder
+# Collections and the local data folder
 
-eXo Client works with two folders.
+eXo Client reads from one or more collections and writes only to a local data folder.
 
-## The eXoDOS folder (the library)
+## Collections
 
-This is the collection itself: the folder that holds `eXo`, `Data`, `Images`, `Manuals`, `Music` and `Videos`. It can live on an external drive or a network share, and it can be read-only. eXo Client only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
+A collection is an eXoDOS or eXoWin9x install, or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for eXoDOS also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. eXo Client only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
 
-Choose it on first launch, or later in Settings › Library.
+Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
+
+Add collections on first launch or in Settings › Library. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
 
 ## The local data folder
 

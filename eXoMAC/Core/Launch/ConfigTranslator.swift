@@ -328,6 +328,7 @@ nonisolated public struct ConfigTranslator: Sendable {
             case .on: document.set("render", "aspect", "true")
             case .off: document.set("render", "aspect", "false")
             }
+            if options.scaler != .gameConfig { document.set("render", "scaler", options.scaler.rawValue) }
             if options.quietStartup {
                 document.set("dosbox", "fastbioslogo", "true")
                 document.set("dosbox", "startbanner", "false")

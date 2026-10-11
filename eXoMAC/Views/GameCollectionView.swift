@@ -133,7 +133,7 @@ struct BoxArtView: View {
     }
 
     private func load() async {
-        guard let media = model.media else { return }
+        guard let media = model.media(for: game) else { return }
         let cache = model.thumbnails
         guard let file = await media.firstImage(for: game) else {
             image = nil
@@ -268,9 +268,9 @@ struct GameContextMenu: View {
                 Button("Install…") { model.pendingInstall = game }
             }
         } else {
-            Button("Open") { model.play(game) }
+            Button(model.isDocumentItem(game) ? "Open" : "Play") { model.play(game) }
         }
-        Button("Configure…") { model.pendingInfoGame = game }
+        Button("Configure…") { model.configure(game) }
         Divider()
         Button("Open Game Page") { model.openedGameID = game.id }
         GameExtrasMenu(game: game)
@@ -306,7 +306,7 @@ struct GameExtrasMenu: View {
             }
         }
         .task(id: game.id) {
-            guard let media = model.media else { return }
+            guard let media = model.media(for: game) else { return }
             extras = await media.extras(for: game)
             manual = await media.manual(for: game)
         }

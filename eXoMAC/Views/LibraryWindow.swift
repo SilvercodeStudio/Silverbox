@@ -157,20 +157,20 @@ struct LibrarySetupView: View {
             Image(systemName: "externaldrive.badge.questionmark")
                 .font(.system(size: 44))
                 .foregroundStyle(Theme.accent)
-            Text(error == nil ? "Choose your eXoDOS folder" : "The library could not be loaded")
+            Text(error == nil ? "Add your first collection" : "The library could not be loaded")
                 .font(.title2.weight(.semibold))
-            Text(error ?? "Pick the folder that holds eXo, Data, Images, Manuals, Music and Videos. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac.")
+            Text(error ?? "Pick an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: 440)
-            if let report = model.rootReport {
+            ForEach(Array(model.rootReports.values), id: \.root.url) { report in
                 LibraryRootReportView(report: report)
                     .frame(maxWidth: 480)
             }
             HStack {
-                Button("Choose Folder…") { showingPicker = true }
+                Button("Add Collection…") { showingPicker = true }
                     .buttonStyle(.borderedProminent)
-                if model.libraryRoot != nil {
+                if !model.collections.isEmpty {
                     Button("Try Again") { model.reloadLibrary() }
                 }
             }
@@ -178,7 +178,7 @@ struct LibrarySetupView: View {
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { model.setLibrary(url: url) }
+            if case .success(let url) = result { model.addCollection(url: url) }
         }
     }
 }
@@ -190,8 +190,8 @@ struct LibraryRootReportView: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(report.items) { item in
                 HStack(spacing: 10) {
-                    Image(systemName: item.exists ? "checkmark" : "xmark")
-                        .foregroundStyle(item.exists ? Theme.accent : .red)
+                    Image(systemName: item.exists ? "checkmark" : (item.isRequired ? "xmark" : "minus"))
+                        .foregroundStyle(item.exists ? Theme.accent : (item.isRequired ? .red : Theme.textTertiary))
                         .frame(width: 16)
                     Text(item.label)
                     Spacer()

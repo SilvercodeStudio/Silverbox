@@ -40,7 +40,7 @@ struct ExtrasList: View {
         .quickLookPreview($previewURL)
         .task(id: game.id) {
             showAll = false
-            guard let media = model.media else { return }
+            guard let media = model.media(for: game) else { return }
             extras = await media.extras(for: game)
             manual = await media.manual(for: game)
         }

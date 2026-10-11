@@ -18,18 +18,18 @@ The games, media and emulators are not part of this project.
 
 ## Build
 
-Open `eXoMAC.xcodeproj` and run the `eXoMAC` scheme, or:
+Open `eXoMAC.xcodeproj` and run the `eXoMAC` scheme, or use the Makefile:
 
 ```
-xcodebuild -project eXoMAC.xcodeproj -scheme eXoMAC -destination 'platform=macOS' build
+make run                  # build with xcodebuild, then start the app
+make run ARGS='-libraryPath /Volumes/eXoDOS_ro -musicEnabled 0'
+make build                # build only; CONFIG=Release for a release build
+make test                 # core tests (swift test)
 ```
 
 The core library (XML parsing, media lookup, config translation) is a plain
-Swift package at the repo root:
-
-```
-swift test
-```
+Swift package at the repo root, so `swift build` and `swift test` work
+without Xcode's project.
 
 On first launch, choose your eXoDOS folder. It can be read-only (an external
 drive or a network share): the app never modifies it. Installed games, save

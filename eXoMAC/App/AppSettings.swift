@@ -23,7 +23,9 @@ enum LibraryViewMode: String, Codable, CaseIterable {
 
 /// Everything the user configures. Saved as JSON in UserDefaults.
 struct AppSettings: Codable, Equatable {
+    /// Kept for migration from the single-library days.
     var libraryPath: String?
+    var collections: [LibraryCollection] = []
     var localStorePath: String?
     var installLocation: InstallLocation = .localStore
     var showLaunchOptions = true
@@ -41,6 +43,10 @@ struct AppSettings: Codable, Equatable {
 
     static let defaultsKey = "eXoMAC.settings"
 
+    /// True when launch arguments replaced the saved collections; such
+    /// settings are not written back.
+    var transient = false
+
     init() {}
 
     /// Missing keys keep their defaults, so adding a setting later never
@@ -48,6 +54,7 @@ struct AppSettings: Codable, Equatable {
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         libraryPath = try c.decodeIfPresent(String.self, forKey: .libraryPath)
+        collections = try c.decodeIfPresent([LibraryCollection].self, forKey: .collections) ?? []
         localStorePath = try c.decodeIfPresent(String.self, forKey: .localStorePath)
         installLocation = try c.decodeIfPresent(InstallLocation.self, forKey: .installLocation) ?? .localStore
         showLaunchOptions = try c.decodeIfPresent(Bool.self, forKey: .showLaunchOptions) ?? true
@@ -70,10 +77,22 @@ struct AppSettings: Codable, Equatable {
            let saved = try? JSONDecoder().decode(AppSettings.self, from: data) {
             settings = saved
         }
-        // Launch arguments such as `-libraryPath /Volumes/eXoDOS` override the
-        // saved values for this run only. Handy for testing other installs.
-        if let path = defaults.string(forKey: "libraryPath"), !path.isEmpty {
-            settings.libraryPath = path
+        // A library chosen before collections existed becomes the first collection.
+        if settings.collections.isEmpty, let path = settings.libraryPath, !path.isEmpty {
+            let url = URL(fileURLWithPath: path, isDirectory: true)
+            settings.collections = [LibraryCollection(name: LibraryCollection.suggestedName(for: url), rootPath: path)]
+            settings.libraryPath = nil
+        }
+        // Launch arguments such as `-libraryPath /Volumes/eXoDOS` replace the
+        // collections for this run only. Handy for testing other installs.
+        // Several folders can be given, separated by "|".
+        if let paths = defaults.string(forKey: "libraryPath"), !paths.isEmpty {
+            settings.collections = paths.split(separator: "|").enumerated().map { offset, path in
+                let url = URL(fileURLWithPath: String(path), isDirectory: true)
+                let id = UUID(uuidString: String(format: "11111111-1111-1111-1111-%012d", offset + 1))!
+                return LibraryCollection(id: id, name: LibraryCollection.suggestedName(for: url), rootPath: String(path))
+            }
+            settings.transient = true
         }
         if defaults.object(forKey: "musicEnabled") != nil {
             settings.musicEnabled = defaults.bool(forKey: "musicEnabled")
@@ -82,10 +101,19 @@ struct AppSettings: Codable, Equatable {
     }
 
     func save(to defaults: UserDefaults = .standard) {
+        guard !transient else { return }
         if let data = try? JSONEncoder().encode(self) {
             defaults.set(data, forKey: Self.defaultsKey)
         }
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
+             dosboxXExecutablePath, emulatorPolicy, launchOptions, musicEnabled, musicVolume, tileSize, viewMode,
+             sortOrder, showHiddenGames, inspectorShown
+    }
+
+    var enabledCollections: [LibraryCollection] { collections.filter(\.isEnabled) }
 
     /// The writable companion folder; Application Support unless chosen.
     var localStore: LocalStore {
@@ -93,11 +121,6 @@ struct AppSettings: Codable, Equatable {
             return LocalStore(directory: URL(fileURLWithPath: localStorePath, isDirectory: true))
         }
         return LocalStore(directory: AppPaths.applicationSupport)
-    }
-
-    var libraryRoot: LibraryRoot? {
-        guard let libraryPath, !libraryPath.isEmpty else { return nil }
-        return LibraryRoot(url: URL(fileURLWithPath: libraryPath, isDirectory: true))
     }
 
     func emulatorInstallation(_ kind: EmulatorKind) -> EmulatorInstallation? {
@@ -125,5 +148,6 @@ enum AppPaths {
     static var launchConfigs: URL { applicationSupport.appendingPathComponent("Launch", isDirectory: true) }
     static var logs: URL { applicationSupport.appendingPathComponent("Logs", isDirectory: true) }
     static var mediaIndexes: URL { applicationSupport.appendingPathComponent("MediaIndex", isDirectory: true) }
+    static var libraryCache: URL { applicationSupport.appendingPathComponent("LibraryCache", isDirectory: true) }
     static var userLibraryState: URL { applicationSupport.appendingPathComponent("user-library.json") }
 }

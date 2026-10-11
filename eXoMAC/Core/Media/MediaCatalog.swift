@@ -175,7 +175,7 @@ public actor MediaCatalog {
     public func images(for game: Game, type: ImageType) async -> [MediaFile] {
         let folder = snapshot.mediaFolder(platform: game.platform, mediaType: type.rawValue)
         let index = await imageIndex(for: folder)
-        return index.files(forTitle: game.title, gameID: game.id)
+        return index.files(forTitle: game.title, gameID: game.launchBoxID)
     }
 
     /// The first image found, trying `types` in order.

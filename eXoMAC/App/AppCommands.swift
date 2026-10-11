@@ -44,7 +44,7 @@ struct AppCommands: Commands {
         CommandMenu("Library") {
             Button("Rescan Library") { model.reloadLibrary(clearMediaCache: true) }
                 .keyboardShortcut("r", modifiers: .command)
-                .disabled(model.libraryRoot == nil)
+                .disabled(model.collections.isEmpty)
             Divider()
             Button("Show as Grid") { model.settings.viewMode = .grid }.keyboardShortcut("1", modifiers: .command)
             Button("Show as List") { model.settings.viewMode = .list }.keyboardShortcut("2", modifiers: .command)

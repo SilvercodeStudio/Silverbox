@@ -5,7 +5,11 @@ import Foundation
 /// Path fields keep LaunchBox's Windows-relative form (`eXo\eXoDOS\!dos\ultima5\...`).
 /// Use ``LibraryRoot/url(forWindowsRelativePath:)`` to turn them into file URLs.
 nonisolated public struct Game: Identifiable, Hashable, Sendable, Codable {
-    public var id: String
+    /// LaunchBox's GUID for the game. Unique within a library, and the same
+    /// game keeps it across copies of that library, so user state is keyed on it.
+    public var launchBoxID: String
+    /// The collection this record was loaded from.
+    public var collectionID: UUID
     public var title: String
     public var sortTitle: String?
     public var platform: String
@@ -75,8 +79,15 @@ nonisolated public struct Game: Identifiable, Hashable, Sendable, Codable {
         public static let music = MissingMedia(rawValue: 1 << 11)
     }
 
+    /// Marks a game not yet assigned to a collection; ``LibrarySnapshot`` fills it in.
+    public static let unassignedCollection = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+
+    /// Unique across collections: the collection and the LaunchBox GUID.
+    public var id: String { "\(collectionID.uuidString)/\(launchBoxID)" }
+
     public init(
         id: String,
+        collectionID: UUID = Game.unassignedCollection,
         title: String,
         platform: String,
         applicationPath: String,
@@ -126,7 +137,8 @@ nonisolated public struct Game: Identifiable, Hashable, Sendable, Codable {
         useScummVM: Bool = false,
         missingMedia: MissingMedia = []
     ) {
-        self.id = id
+        self.launchBoxID = id
+        self.collectionID = collectionID
         self.title = title
         self.sortTitle = sortTitle
         self.platform = platform
@@ -215,9 +227,13 @@ nonisolated extension Game {
         series.filter { Self.strip(prefix: "Playlist:", from: $0) == nil && Self.strip(prefix: "Theme:", from: $0) == nil }
     }
 
-    /// True when the launcher is an eXoDOS batch file in a `!dos` config folder.
+    /// True when the launcher is an eXoDOS batch file in a `!dos` config
+    /// folder. Other batch files, such as a plain DOS folder import, are not
+    /// eXoDOS games and cannot be installed or translated the eXoDOS way.
     public var isDOSGame: Bool {
-        applicationPath.lowercased().hasSuffix(".bat")
+        guard applicationPath.lowercased().hasSuffix(".bat") else { return false }
+        let folder = (rootFolder ?? applicationPath).lowercased()
+        return folder.contains("\\!dos\\") || folder.contains("/!dos/") || folder.hasSuffix("\\!dos") || folder.contains("exo\\exodos\\")
     }
 
     /// The key used for sorting: LaunchBox's `SortTitle` when present.
