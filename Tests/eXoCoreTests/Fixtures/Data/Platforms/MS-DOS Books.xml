@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>eXo\Books\[1987] Programmer's Guide to MS-DOS\Programmer's Guide to MS-DOS.pdf</ApplicationPath>
+    <ID>bbbbbbbb-0000-0000-0000-000000000001</ID>
+    <Platform>MS-DOS Books</Platform>
+    <RootFolder>eXo\Books\[1987] Programmer's Guide to MS-DOS</RootFolder>
+    <Title>Programmer's Guide to MS-DOS</Title>
+    <ReleaseDate>1987-01-01T00:00:00-06:00</ReleaseDate>
+  </Game>
+</LaunchBox>

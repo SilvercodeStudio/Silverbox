@@ -1,0 +1,17 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Playlist>
+    <PlaylistId>e64fb51c-ff5d-4fbe-919c-aa2249d78117</PlaylistId>
+    <Name>eXoDOS Games with MT-32</Name>
+    <NestedName>eXoDOS Games with MT-32</NestedName>
+    <Notes>.</Notes>
+    <IncludeWithPlatforms>false</IncludeWithPlatforms>
+    <AutoPopulate>true</AutoPopulate>
+    <SortTitle>eXoDOS Games with MT-32</SortTitle>
+  </Playlist>
+  <PlaylistFilter>
+    <Value>Playlist: Roland MT-32</Value>
+    <FieldKey>Series</FieldKey>
+    <ComparisonTypeKey>EqualTo</ComparisonTypeKey>
+  </PlaylistFilter>
+</LaunchBox>

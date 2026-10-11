@@ -1,0 +1,43 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Platform>
+    <Name>MS-DOS</Name>
+    <ReleaseDate>1981-08-01T02:00:00-05:00</ReleaseDate>
+    <Developer>Microsoft</Developer>
+    <Manufacturer>IBM</Manufacturer>
+    <Notes>MS-DOS test platform.</Notes>
+    <ImageType>Boxes</ImageType>
+  </Platform>
+  <Platform>
+    <Name>MS-DOS Books</Name>
+    <Folder>Games\MS-DOS Books</Folder>
+  </Platform>
+  <PlatformCategory>
+    <Name>Computers</Name>
+    <NestedName>Computers</NestedName>
+  </PlatformCategory>
+  <PlatformCategory>
+    <Name>Literature</Name>
+    <NestedName>Literature</NestedName>
+  </PlatformCategory>
+  <PlatformFolder>
+    <MediaType>Box - Front</MediaType>
+    <FolderPath>Images\MS-DOS\Box - Front</FolderPath>
+    <Platform>MS-DOS</Platform>
+  </PlatformFolder>
+  <PlatformFolder>
+    <MediaType>Video</MediaType>
+    <FolderPath>Videos\MS-DOS</FolderPath>
+    <Platform>MS-DOS</Platform>
+  </PlatformFolder>
+  <PlatformFolder>
+    <MediaType>Manual</MediaType>
+    <FolderPath>Manuals\MS-DOS</FolderPath>
+    <Platform>MS-DOS</Platform>
+  </PlatformFolder>
+  <PlatformFolder>
+    <MediaType>Music</MediaType>
+    <FolderPath>Music\MS-DOS</FolderPath>
+    <Platform>MS-DOS</Platform>
+  </PlatformFolder>
+</LaunchBox>

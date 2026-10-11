@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Playlist>
+    <PlaylistId>11111111-2222-3333-4444-555555555555</PlaylistId>
+    <Name>Quality Freeware</Name>
+    <AutoPopulate>false</AutoPopulate>
+  </Playlist>
+  <PlaylistGame>
+    <GameId>aaaaaaaa-0000-0000-0000-000000000003</GameId>
+    <GameTitle>Super Tetris</GameTitle>
+    <GameFileName>Super Tetris (1991).bat</GameFileName>
+    <GamePlatform>MS-DOS</GamePlatform>
+    <ManualOrder>0</ManualOrder>
+  </PlaylistGame>
+</LaunchBox>

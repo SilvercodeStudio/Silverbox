@@ -1,0 +1,96 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <VideoPath />
+    <Installed>false</Installed>
+    <ApplicationPath>eXo\eXoDOS\!dos\ultima5\Ultima V - Warriors of Destiny (1988).bat</ApplicationPath>
+    <CommandLine />
+    <Completed>false</Completed>
+    <ConfigurationPath>eXo\eXoDOS\!dos\ultima5\install.bat</ConfigurationPath>
+    <DateAdded>2017-12-11T09:09:53.788151-06:00</DateAdded>
+    <DateModified>2023-11-06T09:51:53.2784661-06:00</DateModified>
+    <Developer>ORIGIN Systems, Inc.</Developer>
+    <Favorite>true</Favorite>
+    <ID>80984a42-2c4e-47b3-a132-b4b439c08cfc</ID>
+    <ManualPath>Manuals\MS-DOS\Ultima V - Warriors of Destiny (1988).pdf</ManualPath>
+    <MusicPath />
+    <Notes>Ultima V uses the basics of the Ultima IV engine.
+
+In Ultima V, you are called back to deal with a new threat.</Notes>
+    <Platform>MS-DOS</Platform>
+    <Publisher>ORIGIN Systems, Inc.</Publisher>
+    <Rating>Not Rated</Rating>
+    <ReleaseDate>1988-10-05T02:00:00-05:00</ReleaseDate>
+    <RootFolder>eXo\eXoDOS\!dos\ultima5</RootFolder>
+    <SortTitle>Ultima 5</SortTitle>
+    <Source>Commercial</Source>
+    <StarRatingFloat>0</StarRatingFloat>
+    <CommunityStarRating>4.5</CommunityStarRating>
+    <CommunityStarRatingTotalVotes>10</CommunityStarRatingTotalVotes>
+    <DatabaseID>19877</DatabaseID>
+    <WikipediaURL>https://en.wikipedia.org/wiki/Ultima_V:_Warriors_of_Destiny</WikipediaURL>
+    <Title>Ultima V: Warriors of Destiny</Title>
+    <Series>Playlist: Roland MT-32; Playlist: Sound Canvas; Theme: Fantasy; Ultima series</Series>
+    <PlayMode>Single Player</PlayMode>
+    <PlayCount>0</PlayCount>
+    <PlayTime>0</PlayTime>
+    <Hide>false</Hide>
+    <Broken>false</Broken>
+    <Genre>Role-Playing</Genre>
+    <MissingVideo>true</MissingVideo>
+    <MissingBoxFrontImage>false</MissingBoxFrontImage>
+    <MaxPlayers>1</MaxPlayers>
+  </Game>
+  <Game>
+    <Installed>false</Installed>
+    <ApplicationPath>eXo\eXoDOS\!dos\jeopardy\Jeopardy! (1987).bat</ApplicationPath>
+    <DateAdded>2018-03-01T13:40:33.8261186-06:00</DateAdded>
+    <Developer>ShareData, Inc.</Developer>
+    <Favorite>false</Favorite>
+    <ID>aaaaaaaa-0000-0000-0000-000000000002</ID>
+    <Notes>Based on the tv game show.</Notes>
+    <Platform>MS-DOS</Platform>
+    <Publisher>ShareData, Inc.</Publisher>
+    <ReleaseDate>1987-01-01T00:00:00-06:00</ReleaseDate>
+    <RootFolder>eXo\eXoDOS\!dos\jeopardy</RootFolder>
+    <Title>Jeopardy! (1987)</Title>
+    <Series>TV Game Show games; Playlist: CGA Composite</Series>
+    <PlayMode>Multiplayer</PlayMode>
+    <Genre>Game Show; Puzzle; Quiz</Genre>
+    <MaxPlayers>3</MaxPlayers>
+  </Game>
+  <Game>
+    <Installed>true</Installed>
+    <ApplicationPath>eXo\eXoDOS\!dos\SuperTet\Super Tetris (1991).bat</ApplicationPath>
+    <Developer>Sphere, Inc.</Developer>
+    <ID>aaaaaaaa-0000-0000-0000-000000000003</ID>
+    <Platform>MS-DOS</Platform>
+    <Publisher>Spectrum HoloByte, Inc.</Publisher>
+    <ReleaseDate>1991-01-01T00:00:00-06:00</ReleaseDate>
+    <RootFolder>eXo\eXoDOS\!dos\SuperTet</RootFolder>
+    <Title>Super Tetris</Title>
+    <Series>Playlist: Roland MT-32</Series>
+    <Genre>Puzzle</Genre>
+  </Game>
+  <AdditionalApplication>
+    <Id>0e811604-c3b3-4b3a-b9c9-243a8248612c</Id>
+    <PlayCount>0</PlayCount>
+    <PlayTime>0</PlayTime>
+    <GameID>80984a42-2c4e-47b3-a132-b4b439c08cfc</GameID>
+    <ApplicationPath>eXo\Update\update.bat</ApplicationPath>
+    <AutoRunAfter>false</AutoRunAfter>
+    <AutoRunBefore>false</AutoRunBefore>
+    <Name>eXoDOS Updater</Name>
+    <WaitForExit>false</WaitForExit>
+  </AdditionalApplication>
+  <AlternateName>
+    <GameID>80984a42-2c4e-47b3-a132-b4b439c08cfc</GameID>
+    <Name>Ultima 5: Warriors of Destiny</Name>
+    <Region>Common abbreviation</Region>
+  </AlternateName>
+  <AlternateName>
+    <GameID>80984a42-2c4e-47b3-a132-b4b439c08cfc</GameID>
+    <Name>Ultima Quintus</Name>
+    <Region>Japan</Region>
+  </AlternateName>
+</LaunchBox>

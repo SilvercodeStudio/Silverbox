@@ -2,31 +2,26 @@
 //  eXoMACApp.swift
 //  eXoMAC
 //
-//  Created by Preston Landers on 10/11/26.
+//  An emulation front-end for the eXoDOS and eXoWin9x collections on the Mac.
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct eXoMACApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        WindowGroup("eXoMAC") {
+            LibraryWindow()
+                .environment(model)
         }
-        .modelContainer(sharedModelContainer)
+        .defaultSize(width: 1320, height: 840)
+        .commands { AppCommands(model: model) }
+
+        Settings {
+            SettingsView()
+                .environment(model)
+        }
     }
 }

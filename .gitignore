@@ -17,3 +17,6 @@ DerivedData/
 # Claude Code per-user files
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Coverage data written by test and debug runs
+*.profraw
