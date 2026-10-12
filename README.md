@@ -24,7 +24,7 @@ The games, media and emulators are not part of this project.
 
 ## Build
 
-Open `eXoMAC.xcodeproj` and run the `eXoMAC` scheme, or use the Makefile:
+Open `eXoMAC.xcodeproj` and run the "eXo Client" scheme, or use the Makefile:
 
 ```
 make run                  # build with xcodebuild, then start the app
@@ -39,6 +39,16 @@ The core library (XML parsing, media lookup, config translation, music
 decoders) is a Swift package at the repo root, so `swift build` and
 `swift test` work without Xcode's project. The app links the package's
 `eXoCore` product as a local package dependency.
+
+Instructions for coding agents are in `AGENTS.md`. To let Claude Code build
+and read diagnostics through the open Xcode, enable MCP under Xcode ›
+Settings › Intelligence, then register the server:
+
+```
+claude mcp add --transport stdio xcode -- xcrun mcpbridge
+```
+
+Xcode asks for permission when a new session connects.
 
 ## Third-party code
 

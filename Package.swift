@@ -9,7 +9,7 @@
 //   swift test           # runs Tests/eXoCoreTests
 //
 // Vendored C code lives in its own target under Sources/ with the upstream
-// LICENSE and a VENDOR.md note; see CLAUDE.md for the rules.
+// LICENSE and a VENDOR.md note; see AGENTS.md for the rules.
 //
 import PackageDescription
 
