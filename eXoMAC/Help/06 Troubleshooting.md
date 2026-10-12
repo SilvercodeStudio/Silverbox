@@ -14,7 +14,11 @@ Artwork is found by file name, the same way LaunchBox does it. The first scan of
 
 ## The emulator is not found
 
-Set the location of DOSBox Staging or DOSBox-X in Settings › Emulators. Either the application bundle or the executable inside it can be chosen.
+Set the location of DOSBox Staging or DOSBox-X in Settings › Emulators. Either the application bundle or the executable inside it can be chosen. The same tab holds RetroArch, Dolphin, MAME and Mednafen for other platforms.
+
+## A console game says its core is not installed
+
+RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder eXo Client reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
 
 ## Menu music does not play
 

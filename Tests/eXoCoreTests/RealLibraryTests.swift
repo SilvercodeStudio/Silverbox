@@ -15,7 +15,10 @@ struct RealLibraryTests {
         #expect(snapshot.dosboxIndex.count > 7000)
         let ultima = try #require(snapshot.games.first { $0.title == "Ultima V: Warriors of Destiny" })
         #expect(ultima.gameFolderName == "ultima5")
-        #expect(snapshot.dosboxIndex.build(forLauncherBaseName: ultima.launcherBaseName)?.family == .ece)
+        // eXoDOS 6.04 moved Ultima V from DOSBox ECE to Staging; any known build is fine.
+        let build = try #require(snapshot.dosboxIndex.build(forLauncherBaseName: ultima.launcherBaseName))
+        print("Ultima V runs with \(build.displayName)")
+        #expect(build.family != .custom)
         #expect(!snapshot.tree.isEmpty)
     }
 
@@ -63,7 +66,7 @@ struct RealLibraryTests {
             guard let game = snapshot.games.first(where: { $0.title == title }), let folder = planner.configFolder(for: game) else { continue }
             let url = folder.appendingPathComponent("dosbox.conf")
             guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
-            for kind in EmulatorKind.allCases {
+            for kind in EmulatorKind.dosBox {
                 let translator = ConfigTranslator(root: snapshot.root, emulator: kind, options: LaunchOptions())
                 let result = translator.translate(DOSBoxConfigDocument.parse(text))
                 #expect(!result.document.autoexecLines.isEmpty)

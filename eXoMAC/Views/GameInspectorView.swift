@@ -246,6 +246,12 @@ struct MetadataGrid: View {
             if game.isDOSGame {
                 row("eXoDOS runs with", build?.displayName ?? "DOSBox")
                 row("Mac emulator", model.emulatorKind(for: game).displayName)
+            } else if game.launchKind == .emulator {
+                let resolved = model.resolvedEmulator(for: game)
+                if let title = resolved.launchBoxEmulatorTitle { row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? "")) }
+                row("Mac emulator", resolved.isReady ? resolved.summary : "Not ready")
+            } else if game.launchKind == .windowsProgram {
+                row("Launcher", "Windows program, not supported on the Mac")
             }
             if let url = game.wikipediaURL, let link = URL(string: url) {
                 GridRow {

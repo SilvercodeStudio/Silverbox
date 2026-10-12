@@ -63,8 +63,8 @@ nonisolated public struct ConfigTranslator: Sendable {
             for entry in section.entries {
                 let outcomes: [Outcome]
                 switch emulator {
-                case .dosboxStaging: outcomes = stagingOutcome(section: section.name, key: entry.key, value: entry.value)
                 case .dosboxX: outcomes = dosboxXOutcome(section: section.name, key: entry.key, value: entry.value)
+                default: outcomes = stagingOutcome(section: section.name, key: entry.key, value: entry.value)
                 }
                 for outcome in outcomes {
                     switch outcome {
@@ -270,10 +270,10 @@ nonisolated public struct ConfigTranslator: Sendable {
         case .fluidSynthSoundCanvas:
             let soundFont = root.mt32Directory.appendingPathComponent("SoundCanvas.sf2").path
             switch emulator {
-            case .dosboxStaging:
-                return [.set("midi", "mididevice", "fluidsynth"), .set("fluidsynth", "soundfont", soundFont)]
             case .dosboxX:
                 return [.set("midi", "mididevice", "fluidsynth"), .set("midi", "fluid.soundfont", soundFont)]
+            default:
+                return [.set("midi", "mididevice", "fluidsynth"), .set("fluidsynth", "soundfont", soundFont)]
             }
         case .coreAudio, .automatic:
             return [.set("midi", "mididevice", "coreaudio")]
@@ -305,7 +305,7 @@ nonisolated public struct ConfigTranslator: Sendable {
 
     private func applyOptions(to document: inout DOSBoxConfigDocument, notes: inout [String]) {
         switch emulator {
-        case .dosboxStaging:
+        case .dosboxStaging, .retroArch, .dolphin, .mame, .mednafen:
             document.set("sdl", "fullscreen", options.fullscreen ? "on" : "off")
             if options.windowSize != .default { document.set("sdl", "window_size", options.windowSize.rawValue) }
             switch options.aspect {

@@ -35,6 +35,14 @@ final class AppModel {
     private(set) var searchIndex: LibrarySearchIndex?
     private(set) var rootReports: [UUID: LibraryRootReport] = [:]
     private(set) var loadErrors: [UUID: String] = [:]
+    /// Platforms whose games start in a console or arcade emulator.
+    private(set) var romPlatforms: [RomPlatformSummary] = []
+
+    struct RomPlatformSummary: Identifiable, Hashable {
+        let name: String
+        let gameCount: Int
+        var id: String { name }
+    }
 
     var userState: UserLibraryState {
         didSet { scheduleUserStateSave() }
@@ -181,6 +189,7 @@ final class AppModel {
                 return
             }
             self.library = library
+            self.romPlatforms = Self.romPlatforms(in: library)
             var catalogs: [UUID: MediaCatalog] = [:]
             for snapshot in ordered {
                 catalogs[snapshot.collection.id] = MediaCatalog(snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
@@ -204,6 +213,15 @@ final class AppModel {
     }
 
     @ObservationIgnored private var collectionProgress: [UUID: LibraryLoadProgress] = [:]
+
+    private static func romPlatforms(in library: Library) -> [RomPlatformSummary] {
+        var counts: [String: Int] = [:]
+        for game in library.games where game.launchKind == .emulator {
+            counts[game.platform, default: 0] += 1
+        }
+        return counts.map { RomPlatformSummary(name: $0.key, gameCount: $0.value) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
 
     private func reportLoadProgress(_ progress: LibraryLoadProgress, collection: UUID, name: String) {
         guard case .loading = loadState else { return }
@@ -365,7 +383,12 @@ final class AppModel {
     /// launch options dialog, or starts the emulator right away.
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
-        guard game.isDOSGame else {
+        switch game.launchKind {
+        case .dosBox: break
+        case .emulator:
+            launchEmulated(game)
+            return
+        case .document, .link, .windowsProgram:
             openNonGameItem(game)
             return
         }
@@ -464,44 +487,72 @@ final class AppModel {
         try? FileManager.default.removeItem(at: target)
     }
 
-    /// Documents (books, magazines, soundtracks) open in their default app.
-    /// Console and arcade ROMs wait for emulator assignments.
+    // MARK: - Console, computer and arcade games
+
+    /// Weighs the user's platform choices, the libraries' `Emulators.xml`
+    /// and what is installed on this Mac.
+    func emulatorResolver() -> EmulatorAssignmentResolver {
+        EmulatorAssignmentResolver(userAssignments: settings.platformEmulators, snapshots: library?.snapshots ?? [],
+                                   installedKinds: settings.installedRomEmulators, retroArch: settings.retroArchSetup)
+    }
+
+    func resolvedEmulator(for game: Game) -> ResolvedEmulatorAssignment {
+        emulatorResolver().resolve(platform: game.platform)
+    }
+
+    /// Starts a ROM or disc image in the emulator assigned to its platform.
+    func launchEmulated(_ game: Game) {
+        guard let snapshot = snapshot(for: game) else { return }
+        let resolved = resolvedEmulator(for: game)
+        guard let assignment = resolved.assignment, resolved.problem == nil else {
+            alert = AppAlert(title: "Could not start \(game.title)", message: resolved.problem ?? "No emulator is assigned to \(game.platform).")
+            return
+        }
+        guard let emulator = settings.emulatorInstallation(assignment.emulator), emulator.exists else {
+            alert = AppAlert(title: "\(assignment.emulator.displayName) not found",
+                             message: "Choose the \(assignment.emulator.displayName) application in Settings › Emulators.")
+            return
+        }
+        do {
+            let launch = try RomLaunchPlanner(snapshot: snapshot).plan(game: game, resolved: resolved, emulator: emulator,
+                                                                       retroArch: settings.retroArchSetup, options: effectiveLaunchOptions(for: game))
+            music.pause()
+            try launcher.launch(launch)
+        } catch {
+            alert = AppAlert(title: "Could not start \(game.title)", message: error.localizedDescription)
+            updateMusic()
+        }
+    }
+
+    /// Documents (books, magazines, soundtracks) open in their default app;
+    /// links and Windows programs are explained.
     private func openNonGameItem(_ game: Game) {
         guard let snapshot = snapshot(for: game) else { return }
-        if game.applicationPath.lowercased().hasPrefix("steam://") {
-            alert = AppAlert(title: "Steam game", message: "\(game.title) is a Steam link in the LaunchBox library and is not launched by this app.")
-            return
+        switch game.launchKind {
+        case .link:
+            alert = AppAlert(title: "Link", message: "\(game.title) is a link in the LaunchBox library (\(game.applicationPath)) and is not opened by this app.")
+        case .windowsProgram:
+            alert = AppAlert(title: "Windows program", message: "\(game.title) starts a Windows program (\(WindowsPath.lastComponent(of: game.applicationPath))), which cannot run on the Mac.")
+        default:
+            let url = snapshot.root.url(forWindowsRelativePath: game.applicationPath)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                alert = AppAlert(title: "File not found", message: url.path)
+                return
+            }
+            NSWorkspace.shared.open(url)
         }
-        let url = snapshot.root.url(forWindowsRelativePath: game.applicationPath)
-        let ext = url.pathExtension.lowercased()
-        guard Self.documentExtensions.contains(ext) else {
-            let assignment = snapshot.emulatorAssignment(for: game.platform)
-            let hint = assignment.map { " LaunchBox runs it with \($0.emulator.title)." } ?? ""
-            alert = AppAlert(title: "\(game.platform) games cannot be launched yet",
-                             message: "Emulator assignments for console and arcade platforms are the next step.\(hint)")
-            return
-        }
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            alert = AppAlert(title: "File not found", message: url.path)
-            return
-        }
-        NSWorkspace.shared.open(url)
     }
 
     /// True for books, magazines, soundtracks and other items opened in another app.
     func isDocumentItem(_ game: Game) -> Bool {
-        guard !game.isDOSGame else { return false }
-        return Self.documentExtensions.contains(WindowsPath.fileExtension(of: game.applicationPath)?.lowercased() ?? "")
+        game.launchKind == .document
     }
-
-    private static let documentExtensions: Set<String> = ["pdf", "txt", "cbz", "cbr", "epub", "html", "htm", "mp3", "ogg", "flac",
-                                                           "m4a", "wav", "mp4", "mkv", "avi", "mov", "jpg", "jpeg", "png", "gif"]
 
     private func sessionEnded(_ session: GameSession) {
         let seconds = Int(Date().timeIntervalSince(session.startedAt))
-        userState.recordPlay(session.plan.game.launchBoxID, seconds: seconds)
+        userState.recordPlay(session.game.launchBoxID, seconds: seconds)
         if session.exitStatus != 0, let log = session.logURL {
-            alert = AppAlert(title: "\(session.plan.game.title) exited with code \(session.exitStatus)",
+            alert = AppAlert(title: "\(session.game.title) exited with code \(session.exitStatus)",
                              message: "The emulator log is at \(log.path)")
         }
         updateMusic()

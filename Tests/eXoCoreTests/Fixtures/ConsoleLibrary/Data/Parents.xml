@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Parent>
+    <PlatformName>Nintendo Entertainment System</PlatformName>
+    <ParentPlatformCategoryName>Consoles</ParentPlatformCategoryName>
+  </Parent>
+  <Parent>
+    <PlatformName>Nintendo GameCube</PlatformName>
+    <ParentPlatformCategoryName>Consoles</ParentPlatformCategoryName>
+  </Parent>
+  <Parent>
+    <PlatformName>Sony Playstation</PlatformName>
+    <ParentPlatformCategoryName>Consoles</ParentPlatformCategoryName>
+  </Parent>
+  <Parent>
+    <PlatformCategoryName>Consoles</PlatformCategoryName>
+  </Parent>
+</LaunchBox>

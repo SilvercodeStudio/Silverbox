@@ -40,6 +40,7 @@ make run [ARGS='...']            # xcodebuild the app, then start it in the fore
 make build                       # app only (CONFIG=Release for a release build)
 make test                        # swift test: core tests (fast; real-library tests if mounted)
 make core                        # swift build: core only
+make sweep                       # translate every eXoDOS config in the mounted library, print a summary
 ```
 
 `make run` resolves the built app through `xcodebuild -showBuildSettings`,
@@ -84,6 +85,14 @@ Makefile).
   (edited configs), `Overlay/eXoDOS/` (writable overlay mounts for games
   unpacked inside a read-only library), `Launch/`, `Logs/`, `MediaIndex/`,
   `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
+- Emulators. `EmulatorKind` covers DOSBox Staging and DOSBox-X for eXoDOS
+  games plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
+  arcade platforms (`Game.launchKind` tells them apart). Each platform's
+  emulator comes from `EmulatorAssignmentResolver`: the user's choice in
+  Settings, else the library's `Emulators.xml` mapped to the Mac emulators
+  that are installed (`RetroArchSetup` finds cores through `retroarch.cfg`,
+  with aliases for renamed cores). `RomLaunchPlanner` builds the command
+  line. Never call another front-end such as OpenEmu.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers
@@ -105,8 +114,8 @@ Makefile).
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and
   quits; `-autoPlay 1` presses Play on the selected game after loading, which
   opens the launch options dialog; `-autoConfigure 1` opens the same dialog
-  in its Configure (save only) mode; `-openWindow about` (or `help`) opens
-  that window scene at start. Example:
+  in its Configure (save only) mode; `-openWindow about` (or `help`, or
+  `settings` with `-settingsTab emulators`) opens that window at start. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/eXo Client.app/Contents/MacOS/eXo Client" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

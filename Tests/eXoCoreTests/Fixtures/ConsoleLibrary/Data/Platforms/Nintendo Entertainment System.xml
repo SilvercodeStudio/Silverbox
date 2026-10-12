@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>Games\Nintendo Entertainment System\Test Blaster.zip</ApplicationPath>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000001</ID>
+    <Platform>Nintendo Entertainment System</Platform>
+    <Title>Test Blaster</Title>
+  </Game>
+  <Game>
+    <ApplicationPath>Games\Nintendo Entertainment System\Other Core.nes</ApplicationPath>
+    <CommandLine>-L "cores\nestopia_libretro.dll"</CommandLine>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000005</ID>
+    <Platform>Nintendo Entertainment System</Platform>
+    <Title>Other Core</Title>
+  </Game>
+</LaunchBox>

@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>Games\Apple II\Conan.dsk</ApplicationPath>
+    <Emulator>89b48d9f-0000-0000-0000-000000000002</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000004</ID>
+    <Platform>Apple II</Platform>
+    <Title>Conan</Title>
+  </Game>
+</LaunchBox>

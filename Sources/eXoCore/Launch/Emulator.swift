@@ -1,22 +1,68 @@
 import Foundation
 
+/// An emulator program eXo Client can start. DOSBox Staging and DOSBox-X run
+/// eXoDOS games; the others run console, computer and arcade platforms from a
+/// LaunchBox library.
 nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, Hashable, Identifiable {
     case dosboxStaging
     case dosboxX
+    case retroArch
+    case dolphin
+    case mame
+    case mednafen
 
     public var id: String { rawValue }
+
+    /// The emulators that run eXoDOS games.
+    public static let dosBox: [EmulatorKind] = [.dosboxStaging, .dosboxX]
+    /// The emulators that run ROMs and disc images from other platforms.
+    public static let romEmulators: [EmulatorKind] = [.retroArch, .dolphin, .mame, .mednafen]
+
+    public var isDOSBox: Bool { Self.dosBox.contains(self) }
 
     public var displayName: String {
         switch self {
         case .dosboxStaging: return "DOSBox Staging"
         case .dosboxX: return "DOSBox-X"
+        case .retroArch: return "RetroArch"
+        case .dolphin: return "Dolphin"
+        case .mame: return "MAME"
+        case .mednafen: return "Mednafen"
         }
     }
 
+    /// The executable's file name, also the name inside an `.app` bundle.
     public var executableName: String {
         switch self {
         case .dosboxStaging: return "dosbox"
         case .dosboxX: return "dosbox-x"
+        case .retroArch: return "RetroArch"
+        case .dolphin: return "Dolphin"
+        case .mame: return "mame"
+        case .mednafen: return "mednafen"
+        }
+    }
+
+    /// What the emulator is used for, shown in Settings.
+    public var summary: String {
+        switch self {
+        case .dosboxStaging: return "Runs eXoDOS games set up for DOSBox 0.74, ECE and Staging."
+        case .dosboxX: return "Runs eXoDOS games set up for DOSBox SVN Daum and DOSBox-X."
+        case .retroArch: return "Runs most console and computer platforms through its libretro cores."
+        case .dolphin: return "Runs Nintendo GameCube and Wii games."
+        case .mame: return "Runs arcade ROM sets."
+        case .mednafen: return "Runs several consoles from the command line, including Sega Saturn."
+        }
+    }
+
+    public var website: String {
+        switch self {
+        case .dosboxStaging: return "https://www.dosbox-staging.org"
+        case .dosboxX: return "https://dosbox-x.com"
+        case .retroArch: return "https://www.retroarch.com"
+        case .dolphin: return "https://dolphin-emu.org"
+        case .mame: return "https://www.mamedev.org"
+        case .mednafen: return "https://mednafen.github.io"
         }
     }
 }
@@ -95,6 +141,36 @@ nonisolated public enum EmulatorLocator {
                     urls.append(entry.appendingPathComponent("dosbox-x/dosbox-x.app/Contents/MacOS/dosbox-x"))
                 }
             }
+        case .retroArch:
+            urls += [
+                URL(fileURLWithPath: "/Applications/RetroArch.app/Contents/MacOS/RetroArch"),
+                home.appendingPathComponent("Applications/RetroArch.app/Contents/MacOS/RetroArch"),
+                home.appendingPathComponent("Library/Application Support/Steam/steamapps/common/RetroArch/RetroArch.app/Contents/MacOS/RetroArch"),
+                URL(fileURLWithPath: "/opt/homebrew/bin/retroarch"),
+                URL(fileURLWithPath: "/usr/local/bin/retroarch"),
+            ]
+        case .dolphin:
+            urls += [
+                URL(fileURLWithPath: "/Applications/Dolphin.app/Contents/MacOS/Dolphin"),
+                home.appendingPathComponent("Applications/Dolphin.app/Contents/MacOS/Dolphin"),
+                URL(fileURLWithPath: "/opt/homebrew/bin/dolphin-emu"),
+                URL(fileURLWithPath: "/usr/local/bin/dolphin-emu"),
+            ]
+        case .mame:
+            urls += [
+                URL(fileURLWithPath: "/opt/homebrew/bin/mame"),
+                URL(fileURLWithPath: "/usr/local/bin/mame"),
+                URL(fileURLWithPath: "/Applications/MAME.app/Contents/MacOS/mame"),
+                URL(fileURLWithPath: "/Applications/mame/mame"),
+                home.appendingPathComponent("Applications/MAME.app/Contents/MacOS/mame"),
+                home.appendingPathComponent("Applications/mame/mame"),
+                home.appendingPathComponent("mame/mame"),
+            ]
+        case .mednafen:
+            urls += [
+                URL(fileURLWithPath: "/opt/homebrew/bin/mednafen"),
+                URL(fileURLWithPath: "/usr/local/bin/mednafen"),
+            ]
         }
         return urls
     }
@@ -116,6 +192,8 @@ nonisolated public enum EmulatorCapabilities {
         switch installation.kind {
         case .dosboxX:
             return true
+        case .retroArch, .dolphin, .mame, .mednafen:
+            return false
         case .dosboxStaging:
             let fm = FileManager.default
             var folders = [

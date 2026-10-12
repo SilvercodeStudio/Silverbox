@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>Games\Nintendo GameCube\Cube Demo.rvz</ApplicationPath>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000002</ID>
+    <Platform>Nintendo GameCube</Platform>
+    <Title>Cube Demo</Title>
+  </Game>
+</LaunchBox>

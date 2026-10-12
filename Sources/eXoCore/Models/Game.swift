@@ -236,6 +236,24 @@ nonisolated extension Game {
         return folder.contains("\\!dos\\") || folder.contains("/!dos/") || folder.hasSuffix("\\!dos") || folder.contains("exo\\exodos\\")
     }
 
+    /// How the item starts: in DOSBox, in another emulator, in a document
+    /// viewer, or not at all.
+    public var launchKind: GameLaunchKind {
+        if isDOSGame { return .dosBox }
+        let path = applicationPath.trimmingCharacters(in: .whitespaces)
+        if path.isEmpty { return .windowsProgram }
+        if path.range(of: "://") != nil { return .link }
+        let ext = WindowsPath.fileExtension(of: path)?.lowercased() ?? ""
+        if Self.documentExtensions.contains(ext) { return .document }
+        if Self.windowsProgramExtensions.contains(ext) { return .windowsProgram }
+        return .emulator
+    }
+
+    /// Files that open in their default app instead of an emulator.
+    public static let documentExtensions: Set<String> = ["pdf", "txt", "cbz", "cbr", "epub", "html", "htm", "mp3", "ogg", "flac",
+                                                          "m4a", "wav", "mp4", "mkv", "avi", "mov", "jpg", "jpeg", "png", "gif"]
+    public static let windowsProgramExtensions: Set<String> = ["exe", "bat", "cmd", "lnk", "url", "msi", "com"]
+
     /// The key used for sorting: LaunchBox's `SortTitle` when present.
     public var sortKey: String {
         let base = (sortTitle?.isEmpty == false ? sortTitle! : title)
@@ -247,4 +265,17 @@ nonisolated extension Game {
         let rest = value.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
         return rest.isEmpty ? nil : rest
     }
+}
+
+nonisolated public enum GameLaunchKind: Sendable, Hashable {
+    /// An eXoDOS game, run through the translated DOSBox config.
+    case dosBox
+    /// A ROM, disc image or folder for a platform emulator.
+    case emulator
+    /// A manual, magazine, soundtrack or video opened in its own app.
+    case document
+    /// A web or Steam link.
+    case link
+    /// A Windows program or script with no Mac equivalent.
+    case windowsProgram
 }

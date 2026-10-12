@@ -12,7 +12,7 @@ ARGS ?=
 
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination 'platform=macOS'
 
-.PHONY: help build run app test core typecheck
+.PHONY: help build run app test core typecheck sweep
 
 help:
 	@echo "make build          build the app ($(CONFIG)) with xcodebuild"
@@ -21,6 +21,7 @@ help:
 	@echo "make test           run the core tests (swift test)"
 	@echo "make core           build the core package only (swift build)"
 	@echo "make typecheck      type-check the app sources against the package build, without Xcode"
+	@echo "make sweep          translate every eXoDOS config in the mounted library and print a summary"
 	@echo "Set CONFIG=Release for a release build."
 
 build:
@@ -39,6 +40,11 @@ test:
 
 core:
 	swift build
+
+# Walks the real library (/Volumes/eXoDOS_ro or $$EXOMAC_TEST_LIBRARY) and
+# reports configs, builds and translation notes without starting anything.
+sweep:
+	EXOMAC_SWEEP=1 swift test --filter LaunchSweep 2>&1 | grep -v '^\[' 
 
 # Checks that the app only uses public core API, using the package's build
 # products instead of Xcode. SwiftUI and AVFoundation come from the SDK.

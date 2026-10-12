@@ -15,6 +15,12 @@ The games, media and emulators are not part of this project.
 - An eXoDOS v6 installation (the full set, or Lite with games downloaded).
 - [DOSBox Staging](https://www.dosbox-staging.org) in `/Applications`, and
   optionally [DOSBox-X](https://dosbox-x.com). Both can be located in Settings.
+- For console, computer and arcade platforms from a LaunchBox library:
+  [RetroArch](https://www.retroarch.com) with the cores you need,
+  [Dolphin](https://dolphin-emu.org) for GameCube and Wii,
+  [MAME](https://www.mamedev.org) for arcade sets, or
+  [Mednafen](https://mednafen.github.io). Settings › Emulators assigns one
+  per platform, following the library's `Emulators.xml` by default.
 
 ## Build
 
@@ -25,6 +31,7 @@ make run                  # build with xcodebuild, then start the app
 make run ARGS='-libraryPath /Volumes/eXoDOS_ro -musicEnabled 0'
 make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
+make sweep                # translate every eXoDOS config in the mounted library
 ```
 
 The core library (XML parsing, media lookup, config translation, music

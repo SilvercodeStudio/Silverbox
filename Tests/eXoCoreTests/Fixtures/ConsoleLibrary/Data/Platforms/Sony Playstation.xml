@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>Games\Sony Playstation\Packed Game.rar</ApplicationPath>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000006</ID>
+    <Platform>Sony Playstation</Platform>
+    <Title>Packed Game</Title>
+  </Game>
+</LaunchBox>

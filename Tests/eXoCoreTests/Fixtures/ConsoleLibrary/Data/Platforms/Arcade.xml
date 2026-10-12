@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Game>
+    <ApplicationPath>Games\Arcade\pacman.zip</ApplicationPath>
+    <Emulator>27377fec-0000-0000-0000-000000000001</Emulator>
+    <ID>cccccccc-0000-0000-0000-000000000003</ID>
+    <Platform>Arcade</Platform>
+    <Title>Pac-Man</Title>
+  </Game>
+</LaunchBox>

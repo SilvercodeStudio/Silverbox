@@ -77,6 +77,7 @@ struct GameInfoSheet: View {
     let game: Game
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         @Bindable var model = model
@@ -125,7 +126,7 @@ struct GameInfoSheet: View {
                         }
                         Picker("Emulator", selection: emulatorBinding) {
                             Text("Automatic (\(model.settings.emulatorPolicy == .recommended ? (build?.recommendedEmulator ?? .dosboxStaging).displayName : "per Settings"))").tag(EmulatorKind?.none)
-                            ForEach(EmulatorKind.allCases) { kind in
+                            ForEach(EmulatorKind.dosBox) { kind in
                                 Text(kind.displayName).tag(EmulatorKind?.some(kind))
                             }
                         }
@@ -134,6 +135,26 @@ struct GameInfoSheet: View {
                                 Text("First available").tag(String?.none)
                                 ForEach(variants) { variant in
                                     Text(variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : "")).tag(String?.some(variant.id))
+                                }
+                            }
+                        }
+                    }
+                }
+                if game.launchKind == .emulator {
+                    let resolved = model.resolvedEmulator(for: game)
+                    Section("Launch") {
+                        LabeledContent("File") { PathText(game.applicationPath) }
+                        if let title = resolved.launchBoxEmulatorTitle {
+                            LabeledContent("LaunchBox runs with") { Text(title + (resolved.launchBoxCore.map { " · \($0)" } ?? "")) }
+                        }
+                        LabeledContent("Mac emulator") {
+                            HStack {
+                                Text(resolved.isReady ? resolved.summary : (resolved.problem ?? "Not ready"))
+                                    .foregroundStyle(resolved.isReady ? Theme.accent : .orange)
+                                    .multilineTextAlignment(.trailing)
+                                Button("Emulator Settings…") {
+                                    SettingsState.shared.show(tab: .emulators)
+                                    openSettings()
                                 }
                             }
                         }
@@ -343,7 +364,7 @@ struct LaunchOptionsSheet: View {
                 }
                 Section("Emulator") {
                     Picker("Emulator", selection: $emulator) {
-                        ForEach(EmulatorKind.allCases) { kind in
+                        ForEach(EmulatorKind.dosBox) { kind in
                             Text(kind.displayName + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : "")).tag(kind)
                         }
                     }

@@ -55,6 +55,7 @@ nonisolated public enum LaunchPlanError: Error, Sendable, Equatable {
     case notInstalled(folderName: String)
     case missingConfig(URL)
     case emulatorMissing(EmulatorKind)
+    case notADOSBoxEmulator(EmulatorKind)
 }
 
 nonisolated extension LaunchPlanError: LocalizedError {
@@ -65,6 +66,7 @@ nonisolated extension LaunchPlanError: LocalizedError {
         case .notInstalled(let folder): return "The game is not installed: folder \(folder) is missing under eXo/eXoDOS."
         case .missingConfig(let url): return "The DOSBox config is missing: \(url.path)"
         case .emulatorMissing(let kind): return "\(kind.displayName) was not found. Set its location in Settings."
+        case .notADOSBoxEmulator(let kind): return "\(kind.displayName) cannot run DOS games; choose DOSBox Staging or DOSBox-X."
         }
     }
 }
@@ -126,6 +128,7 @@ nonisolated public struct LaunchPlanner: Sendable {
             throw LaunchPlanError.missingGameFolder
         }
         guard let location = snapshot.installedLocation(for: game) else { throw LaunchPlanError.notInstalled(folderName: folderName) }
+        guard emulator.kind.isDOSBox else { throw LaunchPlanError.notADOSBoxEmulator(emulator.kind) }
         guard emulator.exists else { throw LaunchPlanError.emulatorMissing(emulator.kind) }
 
         let sourceURL = overrideConfigURL(for: game, variant: variant)
@@ -176,6 +179,8 @@ nonisolated public struct LaunchPlanner: Sendable {
             arguments = ["--noprimaryconf", "--nolocalconf", "--working-dir", workingDirectory.path, "--conf", configURL.path]
         case .dosboxX:
             arguments = ["-defaultdir", workingDirectory.path, "-conf", configURL.path, "-fastlaunch"]
+        case .retroArch, .dolphin, .mame, .mednafen:
+            throw LaunchPlanError.notADOSBoxEmulator(emulator.kind)
         }
 
         return LaunchPlan(

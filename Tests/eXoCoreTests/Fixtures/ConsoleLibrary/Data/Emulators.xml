@@ -1,0 +1,65 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Emulator>
+    <ApplicationPath>Emulators\RetroArch\retroarch.exe</ApplicationPath>
+    <ID>d0475483-1820-494b-b815-07d17373f71c</ID>
+    <Title>RetroArch</Title>
+  </Emulator>
+  <Emulator>
+    <ApplicationPath>Emulators\Dolphin-x64\Dolphin.exe</ApplicationPath>
+    <CommandLine>-b -e</CommandLine>
+    <ID>326a65db-e611-4ee3-adaf-b22ecfeb4c0b</ID>
+    <Title>Dolphin</Title>
+  </Emulator>
+  <Emulator>
+    <ApplicationPath>Emulators\MAME 0.247\mame.exe</ApplicationPath>
+    <CommandLine>-artwork_crop -skip_gameinfo -waitvsync -nofilter -keyboardprovider dinput</CommandLine>
+    <ID>27377fec-0000-0000-0000-000000000001</ID>
+    <Title>MAME 0.247</Title>
+  </Emulator>
+  <Emulator>
+    <ApplicationPath>Emulators\AppleWin\AppleWin.exe</ApplicationPath>
+    <CommandLine>-d1</CommandLine>
+    <ID>89b48d9f-0000-0000-0000-000000000002</ID>
+    <Title>AppleWin</Title>
+  </Emulator>
+  <EmulatorPlatform>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <Platform>Nintendo Entertainment System</Platform>
+    <CommandLine>-L "cores\fceumm_libretro.dll" -f</CommandLine>
+    <Default>true</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <Platform>Nintendo GameCube</Platform>
+    <CommandLine>-L "cores\dolphin_libretro.dll" -f</CommandLine>
+    <Default>true</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>326a65db-e611-4ee3-adaf-b22ecfeb4c0b</Emulator>
+    <Platform>Nintendo GameCube</Platform>
+    <Default>false</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>27377fec-0000-0000-0000-000000000001</Emulator>
+    <Platform>Arcade</Platform>
+    <Default>true</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <Platform>Arcade</Platform>
+    <CommandLine>-L "cores\mame2003_plus_libretro.dll" -f</CommandLine>
+    <Default>false</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>89b48d9f-0000-0000-0000-000000000002</Emulator>
+    <Platform>Apple II</Platform>
+    <Default>true</Default>
+  </EmulatorPlatform>
+  <EmulatorPlatform>
+    <Emulator>d0475483-1820-494b-b815-07d17373f71c</Emulator>
+    <Platform>Sony Playstation</Platform>
+    <CommandLine>-L "cores\duckstation_libretro.dll" -f</CommandLine>
+    <Default>true</Default>
+  </EmulatorPlatform>
+</LaunchBox>

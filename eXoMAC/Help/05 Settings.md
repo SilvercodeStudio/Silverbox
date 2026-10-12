@@ -12,7 +12,7 @@ The eXoDOS folder and what was found in it; the local data folder; where new gam
 
 ## Emulators
 
-Where DOSBox Staging and DOSBox-X are installed, and which one to use by default.
+Where DOSBox Staging and DOSBox-X are installed, and which one to use by default. Below them, RetroArch (with its cores folder), Dolphin, MAME and Mednafen for console, computer and arcade platforms, and a list of those platforms with the emulator and core each one uses.
 
 ## Display & Sound
 

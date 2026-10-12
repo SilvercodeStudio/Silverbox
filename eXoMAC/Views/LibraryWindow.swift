@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct LibraryWindow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
@@ -24,7 +25,9 @@ struct LibraryWindow: View {
         .onAppear {
             #if DEBUG
             DebugScreenshot.scheduleIfRequested()
-            if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty { openWindow(id: id) }
+            if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty {
+                if id == "settings" { openSettings() } else { openWindow(id: id) }
+            }
             #endif
         }
         .sheet(item: $model.pendingInstall) { game in
@@ -275,13 +278,13 @@ struct NowPlayingBar: View {
                     Text(Formatters.elapsed(context.date.timeIntervalSince(session.startedAt)))
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                 }
-                Text(session.plan.emulator.kind.displayName)
+                Text(session.launch.emulator.kind.displayName)
                     .foregroundStyle(Theme.textSecondary)
-                if !session.plan.notes.isEmpty {
-                    Button("\(session.plan.notes.count) notes") { showingNotes = true }
+                if !session.launch.notes.isEmpty {
+                    Button("\(session.launch.notes.count) notes") { showingNotes = true }
                         .popover(isPresented: $showingNotes) {
                             VStack(alignment: .leading, spacing: 8) {
-                                ForEach(session.plan.notes, id: \.self) { Text($0) }
+                                ForEach(session.launch.notes, id: \.self) { Text($0) }
                             }
                             .padding()
                             .frame(width: 420)

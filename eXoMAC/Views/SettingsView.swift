@@ -2,19 +2,47 @@ import eXoCore
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Lets other windows open Settings on a given tab.
+@Observable
+final class SettingsState {
+    static let shared = SettingsState()
+
+    struct Request: Equatable {
+        let id = UUID()
+        let tab: SettingsView.Tab
+    }
+
+    private(set) var request: Request?
+
+    func show(tab: SettingsView.Tab) {
+        request = Request(tab: tab)
+    }
+}
+
 struct SettingsView: View {
+    enum Tab: String { case general, library, emulators, display }
+    /// Debug builds can start on a tab with `-settingsTab emulators`.
+    @State private var tab = Tab(rawValue: UserDefaults.standard.string(forKey: "settingsTab") ?? "") ?? .general
+
     var body: some View {
-        TabView {
+        let state = SettingsState.shared
+        TabView(selection: $tab) {
             GeneralSettingsView()
                 .tabItem { Label("General", systemImage: "slider.horizontal.3") }
+                .tag(Tab.general)
             LibrarySettingsView()
                 .tabItem { Label("Library", systemImage: "folder") }
+                .tag(Tab.library)
             EmulatorSettingsView()
                 .tabItem { Label("Emulators", systemImage: "display") }
+                .tag(Tab.emulators)
             DisplaySettingsView()
                 .tabItem { Label("Display & Sound", systemImage: "tv.and.hifispeaker.fill") }
+                .tag(Tab.display)
         }
         .frame(width: 640)
+        .onAppear { if let request = state.request { tab = request.tab } }
+        .onChange(of: state.request) { _, request in if let request { tab = request.tab } }
     }
 }
 
@@ -183,39 +211,22 @@ struct CollectionEditor: View {
 struct EmulatorSettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var picking: EmulatorKind?
+    @State private var pickingCores = false
 
     var body: some View {
         @Bindable var model = model
         Form {
-            Section("Which emulator to use") {
+            Section("DOSBox for eXoDOS games") {
                 Picker("Default", selection: $model.settings.emulatorPolicy) {
                     ForEach(EmulatorPolicy.allCases) { Text($0.displayName).tag($0) }
                 }
                 Text("eXoDOS picks a DOSBox build per game (0.74, ECE, Staging, SVN Daum or DOSBox-X). “Match” maps Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging. You can override any game in its info sheet.")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            ForEach(EmulatorKind.allCases) { kind in
+            ForEach(EmulatorKind.dosBox) { kind in
                 Section(kind.displayName) {
-                    let installation = model.settings.emulatorInstallation(kind)
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(installation?.executableURL.path ?? "Not found")
-                                .font(Theme.mono)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            if let installation {
-                                Label(installation.exists ? "Ready" : "Executable missing", systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle")
-                                    .font(.caption)
-                                    .foregroundStyle(installation.exists ? Theme.accent : .red)
-                            }
-                        }
-                        Spacer()
-                        Button("Choose…") { picking = kind }
-                        if path(for: kind) != nil {
-                            Button("Auto-detect") { setPath(nil, for: kind) }
-                        }
-                    }
-                    if kind == .dosboxStaging, let installation {
+                    EmulatorPathRow(kind: kind, picking: $picking)
+                    if kind == .dosboxStaging, let installation = model.settings.emulatorInstallation(kind) {
                         Text(EmulatorCapabilities.fluidSynthAvailable(for: installation)
                              ? "FluidSynth is available for General MIDI with the eXoDOS Sound Canvas SoundFont."
                              : "FluidSynth is not installed, so General MIDI games use the macOS synthesizer. Install it with Homebrew (brew install fluid-synth) for the eXoDOS SoundFont.")
@@ -223,30 +234,227 @@ struct EmulatorSettingsView: View {
                     }
                 }
             }
+            Section("Consoles, computers and arcade") {
+                Text("Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            ForEach(EmulatorKind.romEmulators) { kind in
+                Section(kind.displayName) {
+                    EmulatorPathRow(kind: kind, picking: $picking)
+                    Text(kind.summary).font(.caption).foregroundStyle(.secondary)
+                    if kind == .retroArch { retroArchCoresRow }
+                }
+            }
+            Section("Platforms") {
+                PlatformAssignmentsView()
+            }
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
         .fileImporter(isPresented: Binding(get: { picking != nil }, set: { if !$0 { picking = nil } }),
                       allowedContentTypes: [.applicationBundle, .unixExecutable]) { result in
             if case .success(let url) = result, let kind = picking {
-                setPath(url.path, for: kind)
+                model.settings.setEmulatorPath(url.path, for: kind)
             }
             picking = nil
         }
-    }
-
-    private func path(for kind: EmulatorKind) -> String? {
-        switch kind {
-        case .dosboxStaging: return model.settings.stagingExecutablePath
-        case .dosboxX: return model.settings.dosboxXExecutablePath
+        .fileImporter(isPresented: $pickingCores, allowedContentTypes: [.folder]) { result in
+            if case .success(let url) = result { model.settings.retroArchCoresPath = url.path }
         }
     }
 
-    private func setPath(_ path: String?, for kind: EmulatorKind) {
-        switch kind {
-        case .dosboxStaging: model.settings.stagingExecutablePath = path
-        case .dosboxX: model.settings.dosboxXExecutablePath = path
+    @ViewBuilder
+    private var retroArchCoresRow: some View {
+        let setup = model.settings.retroArchSetup
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Cores folder").font(.subheadline)
+                Text(setup?.coresDirectory?.path ?? (setup == nil ? "RetroArch is not installed" : "Not found"))
+                    .font(Theme.mono).lineLimit(1).truncationMode(.middle)
+                if let setup, setup.coresDirectory != nil {
+                    let count = setup.installedCores().count
+                    Text(count == 0 ? "No cores installed yet. Download them in RetroArch under Online Updater › Core Downloader."
+                         : "\(count) cores installed")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button("Choose…") { pickingCores = true }
+            if model.settings.retroArchCoresPath != nil {
+                Button("Auto-detect") { model.settings.retroArchCoresPath = nil }
+            }
         }
+    }
+}
+
+/// Where one emulator is installed, with Choose and Auto-detect.
+struct EmulatorPathRow: View {
+    let kind: EmulatorKind
+    @Binding var picking: EmulatorKind?
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        let installation = model.settings.emulatorInstallation(kind)
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(installation?.executableURL.path ?? "Not found")
+                    .font(Theme.mono)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if let installation {
+                    Label(installation.exists ? "Ready" : "Executable missing", systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(installation.exists ? Theme.accent : .red)
+                } else if let url = URL(string: kind.website) {
+                    Link("Download from \(url.host ?? kind.website)", destination: url).font(.caption)
+                }
+            }
+            Spacer()
+            Button("Choose…") { picking = kind }
+            if model.settings.emulatorPath(for: kind) != nil {
+                Button("Auto-detect") { model.settings.setEmulatorPath(nil, for: kind) }
+            }
+        }
+    }
+}
+
+/// One row per platform with ROM games: which emulator and core run it.
+struct PlatformAssignmentsView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let resolver = model.emulatorResolver()
+        let cores = model.settings.retroArchSetup?.installedCores() ?? []
+        if model.romPlatforms.isEmpty {
+            Text("No console, computer or arcade platforms are loaded. Add a LaunchBox library in the Library tab.")
+                .font(.caption).foregroundStyle(.secondary)
+        } else {
+            ForEach(model.romPlatforms) { platform in
+                PlatformAssignmentRow(platform: platform, resolved: resolver.resolve(platform: platform.name), cores: cores)
+            }
+        }
+    }
+}
+
+struct PlatformAssignmentRow: View {
+    let platform: AppModel.RomPlatformSummary
+    let resolved: ResolvedEmulatorAssignment
+    let cores: [RetroArchCore]
+    @Environment(AppModel.self) private var model
+
+    private var userAssignment: PlatformEmulatorAssignment? { model.settings.platformAssignment(for: platform.name) }
+    private var effectiveKind: EmulatorKind? { userAssignment?.emulator ?? resolved.assignment?.emulator }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(platform.name).fontWeight(.semibold)
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("Emulator", selection: emulatorBinding) {
+                    Text("Automatic").tag(EmulatorKind?.none)
+                    ForEach(EmulatorKind.romEmulators) { Text($0.displayName).tag(EmulatorKind?.some($0)) }
+                }
+                .labelsHidden()
+                .frame(width: 112)
+                if effectiveKind == .retroArch {
+                    Picker("Core", selection: coreBinding) {
+                        Text("Choose a core").tag(String?.none)
+                        ForEach(missingCores, id: \.self) { Text("\($0) (missing)").tag(String?.some($0)) }
+                        ForEach(cores) { Text($0.title).tag(String?.some($0.name)) }
+                    }
+                    .labelsHidden()
+                    .frame(width: 236)
+                }
+            }
+            if userAssignment != nil {
+                TextField("Extra arguments", text: argumentsBinding)
+                    .font(Theme.mono)
+                    .textFieldStyle(.roundedBorder)
+            }
+            Label(status, systemImage: resolved.isReady ? "checkmark.circle.fill" : "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(resolved.isReady ? Theme.accent : .orange)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var detail: String {
+        var text = platform.gameCount == 1 ? "1 game" : "\(platform.gameCount) games"
+        if let title = resolved.launchBoxEmulatorTitle {
+            text += " · LaunchBox uses \(title)"
+            if let core = resolved.launchBoxCore { text += " with \(core)" }
+        }
+        return text
+    }
+
+    private var status: String {
+        if resolved.isReady {
+            let origin = resolved.source == .user ? "" : " (from LaunchBox)"
+            return "Ready: \(resolved.summary)\(origin)"
+        }
+        // The hint to open Settings is redundant here.
+        return (resolved.problem ?? "Not ready")
+            .replacingOccurrences(of: " Choose it in Settings › Emulators.", with: "")
+            .replacingOccurrences(of: " Choose an emulator in Settings › Emulators.", with: "")
+            .replacingOccurrences(of: " Choose one in Settings › Emulators.", with: "")
+            .replacingOccurrences(of: " in Settings › Emulators.", with: ".")
+    }
+
+    /// Cores named by LaunchBox or the user that are not in the cores folder.
+    private var missingCores: [String] {
+        let installed = Set(cores.map(\.name))
+        var names: [String] = []
+        for candidate in [resolved.launchBoxCore, userAssignment?.core, resolved.assignment?.core].compactMap({ $0 }) {
+            let name = RetroArchSetup.coreName(from: candidate)
+            if !installed.contains(name), !names.contains(name) { names.append(name) }
+        }
+        return names
+    }
+
+    private var emulatorBinding: Binding<EmulatorKind?> {
+        Binding(
+            get: { userAssignment?.emulator },
+            set: { kind in
+                guard let kind else {
+                    model.settings.setPlatformAssignment(nil, for: platform.name)
+                    return
+                }
+                let previous = userAssignment
+                let core = kind == .retroArch ? (previous?.core ?? resolved.launchBoxCore) : nil
+                let arguments = previous?.arguments ?? (resolved.assignment?.emulator == kind ? resolved.assignment?.arguments ?? "" : "")
+                model.settings.setPlatformAssignment(PlatformEmulatorAssignment(platform: platform.name, emulator: kind, core: core, arguments: arguments),
+                                                     for: platform.name)
+            }
+        )
+    }
+
+    private var coreBinding: Binding<String?> {
+        Binding(
+            get: {
+                let core = userAssignment?.core ?? (resolved.assignment?.emulator == .retroArch ? resolved.assignment?.core : nil)
+                return core.map { RetroArchSetup.coreName(from: $0) }
+            },
+            set: { core in
+                model.settings.setPlatformAssignment(PlatformEmulatorAssignment(platform: platform.name, emulator: .retroArch, core: core,
+                                                                                arguments: userAssignment?.arguments ?? ""),
+                                                     for: platform.name)
+            }
+        )
+    }
+
+    private var argumentsBinding: Binding<String> {
+        Binding(
+            get: { userAssignment?.arguments ?? "" },
+            set: { text in
+                guard var assignment = userAssignment else { return }
+                assignment.arguments = text
+                model.settings.setPlatformAssignment(assignment, for: platform.name)
+            }
+        )
     }
 }
 

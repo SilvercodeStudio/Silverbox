@@ -6,13 +6,13 @@ import Observation
 /// A running emulator process.
 struct GameSession: Identifiable {
     let id: UUID
-    let plan: LaunchPlan
+    let launch: EmulatorLaunch
     let startedAt: Date
     let logURL: URL?
     let processIdentifier: Int32
     var exitStatus: Int32 = 0
 
-    var game: Game { plan.game }
+    var game: Game { launch.game }
 }
 
 /// Starts emulators and reports when they quit.
@@ -27,6 +27,10 @@ final class GameLauncher {
     var isRunning: Bool { !sessions.isEmpty }
 
     func launch(_ plan: LaunchPlan) throws {
+        try launch(plan.launch)
+    }
+
+    func launch(_ plan: EmulatorLaunch) throws {
         let id = UUID()
         let process = Process()
         process.executableURL = plan.emulator.executableURL
@@ -55,7 +59,7 @@ final class GameLauncher {
         }
         try process.run()
         processes[id] = process
-        sessions.append(GameSession(id: id, plan: plan, startedAt: Date(), logURL: logURL, processIdentifier: process.processIdentifier))
+        sessions.append(GameSession(id: id, launch: plan, startedAt: Date(), logURL: logURL, processIdentifier: process.processIdentifier))
     }
 
     private func finish(id: UUID, status: Int32) {

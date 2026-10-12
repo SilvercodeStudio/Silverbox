@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="yes"?>
+<LaunchBox>
+  <Platform>
+    <Name>Nintendo Entertainment System</Name>
+    <Folder>Games\Nintendo Entertainment System</Folder>
+  </Platform>
+  <Platform>
+    <Name>Nintendo GameCube</Name>
+    <Folder>Games\Nintendo GameCube</Folder>
+  </Platform>
+  <Platform>
+    <Name>Arcade</Name>
+    <Folder>Games\Arcade</Folder>
+  </Platform>
+  <Platform>
+    <Name>Apple II</Name>
+    <Folder>Games\Apple II</Folder>
+  </Platform>
+  <Platform>
+    <Name>Sony Playstation</Name>
+    <Folder>Games\Sony Playstation</Folder>
+  </Platform>
+  <PlatformCategory>
+    <Name>Consoles</Name>
+    <NestedName>Consoles</NestedName>
+  </PlatformCategory>
+</LaunchBox>
