@@ -1,8 +1,8 @@
-# Welcome to eXo Client
+# Welcome to Autoexec.Mac
 
-eXo Client for Mac is a front-end for the eXoDOS and eXoWin9x game preservation collections. It reads an existing collection, shows the games with their box art, manuals and extras, and launches them in a DOSBox emulator with a configuration translated from the collection's Windows launch scripts.
+Autoexec.Mac is a front-end for the eXoDOS and eXoWin9x game preservation collections. It reads an existing collection, shows the games with their box art, manuals and extras, and launches them in a DOSBox emulator with a configuration translated from the collection's Windows launch scripts.
 
-The games, media and emulators are not part of eXo Client. You need:
+The games, media and emulators are not part of Autoexec.Mac. You need:
 
 - An eXoDOS collection (the full set, or the Lite set with games you have downloaded).
 - DOSBox Staging, and optionally DOSBox-X.

@@ -1,6 +1,6 @@
-# eXo Client for Mac (eXoMAC)
+# Autoexec.Mac (eXoMAC)
 
-eXo Client is an emulation front-end for the Mac, built for the eXoDOS and
+Autoexec.Mac is an emulation front-end for the Mac, built for the eXoDOS and
 eXoWin9x game preservation projects by the eXo team (https://www.retro-exo.com).
 It reads an existing eXoDOS collection (the LaunchBox XML metadata, box art,
 screenshots, manuals, music and videos) in place and launches games in DOSBox
@@ -24,7 +24,7 @@ The games, media and emulators are not part of this project.
 
 ## Build
 
-Open `eXoMAC.xcodeproj` and run the "eXo Client" scheme, or use the Makefile:
+Open `eXoMAC.xcodeproj` and run the "Autoexec.Mac" scheme, or use the Makefile:
 
 ```
 make run                  # build with xcodebuild, then start the app

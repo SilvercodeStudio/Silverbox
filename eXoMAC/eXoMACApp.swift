@@ -32,6 +32,7 @@ struct eXoMACApp: App {
 
         Window("About \(AppInfo.displayName)", id: "about") {
             AboutView()
+                .environment(model)
         }
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
@@ -41,6 +42,5 @@ struct eXoMACApp: App {
 
 /// Names shown to the user. Internal names stay `eXoMAC`.
 enum AppInfo {
-    static let displayName = "eXo Client"
-    static let fullName = "eXo Client for Mac"
+    static let displayName = "Autoexec.Mac"
 }

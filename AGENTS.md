@@ -10,11 +10,15 @@ Windows: it reads the eXoDOS / LaunchBox configuration files so that an
 eXoDOS installation or download is usable on the Mac. The actual emulators
 (DOSBox and related) are external to this front-end project.
 
-Names: `eXoMAC` is the internal name (project, module, bundle id, folders).
-The display name is "eXo Client" ("eXo Client for Mac" in the About box); it is
-set once in `AppInfo` (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
+Names: `eXoMAC` is the internal name (project, module, folders, the local
+data folder). The bundle identifier is `com.github.preston-landers.autoexec-mac`;
+settings saved under the old `…eXoMAC` identifier are read until a collection
+is configured.
+The display name is "Autoexec.Mac"; it is set once in `AppInfo`
+(`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 `INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
-`eXo Client.app`. Do not describe the app as a collection of classic Mac games.
+`Autoexec.Mac.app`. Credit the eXo project in the About box. Do not describe
+the app as a collection of classic Mac games.
 
 ## Layout
 
@@ -112,6 +116,13 @@ Makefile).
 - Help pages are Markdown files in `eXoMAC/Help/` (ordered by their numeric
   prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
   Help window. Add or edit pages there.
+- App icon. `eXoMAC/AppIcon.icon` (amber) is the Icon Composer file Xcode
+  compiles into the bundle icon; `eXoMAC/AppIcon-Green.icon` is the alternate,
+  compiled only when the target's "Include all app icon assets" is on. The app
+  icon setting shows the chosen one in the Dock and the About window through
+  `AppIconVariant.image`, which falls back to the flat 1024 px PNGs in the
+  `AppIconAmber` and `AppIconGreen` image sets. The design sources (SVG masters,
+  Icon Composer layers, classic PNG sets) live in `AM_icons/`.
 - Reference material: a read-only eXoDOS v6 copy at `/Volumes/eXoDOS_ro`,
   LaunchBox screenshots in `Launchbox Screenshots/`, and the design prototypes
   linked from `prompt.md`.
@@ -129,7 +140,7 @@ Makefile).
   `settings` with `-settingsTab emulators`) opens that window at start. Example:
 
   ```
-  "$BUILT_PRODUCTS_DIR/eXo Client.app/Contents/MacOS/eXo Client" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
+  "$BUILT_PRODUCTS_DIR/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
       -searchText ultima -selectTitle "Ultima V: Warriors of Destiny" -screenshotPath /tmp/shot.png
   ```
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.

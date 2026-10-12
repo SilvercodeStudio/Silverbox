@@ -2,7 +2,7 @@
 
 ## DOSBox for eXoDOS games
 
-eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, eXo Client maps these to the two emulators it supports:
+eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Autoexec.Mac maps these to the two emulators it supports:
 
 - **DOSBox Staging** for games set up for DOSBox 0.74, ECE and Staging. This is the default.
 - **DOSBox-X** for games set up for SVN Daum and DOSBox-X.
@@ -11,7 +11,7 @@ Settings › Emulators lets you choose where each emulator is installed, and whe
 
 ## How a game is configured
 
-eXo Client reads the game's `dosbox.conf` from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
+Autoexec.Mac reads the game's `dosbox.conf` from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
 
 ## Music and MIDI
 
@@ -23,7 +23,7 @@ General MIDI games use the collection's Sound Canvas SoundFont through FluidSynt
 
 Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform:
 
-- **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); eXo Client finds them in RetroArch's cores folder.
+- **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); Autoexec.Mac finds them in RetroArch's cores folder.
 - **Dolphin** runs Nintendo GameCube and Wii games.
 - **MAME** runs arcade ROM sets.
 - **Mednafen** covers a few more consoles from the command line.

@@ -6,7 +6,7 @@ Open the local data folder's `Logs` folder. Each game has a log with the exact c
 
 ## Saves are not kept
 
-If the game is unpacked inside a read-only eXoDOS folder, eXo Client mounts a writable overlay from the local data folder's `Overlay` folder. Saves go there. Games installed by eXo Client are unpacked into the local data folder and can be written to directly.
+If the game is unpacked inside a read-only eXoDOS folder, Autoexec.Mac mounts a writable overlay from the local data folder's `Overlay` folder. Saves go there. Games installed by Autoexec.Mac are unpacked into the local data folder and can be written to directly.
 
 ## Box art is missing
 
@@ -18,7 +18,7 @@ Set the location of DOSBox Staging or DOSBox-X in Settings › Emulators. Either
 
 ## A console game says its core is not installed
 
-RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder eXo Client reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
+RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder Autoexec.Mac reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
 
 ## Menu music does not play
 

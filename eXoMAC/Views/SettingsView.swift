@@ -52,6 +52,19 @@ struct GeneralSettingsView: View {
     var body: some View {
         @Bindable var model = model
         Form {
+            Section("App icon") {
+                HStack(spacing: 20) {
+                    ForEach(AppIconVariant.allCases) { variant in
+                        AppIconChoice(variant: variant, isSelected: model.settings.appIcon == variant) {
+                            model.settings.appIcon = variant
+                        }
+                    }
+                }
+                Text(
+                    "The Dock and the About window show the chosen icon. The Finder shows the amber icon built into the app."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
                 Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
@@ -538,5 +551,37 @@ struct DisplaySettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+    }
+}
+
+/// One app icon in the General tab, highlighted when it is the chosen one.
+struct AppIconChoice: View {
+    let variant: AppIconVariant
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(nsImage: variant.image)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 80, height: 80)
+                Text(variant.displayName)
+                    .font(.callout)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isSelected ? Color.accentColor.opacity(0.18) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

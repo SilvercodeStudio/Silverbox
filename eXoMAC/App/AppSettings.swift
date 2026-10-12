@@ -22,6 +22,36 @@ enum LibraryViewMode: String, Codable, CaseIterable {
     case grid, list
 }
 
+/// The two app icons from the design: amber or green phosphor on a dark CRT.
+enum AppIconVariant: String, CaseIterable, Codable, Identifiable {
+    case amber, green
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .amber: return "Amber"
+        case .green: return "Green"
+        }
+    }
+
+    /// The image set in the asset catalog that holds the 1024 px icon.
+    var imageName: String {
+        switch self {
+        case .amber: return "AppIconAmber"
+        case .green: return "AppIconGreen"
+        }
+    }
+
+    /// The Icon Composer icon of this colour, when the build compiled it in.
+    var iconName: String {
+        switch self {
+        case .amber: return "AppIcon"
+        case .green: return "AppIcon-Green"
+        }
+    }
+}
+
 /// Everything the user configures. Saved as JSON in UserDefaults.
 struct AppSettings: Codable, Equatable {
     /// Kept for migration from the single-library days.
@@ -46,6 +76,8 @@ struct AppSettings: Codable, Equatable {
     var sortOrder: GameSortOrder = .title
     var showHiddenGames = false
     var inspectorShown = true
+    /// Which of the two app icons the Dock and the About window show.
+    var appIcon: AppIconVariant = .amber
 
     static let defaultsKey = "eXoMAC.settings"
 
@@ -87,14 +119,20 @@ struct AppSettings: Codable, Equatable {
         sortOrder = try c.decodeIfPresent(GameSortOrder.self, forKey: .sortOrder) ?? .title
         showHiddenGames = try c.decodeIfPresent(Bool.self, forKey: .showHiddenGames) ?? false
         inspectorShown = try c.decodeIfPresent(Bool.self, forKey: .inspectorShown) ?? true
+        appIcon = try c.decodeIfPresent(AppIconVariant.self, forKey: .appIcon) ?? .amber
     }
 
+    /// The bundle identifier before the app was renamed. Settings saved under it
+    /// are used until a collection is configured under the new one.
+    static let legacyDefaultsSuite = "com.github.preston-landers.eXoMAC"
+
     static func load(from defaults: UserDefaults = .standard) -> AppSettings {
-        var settings = AppSettings()
-        if let data = defaults.data(forKey: defaultsKey),
-            let saved = try? JSONDecoder().decode(AppSettings.self, from: data)
+        var settings = decode(defaults.data(forKey: defaultsKey)) ?? AppSettings()
+        if settings.collections.isEmpty, Bundle.main.bundleIdentifier != legacyDefaultsSuite,
+            let legacy = decode(UserDefaults(suiteName: legacyDefaultsSuite)?.data(forKey: defaultsKey)),
+            !legacy.collections.isEmpty
         {
-            settings = saved
+            settings = legacy
         }
         // A library chosen before collections existed becomes the first collection.
         if settings.collections.isEmpty, let path = settings.libraryPath, !path.isEmpty {
@@ -120,6 +158,10 @@ struct AppSettings: Codable, Equatable {
         return settings
     }
 
+    private static func decode(_ data: Data?) -> AppSettings? {
+        data.flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) }
+    }
+
     func save(to defaults: UserDefaults = .standard) {
         guard !transient else { return }
         if let data = try? JSONEncoder().encode(self) {
@@ -130,7 +172,8 @@ struct AppSettings: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
             dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
-            musicEnabled, musicVolume, tileSize, viewMode, sortOrder, showHiddenGames, inspectorShown
+            musicEnabled, musicVolume, tileSize, viewMode, sortOrder, showHiddenGames, inspectorShown,
+            appIcon
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -152,6 +195,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(sortOrder, forKey: .sortOrder)
         try c.encode(showHiddenGames, forKey: .showHiddenGames)
         try c.encode(inspectorShown, forKey: .inspectorShown)
+        try c.encode(appIcon, forKey: .appIcon)
     }
 
     var enabledCollections: [LibraryCollection] { collections.filter(\.isEnabled) }

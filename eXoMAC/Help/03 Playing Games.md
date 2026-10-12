@@ -4,11 +4,11 @@ Select a game and press Play, press Command-Return, or double-click its box.
 
 ## Installing
 
-The first time you play a game, eXo Client unpacks its archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If you uninstalled the game before and kept a backup, you can restore your saved progress.
+The first time you play a game, Autoexec.Mac unpacks its archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If you uninstalled the game before and kept a backup, you can restore your saved progress.
 
 ## The launch options dialog
 
-Before a game starts, eXo Client shows its launch options. On Windows, eXoDOS asks the same questions in a console window when you play or configure a game. The dialog starts from the defaults in Settings › Display & Sound.
+Before a game starts, Autoexec.Mac shows its launch options. On Windows, eXoDOS asks the same questions in a console window when you play or configure a game. The dialog starts from the defaults in Settings › Display & Sound.
 
 - **Version** — some games come in several editions, for example CGA, EGA and VGA releases, or original and patched versions. Games that show their version menu inside DOSBox, such as A-10 Tank Killer, still do so.
 - **Full screen** or a window. In full screen the emulator scales the picture to your display.
@@ -21,7 +21,7 @@ Turn on "Remember these choices for this game" to keep them for next time. **Con
 
 ## Uninstalling
 
-Choose Uninstall from the game's context menu. eXo Client offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.
+Choose Uninstall from the game's context menu. Autoexec.Mac offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.
 
 ## Extras and manuals
 
@@ -29,4 +29,4 @@ The inspector lists the game's manual and extras: reference cards, maps, clueboo
 
 ## Menu music
 
-Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into eXo Client. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General.
+Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Autoexec.Mac. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General.

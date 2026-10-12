@@ -1,4 +1,4 @@
-# Shortcuts for building, running and testing eXo Client.
+# Shortcuts for building, running and testing Autoexec.Mac.
 #
 #   make run ARGS='-libraryPath /Volumes/eXoDOS_ro -musicEnabled 0'
 #
@@ -6,7 +6,7 @@
 # Xcode and from here share the same incremental state.
 
 PROJECT = eXoMAC.xcodeproj
-SCHEME = "eXo Client"
+SCHEME = "Autoexec.Mac"
 CONFIG ?= Debug
 ARGS ?=
 

@@ -20,6 +20,7 @@ final class AppModel {
             settings.save()
             if settings.musicVolume != oldValue.musicVolume { music.volume = settings.musicVolume }
             if settings.musicEnabled != oldValue.musicEnabled { updateMusic() }
+            if settings.appIcon != oldValue.appIcon { applyAppIcon() }
             if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
                 refreshVisibleGames()
             }
@@ -89,6 +90,7 @@ final class AppModel {
         settings = AppSettings.load()
         userState = (try? userStateStore.load()) ?? UserLibraryState()
         music.volume = settings.musicVolume
+        applyAppIcon()
         // Debug conveniences: `-searchText ultima -selectTitle "Ultima V: Warriors of Destiny"`.
         if let text = UserDefaults.standard.string(forKey: "searchText") { searchText = text }
         pendingSelectTitle = UserDefaults.standard.string(forKey: "selectTitle")
@@ -101,6 +103,12 @@ final class AppModel {
     }
 
     // MARK: - Collections and loading
+
+    /// Shows the chosen icon in the Dock; nil restores the bundle icon with its
+    /// appearance variants. The Finder keeps the icon built into the bundle.
+    private func applyAppIcon() {
+        NSApplication.shared.applicationIconImage = settings.appIcon == .amber ? nil : settings.appIcon.image
+    }
 
     var localStore: LocalStore { settings.localStore }
     var collections: [LibraryCollection] { settings.collections }
@@ -685,5 +693,13 @@ final class AppModel {
 
     func open(_ url: URL) {
         NSWorkspace.shared.open(url)
+    }
+}
+
+extension AppIconVariant {
+    /// The icon as the system renders it from the Icon Composer file, else
+    /// the flat PNG from the image set.
+    var image: NSImage {
+        NSImage(named: iconName) ?? NSImage(named: imageName) ?? NSImage()
     }
 }

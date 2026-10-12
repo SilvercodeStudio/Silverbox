@@ -4,7 +4,7 @@ Open Settings with Command-Comma.
 
 ## General
 
-Menu music on or off and its volume; whether to show the launch options dialog before each game; whether hidden games appear in the library.
+The app icon, amber or green, which the Dock and the About window show; menu music on or off and its volume; whether to show the launch options dialog before each game; whether hidden games appear in the library.
 
 ## Library
 

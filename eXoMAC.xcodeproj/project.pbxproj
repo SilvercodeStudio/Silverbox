@@ -28,7 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		04788C55307BEF960061AE3E /* eXo Client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "eXo Client.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		04788C55307BEF960061AE3E /* Autoexec.Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Autoexec.Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04788C64307BEF960061AE3E /* eXoMACTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -84,7 +84,7 @@
 		04788C56307BEF960061AE3E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04788C55307BEF960061AE3E /* eXo Client.app */,
+				04788C55307BEF960061AE3E /* Autoexec.Mac.app */,
 				04788C64307BEF960061AE3E /* eXoMACTests.xctest */,
 				04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */,
 			);
@@ -112,7 +112,7 @@
 				040E9EFC307C63D700F9423C /* eXoCore */,
 			);
 			productName = eXoMAC;
-			productReference = 04788C55307BEF960061AE3E /* eXo Client.app */;
+			productReference = 04788C55307BEF960061AE3E /* Autoexec.Mac.app */;
 			productType = "com.apple.product-type.application";
 		};
 		04788C63307BEF960061AE3E /* eXoMACTests */ = {
@@ -375,15 +375,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4327JHRP8K;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "eXo Client";
+				INFOPLIST_KEY_CFBundleDisplayName = Autoexec.Mac;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -409,9 +410,9 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMAC";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.autoexec-mac";
 				PRODUCT_MODULE_NAME = eXoMAC;
-				PRODUCT_NAME = "eXo Client";
+				PRODUCT_NAME = Autoexec.Mac;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -431,15 +432,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4327JHRP8K;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "eXo Client";
+				INFOPLIST_KEY_CFBundleDisplayName = Autoexec.Mac;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -465,9 +467,9 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMAC";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.autoexec-mac";
 				PRODUCT_MODULE_NAME = eXoMAC;
-				PRODUCT_NAME = "eXo Client";
+				PRODUCT_NAME = Autoexec.Mac;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -503,7 +505,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXo Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXo Client";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac";
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Debug;
@@ -529,7 +531,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/eXo Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/eXo Client";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac";
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
