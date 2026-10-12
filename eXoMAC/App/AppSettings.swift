@@ -1,3 +1,4 @@
+import eXoCore
 import Foundation
 
 /// How eXoMAC picks an emulator for a game.

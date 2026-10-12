@@ -1,12 +1,15 @@
 // swift-tools-version: 6.2
 //
-// This manifest builds the portable, Foundation-only core of eXoMAC as a
-// standalone Swift package so it can be compiled and tested from the command
-// line (and, later, on Linux). The Xcode app target compiles the same files
-// directly through its folder-synchronized group, so there is nothing to link.
+// This manifest builds the portable, Foundation-only core of eXoMAC as the
+// eXoCore library, plus the two vendored C decoders it uses for menu music.
+// The Xcode app target links the eXoCore product of this package (added as a
+// local package dependency), and the tests run from the command line:
 //
-//   swift build          # compiles eXoMAC/Core as the eXoCore module
+//   swift build          # eXoCore and the vendored C targets
 //   swift test           # runs Tests/eXoCoreTests
+//
+// Vendored C code lives in its own target under Sources/ with the upstream
+// LICENSE and a VENDOR.md note; see CLAUDE.md for the rules.
 //
 import PackageDescription
 
@@ -26,9 +29,16 @@ let package = Package(
         .library(name: "eXoCore", targets: ["eXoCore"]),
     ],
     targets: [
+        // stb_vorbis: Ogg Vorbis decoder (public domain / MIT), one C file.
+        .target(name: "CStbVorbis"),
+        // libxmp-lite: MOD, S3M, XM and IT module player (MIT).
+        .target(
+            name: "CXmpLite",
+            cSettings: [.define("LIBXMP_CORE_PLAYER"), .define("LIBXMP_STATIC")]
+        ),
         .target(
             name: "eXoCore",
-            path: "eXoMAC/Core",
+            dependencies: ["CStbVorbis", "CXmpLite"],
             swiftSettings: coreSettings
         ),
         .testTarget(

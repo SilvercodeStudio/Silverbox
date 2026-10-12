@@ -1,9 +1,11 @@
+import eXoCore
 import SwiftUI
 import UniformTypeIdentifiers
 
 /// The main window: sidebar, game collection (or game page), inspector.
 struct LibraryWindow: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
@@ -22,6 +24,7 @@ struct LibraryWindow: View {
         .onAppear {
             #if DEBUG
             DebugScreenshot.scheduleIfRequested()
+            if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty { openWindow(id: id) }
             #endif
         }
         .sheet(item: $model.pendingInstall) { game in
@@ -247,7 +250,9 @@ struct MusicBar: View {
     }
 
     private var statusLine: String {
-        if model.music.isUnsupportedFormat { return "Menu music, format not supported" }
+        if model.music.isUnsupportedFormat {
+            return model.music.errorMessage ?? "Menu music, .\(model.music.currentURL?.pathExtension.lowercased() ?? "") format not supported"
+        }
         if model.music.currentURL == nil { return "Menu music" }
         return model.music.isPlaying ? "Menu music, playing" : "Menu music, paused"
     }

@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 
 /// Confirms installation (unzipping) of a game.

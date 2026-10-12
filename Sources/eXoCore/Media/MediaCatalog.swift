@@ -104,7 +104,11 @@ public actor MediaCatalog {
 
     public static let videoExtensions: Set<String> = ["mp4", "m4v", "mov", "mkv", "avi", "webm"]
     public static let manualExtensions: Set<String> = ["pdf", "txt", "cbz", "cbr", "html", "htm", "doc", "docx"]
-    public static let musicExtensions: Set<String> = ["mp3", "ogg", "m4a", "flac", "wav", "aac"]
+    /// Music formats in order of preference when a game has several files:
+    /// what macOS plays itself, then the bundled decoders (see ``MusicDecoders``),
+    /// then formats that are listed but cannot be played.
+    public static let musicPreference: [String] = ["mp3", "m4a", "aac", "flac", "wav", "ogg", "oga", "xm", "it", "s3m", "mod", "amf", "voc"]
+    public static let musicExtensions: Set<String> = Set(musicPreference)
 
     /// Where scanned indexes are saved between launches, if anywhere.
     public let indexStore: MediaIndexStore?
@@ -198,7 +202,14 @@ public actor MediaCatalog {
 
     public func music(for game: Game) async -> URL? {
         if let path = game.musicPath, let url = existing(snapshot.root.url(forWindowsRelativePath: path)) { return url }
-        return await stemFile(for: game, mediaType: "Music", extensions: Self.musicExtensions)
+        let folder = snapshot.mediaFolder(platform: game.platform, mediaType: "Music")
+        let index = await stemIndex(for: folder, extensions: Self.musicExtensions)
+        var candidates = index.urls(forStem: game.launcherBaseName)
+        if candidates.isEmpty { candidates = index.urls(forStem: MediaFileName.sanitize(game.title)) }
+        func rank(_ url: URL) -> Int {
+            Self.musicPreference.firstIndex(of: url.pathExtension.lowercased()) ?? Self.musicPreference.count
+        }
+        return candidates.min { rank($0) < rank($1) }
     }
 
     /// Everything the inspector's filmstrip shows: the video first, then one

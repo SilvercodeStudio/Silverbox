@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 
 /// The grid or list of games for the current scope and search.

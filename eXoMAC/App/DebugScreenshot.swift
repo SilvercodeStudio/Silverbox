@@ -1,4 +1,5 @@
 #if DEBUG
+import eXoCore
 import AppKit
 import Foundation
 

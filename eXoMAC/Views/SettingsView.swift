@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -26,7 +27,7 @@ struct GeneralSettingsView: View {
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
                 Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
-                Text("Ogg Vorbis tracks are not supported by macOS and are skipped.")
+                Text("MP3, Ogg Vorbis and MOD, S3M, XM and IT tracker modules play. AMF modules and VOC files are listed but skipped.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Playing") {

@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 
 struct AppCommands: Commands {
@@ -6,7 +7,7 @@ struct AppCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About \(AppInfo.displayName)") { AboutPanel.show() }
+            Button("About \(AppInfo.displayName)") { openWindow(id: "about") }
         }
         CommandGroup(replacing: .newItem) {}
         CommandGroup(replacing: .help) {

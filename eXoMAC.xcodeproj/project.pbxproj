@@ -6,6 +6,10 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		040E9EFD307C63D700F9423C /* eXoCore in Frameworks */ = {isa = PBXBuildFile; productRef = 040E9EFC307C63D700F9423C /* eXoCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		04788C65307BEF960061AE3E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -51,6 +55,7 @@
 		04788C52307BEF960061AE3E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				040E9EFD307C63D700F9423C /* eXoCore in Frameworks */,
 			);
 		};
 		04788C61307BEF960061AE3E /* Frameworks */ = {
@@ -103,6 +108,9 @@
 				04788C57307BEF960061AE3E /* eXoMAC */,
 			);
 			name = eXoMAC;
+			packageProductDependencies = (
+				040E9EFC307C63D700F9423C /* eXoCore */,
+			);
 			productName = eXoMAC;
 			productReference = 04788C55307BEF960061AE3E /* eXo Client.app */;
 			productType = "com.apple.product-type.application";
@@ -181,6 +189,9 @@
 			);
 			mainGroup = 04788C4C307BEF960061AE3E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "../eXoMAC" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04788C56307BEF960061AE3E /* Products */;
 			projectDirPath = "";
@@ -609,6 +620,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "../eXoMAC" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../eXoMAC;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		040E9EFC307C63D700F9423C /* eXoCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = eXoCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 04788C4D307BEF960061AE3E /* Project object */;
 	validationLevel = 1;

@@ -19,6 +19,28 @@ struct RealLibraryTests {
         #expect(!snapshot.tree.isEmpty)
     }
 
+    /// Decodes the first file of each bundled-decoder format in the Music folder.
+    @Test func decodesRealMusicFiles() throws {
+        let folder = RealLibrary.root.url.appendingPathComponent("Music/MS-DOS")
+        let files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+        for ext in ["ogg", "mod", "s3m", "xm"] {
+            guard let url = files.first(where: { $0.pathExtension.lowercased() == ext }) else { continue }
+            let decoder = try MusicDecoders.decoder(for: url)
+            var buffer = [Int16](repeating: 0, count: 4096 * decoder.channelCount)
+            var frames = 0
+            var peak = 0
+            while frames < decoder.sampleRate * 2 {
+                let got = buffer.withUnsafeMutableBufferPointer { decoder.read(into: $0.baseAddress!, frameCount: 4096) }
+                if got == 0 { break }
+                frames += got
+                peak = max(peak, buffer[..<(got * decoder.channelCount)].map { abs(Int($0)) }.max() ?? 0)
+            }
+            print("\(url.lastPathComponent): \(decoder.sampleRate) Hz, \(decoder.channelCount) ch, title \(decoder.title ?? "-"), \(frames) frames, peak \(peak)")
+            #expect(frames > 0, Comment(rawValue: url.lastPathComponent))
+            #expect(peak > 0, Comment(rawValue: url.lastPathComponent))
+        }
+    }
+
     @Test func locatesMediaAndTranslatesConfigs() async throws {
         let snapshot = try LibraryLoader(root: RealLibrary.root).load()
         let catalog = MediaCatalog(snapshot: snapshot)

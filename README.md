@@ -27,9 +27,22 @@ make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
 ```
 
-The core library (XML parsing, media lookup, config translation) is a plain
-Swift package at the repo root, so `swift build` and `swift test` work
-without Xcode's project.
+The core library (XML parsing, media lookup, config translation, music
+decoders) is a Swift package at the repo root, so `swift build` and
+`swift test` work without Xcode's project. The app links the package's
+`eXoCore` product as a local package dependency.
+
+## Third-party code
+
+Two small C libraries are vendored under `Sources/`, each with its license
+and a note on its origin:
+
+- [stb_vorbis](https://github.com/nothings/stb) (public domain or MIT) decodes
+  Ogg Vorbis menu music.
+- [libxmp-lite](https://github.com/libxmp/libxmp) (MIT) plays MOD, S3M, XM and
+  IT tracker modules.
+
+macOS plays the other music formats itself.
 
 On first launch, choose your eXoDOS folder. It can be read-only (an external
 drive or a network share): the app never modifies it. Installed games, save

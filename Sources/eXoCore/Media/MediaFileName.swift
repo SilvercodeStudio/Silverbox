@@ -160,6 +160,11 @@ nonisolated public struct StemIndex: Sendable {
     public func url(forStem stem: String) -> URL? {
         urlsByStem[stem.lowercased()]?.first
     }
+
+    /// Every file with this stem, in name order.
+    public func urls(forStem stem: String) -> [URL] {
+        urlsByStem[stem.lowercased()] ?? []
+    }
 }
 
 /// Saves folder indexes as JSON so later launches skip the slow scans.

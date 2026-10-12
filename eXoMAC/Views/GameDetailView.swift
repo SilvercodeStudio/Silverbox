@@ -1,3 +1,4 @@
+import eXoCore
 import QuickLook
 import SwiftUI
 

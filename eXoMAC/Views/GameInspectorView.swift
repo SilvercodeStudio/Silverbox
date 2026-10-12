@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 
 /// The right-hand inspector for the selected game.

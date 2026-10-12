@@ -1,3 +1,4 @@
+import eXoCore
 import SwiftUI
 import WebKit
 
@@ -110,24 +111,56 @@ struct HelpWebView: NSViewRepresentable {
 
 /// The About panel with the product name, version and credits.
 enum AboutPanel {
-    static let productName = "eXo Client for Mac"
+    static let productName = AppInfo.fullName
     static let projectURL = URL(string: "https://www.retro-exo.com")!
 
-    static func show() {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1"
+    static var version: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-        let credits = NSMutableAttributedString()
-        let body: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.labelColor]
-        credits.append(NSAttributedString(string: "A front-end for the eXoDOS and eXoWin9x game preservation collections.\n\n", attributes: body))
-        credits.append(NSAttributedString(string: "eXoDOS and eXoWin9x are projects of the eXo team.\n", attributes: body))
-        credits.append(NSAttributedString(string: projectURL.absoluteString, attributes: [.font: NSFont.systemFont(ofSize: 11), .link: projectURL]))
-        credits.append(NSAttributedString(string: "\n\nEmulation by DOSBox Staging and DOSBox-X.", attributes: body))
-        NSApp.orderFrontStandardAboutPanel(options: [
-            .applicationName: productName,
-            .applicationVersion: version,
-            .version: build,
-            .credits: credits,
-        ])
-        NSApp.activate()
+        return "Version \(short) (\(build))"
+    }
+}
+
+/// The About window: the eXoDOS VI cover beside the credits.
+struct AboutView: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 24) {
+            VStack(spacing: 8) {
+                Image("eXoDOSCover")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .shadow(color: .black.opacity(0.5), radius: 8, y: 4)
+                Text("eXoDOS 6: Forever Voyaging")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                Text(AboutPanel.productName)
+                    .font(.title2.weight(.semibold))
+                Text(AboutPanel.version)
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+                Text("A front-end for the eXoDOS and eXoWin9x game preservation collections.")
+                    .padding(.top, 4)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("eXoDOS and eXoWin9x are projects of the eXo team.")
+                    Link(AboutPanel.projectURL.absoluteString, destination: AboutPanel.projectURL)
+                }
+                Text("Emulation by DOSBox Staging and DOSBox-X.")
+                Text("Includes stb_vorbis by Sean Barrett and libxmp-lite by Claudio Matsuoka and Hipolito Carraro Jr, both MIT licensed.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.top, 4)
+            }
+            .font(.callout)
+            .frame(width: 330, alignment: .leading)
+        }
+        .padding(24)
+        .padding(.top, 12)
+        .background(Theme.window)
+        .preferredColorScheme(.dark)
     }
 }

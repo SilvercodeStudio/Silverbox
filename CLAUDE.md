@@ -13,18 +13,25 @@ set once in `AppInfo` (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 
 ## Layout
 
-- `eXoMAC/Core/` — the portable core: Foundation only, no AppKit/SwiftUI.
+- `Sources/eXoCore/` — the portable core: Foundation only, no AppKit/SwiftUI.
   LaunchBox XML parsing, library snapshot and queries, media lookup, DOSBox
-  config translation, launch planning, installing, user state. Every type here
-  is marked `nonisolated` because the app target uses MainActor as the default
-  isolation; the package build enforces the same rule.
-- `eXoMAC/App/`, `eXoMAC/Views/`, `eXoMAC/Services/` — the Mac app.
+  config translation, launch planning, installing, user state, music
+  decoders. Every type here is marked `nonisolated` because the app target
+  uses MainActor as the default isolation; the package build enforces the
+  same rule. Anything the app uses must be `public`.
+- `Sources/CStbVorbis/`, `Sources/CXmpLite/` — vendored C decoders (Ogg
+  Vorbis; MOD/S3M/XM/IT modules), each its own package target with the
+  upstream `LICENSE` and a `VENDOR.md` note.
+- `eXoMAC/App/`, `eXoMAC/Views/`, `eXoMAC/Services/` — the Mac app. Every
+  file starts with `import eXoCore`.
 - `Tests/eXoCoreTests/` — Swift Testing suites for the core, with a small
-  LaunchBox-style library under `Fixtures/`. Tests in `RealLibraryTests.swift`
-  run only when `/Volumes/eXoDOS_ro` (or `$EXOMAC_TEST_LIBRARY`) exists.
-- `Package.swift` at the repo root builds `eXoMAC/Core` as the `eXoCore`
-  module. The Xcode app target compiles the same files through its
-  folder-synchronized group, so the app does not link the package.
+  LaunchBox-style library and audio samples under `Fixtures/`. Tests in
+  `RealLibraryTests.swift` run only when `/Volumes/eXoDOS_ro` (or
+  `$EXOMAC_TEST_LIBRARY`) exists.
+- `Package.swift` at the repo root defines the `eXoCore` library and the
+  vendored C targets. The Xcode app target links the `eXoCore` product as a
+  local package dependency (the repo root added through File › Add Package
+  Dependencies › Add Local), so the core is compiled once, by the package.
 
 ## Build and test
 
@@ -40,13 +47,27 @@ so it shares Xcode's DerivedData.
 
 The Xcode MCP server is available; use it to build, read diagnostics and change
 build settings. Do not edit `project.pbxproj` by hand. New files under
-`eXoMAC/`, `eXoMACTests/` and `eXoMACUITests/` are picked up automatically.
+`eXoMAC/`, `eXoMACTests/` and `eXoMACUITests/` are picked up automatically;
+files under `Sources/` and `Tests/` belong to the package.
+
+To check that the app sources still compile against the core without Xcode,
+type-check them against the package build (see the `typecheck` target in the
+Makefile).
 
 ## Conventions
 
 - Keep core code free of Apple-only frameworks so it can later back a
   SwiftCrossUI client on Linux. Platform-specific work (unzip binary paths,
   emulator locations) stays behind small helpers with `#if os(...)`.
+- Dependencies. Ask before adding one. Declare package dependencies in
+  `Package.swift` (remote packages pinned by `Package.resolved`, which is
+  committed); dependencies of the app target alone go through Xcode's Add
+  Package Dependencies, which the user does. Prefer vendoring small, stable C
+  libraries over binary packages or Homebrew: each in its own target under
+  `Sources/`, with the upstream `LICENSE` and a `VENDOR.md` that records the
+  upstream URL, version or commit, the subset copied and any local changes.
+  Never edit vendored files; put wrappers and shims in our own code (a shim
+  header in `include/` is fine when it says so).
 - Collections. The app loads several `LibraryCollection`s (LaunchBox-format
   libraries: eXoDOS mirrors, the console LaunchBox install) into one `Library`
   aggregate of `LibrarySnapshot`s. `Game.id` is collection-scoped
@@ -84,7 +105,8 @@ build settings. Do not edit `project.pbxproj` by hand. New files under
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and
   quits; `-autoPlay 1` presses Play on the selected game after loading, which
   opens the launch options dialog; `-autoConfigure 1` opens the same dialog
-  in its Configure (save only) mode. Example:
+  in its Configure (save only) mode; `-openWindow about` (or `help`) opens
+  that window scene at start. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/eXo Client.app/Contents/MacOS/eXo Client" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

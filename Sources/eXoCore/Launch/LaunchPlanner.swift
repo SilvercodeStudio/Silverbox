@@ -192,7 +192,7 @@ nonisolated public struct LaunchPlanner: Sendable {
         )
     }
 
-    static func safeFileName(_ value: String) -> String {
+    public static func safeFileName(_ value: String) -> String {
         String(value.map { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_" })
     }
 }

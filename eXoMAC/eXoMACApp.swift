@@ -5,6 +5,7 @@
 //  An emulation front-end for the eXoDOS and eXoWin9x collections on the Mac.
 //
 
+import eXoCore
 import SwiftUI
 
 @main
@@ -28,6 +29,13 @@ struct eXoMACApp: App {
             HelpView()
         }
         .defaultSize(width: 900, height: 620)
+
+        Window("About \(AppInfo.displayName)", id: "about") {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
+        .defaultPosition(.center)
     }
 }
 
