@@ -6,7 +6,7 @@
 # Xcode and from here share the same incremental state.
 
 PROJECT = eXoMAC.xcodeproj
-SCHEME = eXoMAC
+SCHEME = "eXo Client"
 CONFIG ?= Debug
 ARGS ?=
 
