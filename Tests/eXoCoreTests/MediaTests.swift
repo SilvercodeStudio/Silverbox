@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 @Suite("Media file names")
@@ -8,7 +9,9 @@ struct MediaFileNameTests {
         #expect(MediaFileName.sanitize("Ultima V: Warriors of Destiny") == "Ultima V_ Warriors of Destiny")
         #expect(MediaFileName.sanitize("D/Generation") == "D_Generation")
         #expect(MediaFileName.sanitize("Vampire's Castle") == "Vampire_s Castle")
-        #expect(MediaFileName.sanitize("Where in the World Is Carmen Sandiego?") == "Where in the World Is Carmen Sandiego_")
+        #expect(
+            MediaFileName.sanitize("Where in the World Is Carmen Sandiego?") == "Where in the World Is Carmen Sandiego_"
+        )
         #expect(MediaFileName.sanitize("Sam & Max Hit the Road") == "Sam & Max Hit the Road")
         #expect(MediaFileName.sanitize("1,000 Miler") == "1,000 Miler")
         #expect(MediaFileName.sanitize("Jeopardy! (1987)") == "Jeopardy! (1987)")
@@ -71,12 +74,14 @@ struct MediaIndexStoreTests {
         let folder = FixtureLibrary.root.imagesDirectory.appendingPathComponent("MS-DOS/Box - Front", isDirectory: true)
         let scanned = MediaFolderIndex.scan(folder: folder)
         #expect(scanned.fileCount == 4)
-        let store = MediaIndexStore(directory: try FixtureLibrary.scratchDirectory().appendingPathComponent("MediaIndex"))
+        let store = MediaIndexStore(
+            directory: try FixtureLibrary.scratchDirectory().appendingPathComponent("MediaIndex"))
         #expect(store.load(folder: folder) == nil)
         store.save(scanned)
         let loaded = try #require(store.load(folder: folder))
         #expect(loaded.fileCount == 4)
-        #expect(loaded.files(forTitle: "Super Tetris", gameID: "x").first?.url.lastPathComponent == "Super Tetris-01.png")
+        #expect(
+            loaded.files(forTitle: "Super Tetris", gameID: "x").first?.url.lastPathComponent == "Super Tetris-01.png")
         store.clear()
         #expect(store.load(folder: folder) == nil)
     }

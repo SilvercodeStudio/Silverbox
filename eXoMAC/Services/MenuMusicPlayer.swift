@@ -1,7 +1,7 @@
 import AVFoundation
-import eXoCore
 import Foundation
 import Observation
+import eXoCore
 
 /// Plays a game's menu music track, like LaunchBox does while browsing.
 /// Formats macOS decodes itself go through AVAudioPlayer. Ogg Vorbis and
@@ -113,8 +113,11 @@ nonisolated final class DecodedMusicStream: @unchecked Sendable {
 
     init(decoder: any MusicDecoder) throws {
         self.decoder = decoder
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: Double(decoder.sampleRate),
-                                         channels: AVAudioChannelCount(decoder.channelCount)) else {
+        guard
+            let format = AVAudioFormat(
+                standardFormatWithSampleRate: Double(decoder.sampleRate),
+                channels: AVAudioChannelCount(decoder.channelCount))
+        else {
             throw MusicDecoderError.cannotOpen("The track's sample format is not supported.")
         }
         self.format = format
@@ -160,8 +163,9 @@ nonisolated final class DecodedMusicStream: @unchecked Sendable {
                 frames = decoder.read(into: &scratch, frameCount: framesPerBuffer)
             }
             guard frames > 0,
-                  let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)),
-                  let channelData = buffer.floatChannelData else { return }
+                let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)),
+                let channelData = buffer.floatChannelData
+            else { return }
             for channel in 0..<channels {
                 let out = channelData[channel]
                 for frame in 0..<frames {

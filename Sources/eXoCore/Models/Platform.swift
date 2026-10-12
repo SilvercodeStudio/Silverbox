@@ -14,9 +14,11 @@ nonisolated public struct Platform: Identifiable, Hashable, Sendable, Codable {
 
     public var id: String { name }
 
-    public init(name: String, category: String? = nil, releaseDate: Date? = nil, developer: String? = nil,
-                manufacturer: String? = nil, notes: String? = nil, imageType: String? = nil,
-                folder: String? = nil, sortTitle: String? = nil) {
+    public init(
+        name: String, category: String? = nil, releaseDate: Date? = nil, developer: String? = nil,
+        manufacturer: String? = nil, notes: String? = nil, imageType: String? = nil,
+        folder: String? = nil, sortTitle: String? = nil
+    ) {
         self.name = name
         self.category = category
         self.releaseDate = releaseDate

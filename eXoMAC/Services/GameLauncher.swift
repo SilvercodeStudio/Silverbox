@@ -1,7 +1,7 @@
-import eXoCore
 import AppKit
 import Foundation
 import Observation
+import eXoCore
 
 /// A running emulator process.
 struct GameSession: Identifiable {
@@ -42,7 +42,8 @@ final class GameLauncher {
             let url = AppPaths.logs.appendingPathComponent("\(LaunchPlanner.safeFileName(plan.game.id)).log")
             let header = "# \(plan.game.title)\n# \(Date())\n# \(plan.commandLine)\n\n"
             if FileManager.default.createFile(atPath: url.path, contents: Data(header.utf8)),
-               let handle = try? FileHandle(forWritingTo: url) {
+                let handle = try? FileHandle(forWritingTo: url)
+            {
                 handle.seekToEndOfFile()
                 process.standardOutput = handle
                 process.standardError = handle
@@ -59,7 +60,9 @@ final class GameLauncher {
         }
         try process.run()
         processes[id] = process
-        sessions.append(GameSession(id: id, launch: plan, startedAt: Date(), logURL: logURL, processIdentifier: process.processIdentifier))
+        sessions.append(
+            GameSession(
+                id: id, launch: plan, startedAt: Date(), logURL: logURL, processIdentifier: process.processIdentifier))
     }
 
     private func finish(id: UUID, status: Int32) {

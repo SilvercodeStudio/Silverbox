@@ -100,8 +100,10 @@ nonisolated public struct EmulatorInstallation: Hashable, Sendable, Codable, Ide
             let macOSDirectory = url.appendingPathComponent("Contents/MacOS", isDirectory: true)
             let preferred = macOSDirectory.appendingPathComponent(kind.executableName)
             if FileManager.default.isExecutableFile(atPath: preferred.path) { return preferred }
-            if let entries = try? FileManager.default.contentsOfDirectory(at: macOSDirectory, includingPropertiesForKeys: nil),
-               let first = entries.first(where: { FileManager.default.isExecutableFile(atPath: $0.path) }) {
+            if let entries = try? FileManager.default.contentsOfDirectory(
+                at: macOSDirectory, includingPropertiesForKeys: nil),
+                let first = entries.first(where: { FileManager.default.isExecutableFile(atPath: $0.path) })
+            {
                 return first
             }
             return preferred
@@ -135,8 +137,11 @@ nonisolated public enum EmulatorLocator {
             ]
             // The official macOS zip unpacks to a folder with SDL1 and SDL2 apps.
             let downloads = home.appendingPathComponent("Downloads", isDirectory: true)
-            if let entries = try? FileManager.default.contentsOfDirectory(at: downloads, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
-                for entry in entries.sorted(by: { $0.lastPathComponent > $1.lastPathComponent }) where entry.lastPathComponent.lowercased().hasPrefix("dosbox-x") {
+            if let entries = try? FileManager.default.contentsOfDirectory(
+                at: downloads, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+            {
+                for entry in entries.sorted(by: { $0.lastPathComponent > $1.lastPathComponent })
+                where entry.lastPathComponent.lowercased().hasPrefix("dosbox-x") {
                     urls.append(entry.appendingPathComponent("dosbox-x-sdl2/dosbox-x.app/Contents/MacOS/dosbox-x"))
                     urls.append(entry.appendingPathComponent("dosbox-x/dosbox-x.app/Contents/MacOS/dosbox-x"))
                 }
@@ -145,7 +150,9 @@ nonisolated public enum EmulatorLocator {
             urls += [
                 URL(fileURLWithPath: "/Applications/RetroArch.app/Contents/MacOS/RetroArch"),
                 home.appendingPathComponent("Applications/RetroArch.app/Contents/MacOS/RetroArch"),
-                home.appendingPathComponent("Library/Application Support/Steam/steamapps/common/RetroArch/RetroArch.app/Contents/MacOS/RetroArch"),
+                home.appendingPathComponent(
+                    "Library/Application Support/Steam/steamapps/common/RetroArch/RetroArch.app/Contents/MacOS/RetroArch"
+                ),
                 URL(fileURLWithPath: "/opt/homebrew/bin/retroarch"),
                 URL(fileURLWithPath: "/usr/local/bin/retroarch"),
             ]
@@ -197,7 +204,8 @@ nonisolated public enum EmulatorCapabilities {
         case .dosboxStaging:
             let fm = FileManager.default
             var folders = [
-                "/opt/homebrew/lib", "/usr/local/lib", "/usr/lib", "/usr/lib/x86_64-linux-gnu", "/usr/lib/aarch64-linux-gnu",
+                "/opt/homebrew/lib", "/usr/local/lib", "/usr/lib", "/usr/lib/x86_64-linux-gnu",
+                "/usr/lib/aarch64-linux-gnu",
             ].map { URL(fileURLWithPath: $0, isDirectory: true) }
             if let bundle = installation.appBundleURL {
                 folders.insert(bundle.appendingPathComponent("Contents/MacOS/lib", isDirectory: true), at: 0)

@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 /// Confirms installation (unzipping) of a game.
 struct InstallSheet: View {
@@ -17,32 +17,44 @@ struct InstallSheet: View {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Install \(game.title)?").font(.headline)
-                    Text(plan?.location == .inPlace
-                         ? "This game must be installed before it can run for the first time. The archive is unpacked into eXo/eXoDOS, exactly as eXoDOS does on Windows."
-                         : "This game must be installed before it can run for the first time. The archive is unpacked into the local data folder; the eXoDOS folder is not changed.")
-                        .foregroundStyle(Theme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(
+                        plan?.location == .inPlace
+                            ? "This game must be installed before it can run for the first time. The archive is unpacked into eXo/eXoDOS, exactly as eXoDOS does on Windows."
+                            : "This game must be installed before it can run for the first time. The archive is unpacked into the local data folder; the eXoDOS folder is not changed."
+                    )
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
             if let plan {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(plan.archiveURL.path.replacingOccurrences(of: (model.snapshot(for: game)?.root.url.path ?? "") + "/", with: ""))
-                        .font(Theme.mono)
-                        .foregroundStyle(Theme.textSecondary)
+                    Text(
+                        plan.archiveURL.path.replacingOccurrences(
+                            of: (model.snapshot(for: game)?.root.url.path ?? "") + "/", with: "")
+                    )
+                    .font(Theme.mono)
+                    .foregroundStyle(Theme.textSecondary)
                     if plan.archiveExists, let size = plan.archiveSize {
-                        Text("Archive size: \(Formatters.bytes(size))").font(.caption).foregroundStyle(Theme.textTertiary)
+                        Text("Archive size: \(Formatters.bytes(size))").font(.caption).foregroundStyle(
+                            Theme.textTertiary)
                     } else if !plan.archiveExists {
-                        Label("The archive is not present. This may be the Lite edition; downloading games is not supported yet.", systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.orange)
-                            .font(.caption)
+                        Label(
+                            "The archive is not present. This may be the Lite edition; downloading games is not supported yet.",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                        .foregroundStyle(.orange)
+                        .font(.caption)
                     }
                     if plan.updateArchiveURL != nil {
-                        Text("An eXoDOS update for this game will be applied after unpacking.").font(.caption).foregroundStyle(Theme.textTertiary)
+                        Text("An eXoDOS update for this game will be applied after unpacking.").font(.caption)
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
             }
             if let plan, plan.saveArchiveURL != nil {
-                Toggle("Restore saved progress from the backup made \(Formatters.date(plan.saveArchiveDate))", isOn: $restoreSaves)
+                Toggle(
+                    "Restore saved progress from the backup made \(Formatters.date(plan.saveArchiveDate))",
+                    isOn: $restoreSaves)
             }
             Toggle("Play when installation finishes", isOn: $playAfter)
             HStack {
@@ -57,7 +69,8 @@ struct InstallSheet: View {
                 Button("Install") {
                     installing = true
                     Task {
-                        await model.install(game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
+                        await model.install(
+                            game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
                         installing = false
                         dismiss()
                     }
@@ -105,7 +118,9 @@ struct GameInfoSheet: View {
                         LabeledContent("eXoDOS build") { Text(build?.displayName ?? "Unknown") }
                         if let location = model.library?.installedLocation(for: game) {
                             LabeledContent(location.isLocal ? "Installed in local data" : "Installed in library") {
-                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(
+                                    1
+                                ).truncationMode(.middle)
                             }
                         }
                         LabeledContent("Edited config") {
@@ -125,7 +140,9 @@ struct GameInfoSheet: View {
                             }
                         }
                         Picker("Emulator", selection: emulatorBinding) {
-                            Text("Automatic (\(model.settings.emulatorPolicy == .recommended ? (build?.recommendedEmulator ?? .dosboxStaging).displayName : "per Settings"))").tag(EmulatorKind?.none)
+                            Text(
+                                "Automatic (\(model.settings.emulatorPolicy == .recommended ? (build?.recommendedEmulator ?? .dosboxStaging).displayName : "per Settings"))"
+                            ).tag(EmulatorKind?.none)
                             ForEach(EmulatorKind.dosBox) { kind in
                                 Text(kind.displayName).tag(EmulatorKind?.some(kind))
                             }
@@ -134,7 +151,9 @@ struct GameInfoSheet: View {
                             Picker("Version to play", selection: variantBinding) {
                                 Text("First available").tag(String?.none)
                                 ForEach(variants) { variant in
-                                    Text(variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : "")).tag(String?.some(variant.id))
+                                    Text(
+                                        variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : "")
+                                    ).tag(String?.some(variant.id))
                                 }
                             }
                         }
@@ -145,7 +164,9 @@ struct GameInfoSheet: View {
                     Section("Launch") {
                         LabeledContent("File") { PathText(game.applicationPath) }
                         if let title = resolved.launchBoxEmulatorTitle {
-                            LabeledContent("LaunchBox runs with") { Text(title + (resolved.launchBoxCore.map { " · \($0)" } ?? "")) }
+                            LabeledContent("LaunchBox runs with") {
+                                Text(title + (resolved.launchBoxCore.map { " · \($0)" } ?? ""))
+                            }
                         }
                         LabeledContent("Mac emulator") {
                             HStack {
@@ -245,21 +266,26 @@ struct UninstallSheet: View {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Uninstall \(game.title)?").font(.headline)
-                    Text("The game folder is removed. The archive stays in the collection, so you can install the game again at any time.")
-                        .foregroundStyle(Theme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(
+                        "The game folder is removed. The archive stays in the collection, so you can install the game again at any time."
+                    )
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
             if let plan {
-                Text(plan.installedFolderURL.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                Text(plan.installedFolderURL.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                    .truncationMode(.middle)
                 Toggle("Back up saved games and changed files first", isOn: $backup)
                     .disabled(!plan.archiveExists)
-                Text(backup && plan.archiveExists
-                     ? "Only files that are new or changed since installation are saved, to \(plan.saveBackupURL.path)."
-                     : "Saved games in the folder will be lost.")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    backup && plan.archiveExists
+                        ? "Only files that are new or changed since installation are saved, to \(plan.saveBackupURL.path)."
+                        : "Saved games in the folder will be lost."
+                )
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
                 if working {
@@ -365,7 +391,8 @@ struct LaunchOptionsSheet: View {
                 Section("Emulator") {
                     Picker("Emulator", selection: $emulator) {
                         ForEach(EmulatorKind.dosBox) { kind in
-                            Text(kind.displayName + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : "")).tag(kind)
+                            Text(kind.displayName + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : ""))
+                                .tag(kind)
                         }
                     }
                     .pickerStyle(.radioGroup)
@@ -397,7 +424,8 @@ struct LaunchOptionsSheet: View {
                 Button(pending.configureOnly ? "Save" : "Play") {
                     let variant = pending.variants.first { $0.id == variantID }
                     if remember || pending.configureOnly {
-                        model.rememberLaunchChoices(for: game, options: options, variant: variant, emulatorKind: emulator)
+                        model.rememberLaunchChoices(
+                            for: game, options: options, variant: variant, emulatorKind: emulator)
                     }
                     dismiss()
                     if !pending.configureOnly {
@@ -406,7 +434,8 @@ struct LaunchOptionsSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(!pending.configureOnly && pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
+                .disabled(
+                    !pending.configureOnly && pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
             }
             .padding(16)
         }
@@ -416,7 +445,9 @@ struct LaunchOptionsSheet: View {
             emulator = model.emulatorKind(for: game)
             variantID = model.preferredVariant(for: game, in: pending.variants)?.id
             let state = model.userState.state(for: game.launchBoxID)
-            remember = !(state.launchOverrides?.isEmpty ?? true) || state.preferredVariantID != nil || state.emulatorOverride != nil
+            remember =
+                !(state.launchOverrides?.isEmpty ?? true) || state.preferredVariantID != nil
+                || state.emulatorOverride != nil
         }
     }
 

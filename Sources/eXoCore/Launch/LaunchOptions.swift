@@ -103,9 +103,11 @@ nonisolated public struct LaunchOptions: Hashable, Sendable, Codable {
     public var generalMIDI: GeneralMIDI
     public var quietStartup: Bool
 
-    public init(fullscreen: Bool = false, windowSize: WindowSize = .default, aspect: AspectMode = .gameConfig,
-                shader: Shader = .crtAuto, scaler: Scaler = .gameConfig, generalMIDI: GeneralMIDI = .automatic,
-                quietStartup: Bool = true) {
+    public init(
+        fullscreen: Bool = false, windowSize: WindowSize = .default, aspect: AspectMode = .gameConfig,
+        shader: Shader = .crtAuto, scaler: Scaler = .gameConfig, generalMIDI: GeneralMIDI = .automatic,
+        quietStartup: Bool = true
+    ) {
         self.fullscreen = fullscreen
         self.windowSize = windowSize
         self.aspect = aspect
@@ -135,9 +137,11 @@ nonisolated public struct LaunchOverrides: Hashable, Sendable, Codable {
     public var shader: LaunchOptions.Shader?
     public var scaler: LaunchOptions.Scaler?
 
-    public init(fullscreen: Bool? = nil, windowSize: LaunchOptions.WindowSize? = nil,
-                aspect: LaunchOptions.AspectMode? = nil, shader: LaunchOptions.Shader? = nil,
-                scaler: LaunchOptions.Scaler? = nil) {
+    public init(
+        fullscreen: Bool? = nil, windowSize: LaunchOptions.WindowSize? = nil,
+        aspect: LaunchOptions.AspectMode? = nil, shader: LaunchOptions.Shader? = nil,
+        scaler: LaunchOptions.Scaler? = nil
+    ) {
         self.fullscreen = fullscreen
         self.windowSize = windowSize
         self.aspect = aspect

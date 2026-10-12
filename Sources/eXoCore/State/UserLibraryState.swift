@@ -14,10 +14,12 @@ nonisolated public struct GameUserState: Hashable, Sendable, Codable {
     public var preferredVariantID: String?
     public var launchOverrides: LaunchOverrides?
 
-    public init(favorite: Bool? = nil, completed: Bool? = nil, hidden: Bool? = nil, broken: Bool? = nil,
-                playCount: Int = 0, playTimeSeconds: Int = 0, lastPlayed: Date? = nil,
-                emulatorOverride: EmulatorKind? = nil, preferredVariantID: String? = nil,
-                launchOverrides: LaunchOverrides? = nil) {
+    public init(
+        favorite: Bool? = nil, completed: Bool? = nil, hidden: Bool? = nil, broken: Bool? = nil,
+        playCount: Int = 0, playTimeSeconds: Int = 0, lastPlayed: Date? = nil,
+        emulatorOverride: EmulatorKind? = nil, preferredVariantID: String? = nil,
+        launchOverrides: LaunchOverrides? = nil
+    ) {
         self.favorite = favorite
         self.completed = completed
         self.hidden = hidden

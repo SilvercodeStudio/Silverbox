@@ -1,6 +1,6 @@
-import eXoCore
 import SwiftUI
 import UniformTypeIdentifiers
+import eXoCore
 
 /// Lets other windows open Settings on a given tab.
 @Observable
@@ -55,13 +55,17 @@ struct GeneralSettingsView: View {
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
                 Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
-                Text("MP3, Ogg Vorbis and MOD, S3M, XM and IT tracker modules play. AMF modules and VOC files are listed but skipped.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "MP3, Ogg Vorbis and MOD, S3M, XM and IT tracker modules play. AMF modules and VOC files are listed but skipped."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             Section("Playing") {
                 Toggle("Show launch options before each game", isOn: $model.settings.showLaunchOptions)
-                Text("The dialog offers the game's versions, full screen or window, shader or filter, and emulator, like the menus eXoDOS shows in its console window. Configure in a game's menu opens the same dialog to save choices for that game.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "The dialog offers the game's versions, full screen or window, shader or filter, and emulator, like the menus eXoDOS shows in its console window. Configure in a game's menu opens the same dialog to save choices for that game."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             Section("Library view") {
                 Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
@@ -88,14 +92,18 @@ struct LibrarySettingsView: View {
                     Button("Add Collection…") { showingPicker = true }
                     Spacer()
                     if let library = model.library {
-                        Text("\(library.games.count.formatted()) games in \(library.snapshots.count) collection\(library.snapshots.count == 1 ? "" : "s")")
-                            .foregroundStyle(.secondary)
+                        Text(
+                            "\(library.games.count.formatted()) games in \(library.snapshots.count) collection\(library.snapshots.count == 1 ? "" : "s")"
+                        )
+                        .foregroundStyle(.secondary)
                     }
                     Button("Rescan All") { model.reloadLibrary(clearMediaCache: true) }
                         .disabled(model.collections.isEmpty)
                 }
-                Text("A collection is an eXoDOS install or any LaunchBox library folder. Rescan after you add or update packs.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "A collection is an eXoDOS install or any LaunchBox library folder. Rescan after you add or update packs."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             Section("Local data folder") {
                 HStack {
@@ -108,10 +116,14 @@ struct LibrarySettingsView: View {
                     if model.settings.localStorePath != nil {
                         Button("Use Default") { model.settings.localStorePath = nil }
                     }
-                    Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.localStore.directory]) }
+                    Button("Show in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([model.localStore.directory])
+                    }
                 }
-                Text("Installed games, save backups, edited configs and logs are kept here, so the collections can stay read-only.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "Installed games, save backups, edited configs and logs are kept here, so the collections can stay read-only."
+                )
+                .font(.caption).foregroundStyle(.secondary)
                 Picker("Install games to", selection: $model.settings.installLocation) {
                     ForEach(InstallLocation.allCases) { Text($0.displayName).tag($0) }
                 }
@@ -159,8 +171,10 @@ struct CollectionEditor: View {
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Path substitutions").font(.subheadline.weight(.semibold))
-                    Text("Map a Windows prefix used in the library, such as X:\\Emulation or the Games folder, to a folder on this Mac.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        "Map a Windows prefix used in the library, such as X:\\Emulation or the Games folder, to a folder on this Mac."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                     ForEach($collection.substitutions) { $substitution in
                         HStack {
                             TextField("Windows prefix", text: $substitution.windowsPrefix)
@@ -174,7 +188,9 @@ struct CollectionEditor: View {
                             Button("Choose…") { pickingSubstitution = substitution.id }
                             Button {
                                 collection.substitutions.removeAll { $0.id == substitution.id }
-                            } label: { Image(systemName: "minus.circle") }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                            }
                             .buttonStyle(.borderless)
                         }
                     }
@@ -197,10 +213,13 @@ struct CollectionEditor: View {
         .fileImporter(isPresented: $pickingRoot, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { collection.rootPath = url.path }
         }
-        .fileImporter(isPresented: Binding(get: { pickingSubstitution != nil }, set: { if !$0 { pickingSubstitution = nil } }),
-                      allowedContentTypes: [.folder]) { result in
+        .fileImporter(
+            isPresented: Binding(get: { pickingSubstitution != nil }, set: { if !$0 { pickingSubstitution = nil } }),
+            allowedContentTypes: [.folder]
+        ) { result in
             if case .success(let url) = result, let id = pickingSubstitution,
-               let index = collection.substitutions.firstIndex(where: { $0.id == id }) {
+                let index = collection.substitutions.firstIndex(where: { $0.id == id })
+            {
                 collection.substitutions[index].macPath = url.path
             }
             pickingSubstitution = nil
@@ -220,23 +239,29 @@ struct EmulatorSettingsView: View {
                 Picker("Default", selection: $model.settings.emulatorPolicy) {
                     ForEach(EmulatorPolicy.allCases) { Text($0.displayName).tag($0) }
                 }
-                Text("eXoDOS picks a DOSBox build per game (0.74, ECE, Staging, SVN Daum or DOSBox-X). “Match” maps Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging. You can override any game in its info sheet.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "eXoDOS picks a DOSBox build per game (0.74, ECE, Staging, SVN Daum or DOSBox-X). “Match” maps Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging. You can override any game in its info sheet."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             ForEach(EmulatorKind.dosBox) { kind in
                 Section(kind.displayName) {
                     EmulatorPathRow(kind: kind, picking: $picking)
                     if kind == .dosboxStaging, let installation = model.settings.emulatorInstallation(kind) {
-                        Text(EmulatorCapabilities.fluidSynthAvailable(for: installation)
-                             ? "FluidSynth is available for General MIDI with the eXoDOS Sound Canvas SoundFont."
-                             : "FluidSynth is not installed, so General MIDI games use the macOS synthesizer. Install it with Homebrew (brew install fluid-synth) for the eXoDOS SoundFont.")
+                        Text(
+                            EmulatorCapabilities.fluidSynthAvailable(for: installation)
+                                ? "FluidSynth is available for General MIDI with the eXoDOS Sound Canvas SoundFont."
+                                : "FluidSynth is not installed, so General MIDI games use the macOS synthesizer. Install it with Homebrew (brew install fluid-synth) for the eXoDOS SoundFont."
+                        )
                         .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
             Section("Consoles, computers and arcade") {
-                Text("Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             ForEach(EmulatorKind.romEmulators) { kind in
                 Section(kind.displayName) {
@@ -251,8 +276,10 @@ struct EmulatorSettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
-        .fileImporter(isPresented: Binding(get: { picking != nil }, set: { if !$0 { picking = nil } }),
-                      allowedContentTypes: [.applicationBundle, .unixExecutable]) { result in
+        .fileImporter(
+            isPresented: Binding(get: { picking != nil }, set: { if !$0 { picking = nil } }),
+            allowedContentTypes: [.applicationBundle, .unixExecutable]
+        ) { result in
             if case .success(let url) = result, let kind = picking {
                 model.settings.setEmulatorPath(url.path, for: kind)
             }
@@ -273,9 +300,12 @@ struct EmulatorSettingsView: View {
                     .font(Theme.mono).lineLimit(1).truncationMode(.middle)
                 if let setup, setup.coresDirectory != nil {
                     let count = setup.installedCores().count
-                    Text(count == 0 ? "No cores installed yet. Download them in RetroArch under Online Updater › Core Downloader."
-                         : "\(count) cores installed")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        count == 0
+                            ? "No cores installed yet. Download them in RetroArch under Online Updater › Core Downloader."
+                            : "\(count) cores installed"
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
             }
             Spacer()
@@ -303,9 +333,12 @@ struct EmulatorPathRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let installation {
-                    Label(installation.exists ? "Ready" : "Executable missing", systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(installation.exists ? Theme.accent : .red)
+                    Label(
+                        installation.exists ? "Ready" : "Executable missing",
+                        systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(installation.exists ? Theme.accent : .red)
                 } else if let url = URL(string: kind.website) {
                     Link("Download from \(url.host ?? kind.website)", destination: url).font(.caption)
                 }
@@ -331,7 +364,8 @@ struct PlatformAssignmentsView: View {
                 .font(.caption).foregroundStyle(.secondary)
         } else {
             ForEach(model.romPlatforms) { platform in
-                PlatformAssignmentRow(platform: platform, resolved: resolver.resolve(platform: platform.name), cores: cores)
+                PlatformAssignmentRow(
+                    platform: platform, resolved: resolver.resolve(platform: platform.name), cores: cores)
             }
         }
     }
@@ -425,9 +459,13 @@ struct PlatformAssignmentRow: View {
                 }
                 let previous = userAssignment
                 let core = kind == .retroArch ? (previous?.core ?? resolved.launchBoxCore) : nil
-                let arguments = previous?.arguments ?? (resolved.assignment?.emulator == kind ? resolved.assignment?.arguments ?? "" : "")
-                model.settings.setPlatformAssignment(PlatformEmulatorAssignment(platform: platform.name, emulator: kind, core: core, arguments: arguments),
-                                                     for: platform.name)
+                let arguments =
+                    previous?.arguments
+                    ?? (resolved.assignment?.emulator == kind ? resolved.assignment?.arguments ?? "" : "")
+                model.settings.setPlatformAssignment(
+                    PlatformEmulatorAssignment(
+                        platform: platform.name, emulator: kind, core: core, arguments: arguments),
+                    for: platform.name)
             }
         )
     }
@@ -435,13 +473,17 @@ struct PlatformAssignmentRow: View {
     private var coreBinding: Binding<String?> {
         Binding(
             get: {
-                let core = userAssignment?.core ?? (resolved.assignment?.emulator == .retroArch ? resolved.assignment?.core : nil)
+                let core =
+                    userAssignment?.core
+                    ?? (resolved.assignment?.emulator == .retroArch ? resolved.assignment?.core : nil)
                 return core.map { RetroArchSetup.coreName(from: $0) }
             },
             set: { core in
-                model.settings.setPlatformAssignment(PlatformEmulatorAssignment(platform: platform.name, emulator: .retroArch, core: core,
-                                                                                arguments: userAssignment?.arguments ?? ""),
-                                                     for: platform.name)
+                model.settings.setPlatformAssignment(
+                    PlatformEmulatorAssignment(
+                        platform: platform.name, emulator: .retroArch, core: core,
+                        arguments: userAssignment?.arguments ?? ""),
+                    for: platform.name)
             }
         )
     }
@@ -469,8 +511,10 @@ struct DisplaySettingsView: View {
                 Picker("Window size", selection: $model.settings.launchOptions.windowSize) {
                     ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
                 }
-                Text("Automatic lets DOSBox Staging size the window for your screen. DOSBox-X then uses the size in the game's config, which eXoDOS sets for a 1080p desktop.")
-                    .font(.caption).foregroundStyle(.secondary)
+                Text(
+                    "Automatic lets DOSBox Staging size the window for your screen. DOSBox-X then uses the size in the game's config, which eXoDOS sets for a 1080p desktop."
+                )
+                .font(.caption).foregroundStyle(.secondary)
             }
             Section("Picture") {
                 Picker("Aspect ratio correction", selection: $model.settings.launchOptions.aspect) {

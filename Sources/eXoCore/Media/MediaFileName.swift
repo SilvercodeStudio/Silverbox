@@ -26,7 +26,8 @@ nonisolated public enum MediaFileName {
         }
     }
 
-    nonisolated(unsafe) private static let guidPattern = #/^(?<key>.*?)(?:\.(?<guid>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))?-(?<index>\d{2,3})$/#
+    nonisolated(unsafe) private static let guidPattern =
+        #/^(?<key>.*?)(?:\.(?<guid>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}))?-(?<index>\d{2,3})$/#
 
     public static func parse(stem: String) -> Parsed {
         if let match = stem.wholeMatch(of: guidPattern) {
@@ -63,7 +64,9 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
     /// whether a saved index is still current.
     public var modificationDate: Date?
 
-    public static let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "heic"]
+    public static let imageExtensions: Set<String> = [
+        "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "heic",
+    ]
 
     /// Region sub-folders in order of preference. The empty string is the
     /// folder root (files without a region).
@@ -88,8 +91,11 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
         let fm = FileManager.default
         var byKey: [String: [MediaFile]] = [:]
         var count = 0
-        guard let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [],
-                                             options: [.skipsHiddenFiles, .skipsPackageDescendants]) else {
+        guard
+            let enumerator = fm.enumerator(
+                at: folder, includingPropertiesForKeys: [],
+                options: [.skipsHiddenFiles, .skipsPackageDescendants])
+        else {
             return MediaFolderIndex(folder: folder, filesByKey: [:], fileCount: 0)
         }
         let basePath = folder.standardizedFileURL.path
@@ -106,7 +112,8 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
             byKey[parsed.key.lowercased(), default: []].append(file)
             count += 1
         }
-        return MediaFolderIndex(folder: folder, filesByKey: byKey, fileCount: count, modificationDate: modificationDate(of: folder))
+        return MediaFolderIndex(
+            folder: folder, filesByKey: byKey, fileCount: count, modificationDate: modificationDate(of: folder))
     }
 
     /// Files for a game, best first: exact game-ID matches win over plain
@@ -121,7 +128,8 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
     }
 
     static func preferred(_ a: MediaFile, _ b: MediaFile) -> Bool {
-        let ra = regionRank(a.region), rb = regionRank(b.region)
+        let ra = regionRank(a.region)
+        let rb = regionRank(b.region)
         if ra != rb { return ra < rb }
         if a.index != b.index { return a.index < b.index }
         return a.url.path < b.url.path
@@ -148,7 +156,9 @@ nonisolated public struct StemIndex: Sendable {
     public static func scan(folder: URL, extensions: Set<String>) -> StemIndex {
         let fm = FileManager.default
         var byStem: [String: [URL]] = [:]
-        if let entries = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) {
+        if let entries = try? fm.contentsOfDirectory(
+            at: folder, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles])
+        {
             for url in entries where extensions.contains(url.pathExtension.lowercased()) {
                 byStem[url.deletingPathExtension().lastPathComponent.lowercased(), default: []].append(url)
             }
@@ -184,7 +194,8 @@ nonisolated public struct MediaIndexStore: Sendable {
         guard index.folder.standardizedFileURL.path == folder.standardizedFileURL.path else { return nil }
         let current = MediaFolderIndex.modificationDate(of: folder)
         guard let saved = index.modificationDate, let current,
-              abs(saved.timeIntervalSince(current)) < 1 else { return nil }
+            abs(saved.timeIntervalSince(current)) < 1
+        else { return nil }
         return index
     }
 

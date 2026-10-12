@@ -31,7 +31,8 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
 
     /// The edited config a user keeps for a game, if any.
     public func overrideConfigURL(for game: Game, configName: String) -> URL {
-        overridesDirectory.appendingPathComponent(game.launchBoxID, isDirectory: true).appendingPathComponent(configName)
+        overridesDirectory.appendingPathComponent(game.launchBoxID, isDirectory: true).appendingPathComponent(
+            configName)
     }
 }
 

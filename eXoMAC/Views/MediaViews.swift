@@ -1,6 +1,6 @@
-import eXoCore
 import AVKit
 import SwiftUI
+import eXoCore
 
 /// A full-size image loaded through the thumbnail cache.
 struct FullImageView: View {
@@ -34,7 +34,10 @@ struct GameVideoPlayer: View {
     var body: some View {
         VideoPlayer(player: player)
             .onAppear { player = AVPlayer(url: url) }
-            .onDisappear { player?.pause(); player = nil }
+            .onDisappear {
+                player?.pause()
+                player = nil
+            }
     }
 }
 
@@ -84,8 +87,16 @@ struct MediaGalleryView: View {
 
             if items.count > 1 {
                 HStack(spacing: 8) {
-                    Button { index = (index - 1 + items.count) % items.count } label: { Image(systemName: "chevron.left") }
-                    Button { index = (index + 1) % items.count } label: { Image(systemName: "chevron.right") }
+                    Button {
+                        index = (index - 1 + items.count) % items.count
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    Button {
+                        index = (index + 1) % items.count
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
                     Text("\(index + 1) of \(items.count)")
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
@@ -109,7 +120,10 @@ struct MediaGalleryView: View {
         }
         .task(id: game.id) {
             index = 0
-            guard let media = model.media(for: game) else { items = []; return }
+            guard let media = model.media(for: game) else {
+                items = []
+                return
+            }
             items = await media.gallery(for: game)
         }
     }

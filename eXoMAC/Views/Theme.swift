@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 /// The dark, amber-accented look from the design prototypes.
 enum Theme {
@@ -68,8 +68,10 @@ enum Formatters {
     static func releaseLine(_ game: Game) -> String {
         var parts: [String] = []
         if let date = game.releaseDate {
-            let hasDay = Calendar.current.component(.day, from: date) != 1 || Calendar.current.component(.month, from: date) != 1
-            parts.append("Released " + (hasDay ? date.formatted(date: .long, time: .omitted) : String(game.releaseYear ?? 0)))
+            let hasDay =
+                Calendar.current.component(.day, from: date) != 1 || Calendar.current.component(.month, from: date) != 1
+            parts.append(
+                "Released " + (hasDay ? date.formatted(date: .long, time: .omitted) : String(game.releaseYear ?? 0)))
         }
         if let developer = game.developer { parts.append("by \(developer)") }
         return parts.joined(separator: " ")

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 @Suite("Library loading")
@@ -55,17 +56,25 @@ struct LibraryQueryTests {
         #expect(query.games(in: .all).count == 4)
         #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))).count == 3)
         #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Computers"))).count == 4)
-        #expect(query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Literature"))).map(\.title) == ["Programmer's Guide to MS-DOS"])
+        #expect(
+            query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Literature"))).map(\.title) == [
+                "Programmer's Guide to MS-DOS"
+            ])
         #expect(query.games(in: .favorites).map(\.launchBoxID) == [FixtureLibrary.ultimaID])
-        #expect(query.games(in: .installed).map(\.launchBoxID) == [FixtureLibrary.ultimaID, "bbbbbbbb-0000-0000-0000-000000000001"])
+        #expect(
+            query.games(in: .installed).map(\.launchBoxID) == [
+                FixtureLibrary.ultimaID, "bbbbbbbb-0000-0000-0000-000000000001",
+            ])
     }
 
     @Test func playlistsResolve() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
-        let mt32 = query.games(in: .node(collectionID: snapshot.collection.id, ref: .playlist("e64fb51c-ff5d-4fbe-919c-aa2249d78117")))
+        let mt32 = query.games(
+            in: .node(collectionID: snapshot.collection.id, ref: .playlist("e64fb51c-ff5d-4fbe-919c-aa2249d78117")))
         #expect(Set(mt32.map(\.launchBoxID)) == [FixtureLibrary.ultimaID, FixtureLibrary.tetrisID])
-        let explicit = query.games(in: .node(collectionID: snapshot.collection.id, ref: .playlist("11111111-2222-3333-4444-555555555555")))
+        let explicit = query.games(
+            in: .node(collectionID: snapshot.collection.id, ref: .playlist("11111111-2222-3333-4444-555555555555")))
         #expect(explicit.map(\.launchBoxID) == [FixtureLibrary.tetrisID])
     }
 
@@ -82,9 +91,13 @@ struct LibraryQueryTests {
     @Test func sortsByTitleUsingSortTitle() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)
-        let titles = query.sort(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .title).map(\.title)
+        let titles = query.sort(
+            query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .title
+        ).map(\.title)
         #expect(titles == ["Jeopardy! (1987)", "Super Tetris", "Ultima V: Warriors of Destiny"])
-        let years = query.sort(query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .releaseYear).map(\.releaseYear)
+        let years = query.sort(
+            query.games(in: .node(collectionID: snapshot.collection.id, ref: .platform("MS-DOS"))), by: .releaseYear
+        ).map(\.releaseYear)
         #expect(years == [1987, 1988, 1991])
     }
 

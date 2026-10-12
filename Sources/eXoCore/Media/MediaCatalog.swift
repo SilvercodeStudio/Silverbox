@@ -43,12 +43,16 @@ nonisolated public enum ImageType: String, CaseIterable, Sendable, Codable, Hash
     }
 
     /// The order the grid tries when it needs one cover image.
-    public static let coverFallbacks: [ImageType] = [.boxFront, .boxFrontReconstructed, .fanartBoxFront, .box3D, .screenshotGameTitle, .screenshotGameplay]
+    public static let coverFallbacks: [ImageType] = [
+        .boxFront, .boxFrontReconstructed, .fanartBoxFront, .box3D, .screenshotGameTitle, .screenshotGameplay,
+    ]
 
     /// The order the inspector shows in its filmstrip.
-    public static let gallery: [ImageType] = [.boxFront, .screenshotGameTitle, .screenshotGameplay, .boxBack, .box3D, .clearLogo,
-                                             .screenshotGameSelect, .screenshotHighScores, .screenshotGameOver, .disc,
-                                             .advertisementFlyerFront, .fanartBackground, .banner]
+    public static let gallery: [ImageType] = [
+        .boxFront, .screenshotGameTitle, .screenshotGameplay, .boxBack, .box3D, .clearLogo,
+        .screenshotGameSelect, .screenshotHighScores, .screenshotGameOver, .disc,
+        .advertisementFlyerFront, .fanartBackground, .banner,
+    ]
 }
 
 /// A labelled media item for galleries.
@@ -89,8 +93,11 @@ nonisolated public struct GameExtra: Hashable, Sendable, Identifiable {
     /// one group, everything that shipped in the box in the other.
     public var isGuideBook: Bool {
         let lowered = name.lowercased()
-        return ["guide", "atlas", "hint", "strategy", "walkthrough", "solution", "official book", "companion", "handbook", "secrets"]
-            .contains { lowered.contains($0) }
+        return [
+            "guide", "atlas", "hint", "strategy", "walkthrough", "solution", "official book", "companion", "handbook",
+            "secrets",
+        ]
+        .contains { lowered.contains($0) }
     }
 }
 
@@ -107,7 +114,9 @@ public actor MediaCatalog {
     /// Music formats in order of preference when a game has several files:
     /// what macOS plays itself, then the bundled decoders (see ``MusicDecoders``),
     /// then formats that are listed but cannot be played.
-    public static let musicPreference: [String] = ["mp3", "m4a", "aac", "flac", "wav", "ogg", "oga", "xm", "it", "s3m", "mod", "amf", "voc"]
+    public static let musicPreference: [String] = [
+        "mp3", "m4a", "aac", "flac", "wav", "ogg", "oga", "xm", "it", "s3m", "mod", "amf", "voc",
+    ]
     public static let musicExtensions: Set<String> = Set(musicPreference)
 
     /// Where scanned indexes are saved between launches, if anywhere.
@@ -132,7 +141,9 @@ public actor MediaCatalog {
             }
             let start = Date()
             let index = MediaFolderIndex.scan(folder: folder)
-            MediaCatalog.log("scanned \(index.fileCount) files in \(folder.lastPathComponent) in \(String(format: "%.2f", Date().timeIntervalSince(start))) s")
+            MediaCatalog.log(
+                "scanned \(index.fileCount) files in \(folder.lastPathComponent) in \(String(format: "%.2f", Date().timeIntervalSince(start))) s"
+            )
             store?.save(index)
             return index
         }
@@ -168,7 +179,9 @@ public actor MediaCatalog {
                     let folder = snapshot.mediaFolder(platform: platform, mediaType: type.rawValue)
                     group.addTask { _ = await self.imageIndex(for: folder) }
                 }
-                for (mediaType, extensions) in [("Video", Self.videoExtensions), ("Manual", Self.manualExtensions), ("Music", Self.musicExtensions)] {
+                for (mediaType, extensions) in [
+                    ("Video", Self.videoExtensions), ("Manual", Self.manualExtensions), ("Music", Self.musicExtensions),
+                ] {
                     let folder = snapshot.mediaFolder(platform: platform, mediaType: mediaType)
                     group.addTask { _ = await self.stemIndex(for: folder, extensions: extensions) }
                 }
@@ -196,7 +209,9 @@ public actor MediaCatalog {
     }
 
     public func manual(for game: Game) async -> URL? {
-        if let path = game.manualPath, let url = existing(snapshot.root.url(forWindowsRelativePath: path)) { return url }
+        if let path = game.manualPath, let url = existing(snapshot.root.url(forWindowsRelativePath: path)) {
+            return url
+        }
         return await stemFile(for: game, mediaType: "Manual", extensions: Self.manualExtensions)
     }
 
@@ -241,8 +256,12 @@ public actor MediaCatalog {
 
     public func extras(for game: Game) -> [GameExtra] {
         guard let folder = game.rootFolder else { return [] }
-        let extrasDirectory = snapshot.root.url(forWindowsRelativePath: folder).appendingPathComponent("Extras", isDirectory: true)
-        guard let entries = try? FileManager.default.contentsOfDirectory(at: extrasDirectory, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return [] }
+        let extrasDirectory = snapshot.root.url(forWindowsRelativePath: folder).appendingPathComponent(
+            "Extras", isDirectory: true)
+        guard
+            let entries = try? FileManager.default.contentsOfDirectory(
+                at: extrasDirectory, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles])
+        else { return [] }
         return entries.compactMap { url -> GameExtra? in
             let ext = url.pathExtension.lowercased()
             guard ext != "bat", ext != "exe", ext != "cmd" else { return nil }

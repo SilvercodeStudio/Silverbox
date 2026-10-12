@@ -26,9 +26,11 @@ nonisolated public struct AdditionalApplication: Identifiable, Hashable, Sendabl
     public var playCount: Int
     public var playTimeSeconds: Int
 
-    public init(id: String, gameID: String, name: String, applicationPath: String, commandLine: String? = nil,
-                autoRunBefore: Bool = false, autoRunAfter: Bool = false, waitForExit: Bool = false,
-                playCount: Int = 0, playTimeSeconds: Int = 0) {
+    public init(
+        id: String, gameID: String, name: String, applicationPath: String, commandLine: String? = nil,
+        autoRunBefore: Bool = false, autoRunAfter: Bool = false, waitForExit: Bool = false,
+        playCount: Int = 0, playTimeSeconds: Int = 0
+    ) {
         self.id = id
         self.gameID = gameID
         self.name = name

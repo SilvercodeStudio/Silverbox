@@ -23,7 +23,7 @@ set once in `AppInfo` (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
   Vorbis; MOD/S3M/XM/IT modules), each its own package target with the
   upstream `LICENSE` and a `VENDOR.md` note.
 - `eXoMAC/App/`, `eXoMAC/Views/`, `eXoMAC/Services/` — the Mac app. Every
-  file starts with `import eXoCore`.
+  file imports `eXoCore`.
 - `Tests/eXoCoreTests/` — Swift Testing suites for the core, with a small
   LaunchBox-style library and audio samples under `Fixtures/`. Tests in
   `RealLibraryTests.swift` run only when `/Volumes/eXoDOS_ro` (or
@@ -41,6 +41,7 @@ make build                       # app only (CONFIG=Release for a release build)
 make test                        # swift test: core tests (fast; real-library tests if mounted)
 make core                        # swift build: core only
 make sweep                       # translate every eXoDOS config in the mounted library, print a summary
+make format                      # swift-format the Swift sources (settings in .swift-format)
 ```
 
 `make run` resolves the built app through `xcodebuild -showBuildSettings`,
@@ -60,6 +61,10 @@ Makefile).
 - Keep core code free of Apple-only frameworks so it can later back a
   SwiftCrossUI client on Linux. Platform-specific work (unzip binary paths,
   emulator locations) stays behind small helpers with `#if os(...)`.
+- Formatting. `make format` runs `swift-format` with the settings in
+  `.swift-format` (4-space indent, 120 columns, sorted imports). Run it after
+  changing Swift files and before the work is reviewed or committed; do not
+  hand-wrap code that the formatter will rewrite.
 - Dependencies. Ask before adding one. Declare package dependencies in
   `Package.swift` (remote packages pinned by `Package.resolved`, which is
   committed); dependencies of the app target alone go through Xcode's Add

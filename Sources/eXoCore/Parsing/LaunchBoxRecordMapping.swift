@@ -130,7 +130,9 @@ nonisolated extension PlatformCategory {
 nonisolated extension PlatformFolder {
     public init?(record: LaunchBoxRecord) {
         let r = record.reader
-        guard let platform = r["Platform"], let mediaType = r["MediaType"], let folderPath = r["FolderPath"] else { return nil }
+        guard let platform = r["Platform"], let mediaType = r["MediaType"], let folderPath = r["FolderPath"] else {
+            return nil
+        }
         self.init(platform: platform, mediaType: mediaType, folderPath: folderPath)
     }
 }
@@ -188,7 +190,8 @@ nonisolated extension PlaylistGame {
     public init?(record: LaunchBoxRecord) {
         let r = record.reader
         guard let gameID = r["GameId"] else { return nil }
-        self.init(gameID: gameID, title: r["GameTitle"], fileName: r["GameFileName"],
-                  platform: r["GamePlatform"], manualOrder: r.int("ManualOrder") ?? -1)
+        self.init(
+            gameID: gameID, title: r["GameTitle"], fileName: r["GameFileName"],
+            platform: r["GamePlatform"], manualOrder: r.int("ManualOrder") ?? -1)
     }
 }

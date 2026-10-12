@@ -1,6 +1,6 @@
-import eXoCore
 import SwiftUI
 import UniformTypeIdentifiers
+import eXoCore
 
 /// The main window: sidebar, game collection (or game page), inspector.
 struct LibraryWindow: View {
@@ -24,10 +24,10 @@ struct LibraryWindow: View {
         .frame(minWidth: 1040, minHeight: 640)
         .onAppear {
             #if DEBUG
-            DebugScreenshot.scheduleIfRequested()
-            if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty {
-                if id == "settings" { openSettings() } else { openWindow(id: id) }
-            }
+                DebugScreenshot.scheduleIfRequested()
+                if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty {
+                    if id == "settings" { openSettings() } else { openWindow(id: id) }
+                }
             #endif
         }
         .sheet(item: $model.pendingInstall) { game in
@@ -42,8 +42,11 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingUninstall) { game in
             UninstallSheet(game: game)
         }
-        .alert(model.alert?.title ?? "", isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } }),
-               presenting: model.alert) { _ in
+        .alert(
+            model.alert?.title ?? "",
+            isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } }),
+            presenting: model.alert
+        ) { _ in
             Button("OK") {}
         } message: { alert in
             Text(alert.message)
@@ -86,7 +89,11 @@ struct ContentColumn: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.openedGame != nil {
-                    Button { model.openedGameID = nil } label: { Label("Back to Library", systemImage: "chevron.left") }
+                    Button {
+                        model.openedGameID = nil
+                    } label: {
+                        Label("Back to Library", systemImage: "chevron.left")
+                    }
                 }
                 if model.settings.viewMode == .grid, model.openedGame == nil {
                     Slider(value: $model.settings.tileSize, in: 96...260) { Text("Tile size") }
@@ -165,10 +172,13 @@ struct LibrarySetupView: View {
                 .foregroundStyle(Theme.accent)
             Text(error == nil ? "Add your first collection" : "The library could not be loaded")
                 .font(.title2.weight(.semibold))
-            Text(error ?? "Pick an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Theme.textSecondary)
-                .frame(maxWidth: 440)
+            Text(
+                error
+                    ?? "Pick an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac."
+            )
+            .multilineTextAlignment(.center)
+            .foregroundStyle(Theme.textSecondary)
+            .frame(maxWidth: 440)
             ForEach(Array(model.rootReports.values), id: \.root.url) { report in
                 LibraryRootReportView(report: report)
                     .frame(maxWidth: 480)
@@ -254,7 +264,8 @@ struct MusicBar: View {
 
     private var statusLine: String {
         if model.music.isUnsupportedFormat {
-            return model.music.errorMessage ?? "Menu music, .\(model.music.currentURL?.pathExtension.lowercased() ?? "") format not supported"
+            return model.music.errorMessage
+                ?? "Menu music, .\(model.music.currentURL?.pathExtension.lowercased() ?? "") format not supported"
         }
         if model.music.currentURL == nil { return "Menu music" }
         return model.music.isPlaying ? "Menu music, playing" : "Menu music, paused"

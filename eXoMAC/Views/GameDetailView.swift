@@ -1,6 +1,6 @@
-import eXoCore
 import QuickLook
 import SwiftUI
+import eXoCore
 
 /// The full game page with media, metadata, extras and related games.
 struct GameDetailView: View {
@@ -9,7 +9,10 @@ struct GameDetailView: View {
     @State private var tab: Tab = .overview
 
     enum Tab: String, CaseIterable, Identifiable {
-        case overview = "Overview", extras = "Extras", media = "Media", related = "Related"
+        case overview = "Overview"
+        case extras = "Extras"
+        case media = "Media"
+        case related = "Related"
         var id: String { rawValue }
     }
 
@@ -86,7 +89,9 @@ struct MediaGridView: View {
     @State private var previewURL: URL?
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 16)], alignment: .leading, spacing: 20) {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 16)], alignment: .leading, spacing: 20
+        ) {
             ForEach(items) { item in
                 VStack(alignment: .leading, spacing: 6) {
                     ZStack {
@@ -127,7 +132,10 @@ struct RelatedGamesView: View {
         if related.isEmpty {
             Text("No related games found.").foregroundStyle(Theme.textSecondary)
         } else {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: 16, alignment: .bottom)], alignment: .leading, spacing: 20) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: 16, alignment: .bottom)],
+                alignment: .leading, spacing: 20
+            ) {
                 ForEach(related) { other in
                     GameTileView(game: other, width: 140, isSelected: false)
                         .onTapGesture {
@@ -148,7 +156,9 @@ struct RelatedGamesView: View {
             result = library.games.filter { $0.id != game.id && !series.isDisjoint(with: $0.seriesNames) }
         }
         if result.count < 6, let developer = game.developer {
-            let sameDeveloper = library.games.filter { $0.id != game.id && $0.developer == developer && !result.contains($0) }
+            let sameDeveloper = library.games.filter {
+                $0.id != game.id && $0.developer == developer && !result.contains($0)
+            }
             result += sameDeveloper
         }
         return Array(result.sorted { $0.sortKey < $1.sortKey }.prefix(24))

@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 struct SidebarView: View {
     @Environment(AppModel.self) private var model

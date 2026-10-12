@@ -24,7 +24,8 @@ nonisolated public enum SaveArchiver {
             guard let match = line.wholeMatch(of: Self.verbosePattern) else { continue }
             let name = String(match.name)
             guard !name.hasSuffix("/") else { continue }
-            entries[name.lowercased()] = ArchiveEntry(size: Int(match.size) ?? 0, crc: UInt32(match.crc, radix: 16) ?? 0)
+            entries[name.lowercased()] = ArchiveEntry(
+                size: Int(match.size) ?? 0, crc: UInt32(match.crc, radix: 16) ?? 0)
         }
         return entries
     }
@@ -54,8 +55,11 @@ nonisolated public enum SaveArchiver {
     static func localFiles(in folder: URL) -> [LocalFile] {
         let fm = FileManager.default
         let prefix = folder.lastPathComponent
-        guard let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-                                             options: [.skipsHiddenFiles]) else { return [] }
+        guard
+            let enumerator = fm.enumerator(
+                at: folder, includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+                options: [.skipsHiddenFiles])
+        else { return [] }
         let basePath = folder.standardizedFileURL.path
         var files: [LocalFile] = []
         for case let url as URL in enumerator {
@@ -63,7 +67,10 @@ nonisolated public enum SaveArchiver {
             guard values?.isRegularFile == true else { continue }
             let path = url.standardizedFileURL.path
             guard path.hasPrefix(basePath + "/") else { continue }
-            files.append(LocalFile(url: url, relativePath: prefix + "/" + path.dropFirst(basePath.count + 1), size: values?.fileSize ?? -1))
+            files.append(
+                LocalFile(
+                    url: url, relativePath: prefix + "/" + path.dropFirst(basePath.count + 1),
+                    size: values?.fileSize ?? -1))
         }
         return files
     }
@@ -80,9 +87,12 @@ nonisolated public enum SaveArchiver {
         let listURL = fm.temporaryDirectory.appendingPathComponent("exo-save-\(UUID().uuidString).txt")
         try changed.joined(separator: "\n").write(to: listURL, atomically: true, encoding: .utf8)
         defer { try? fm.removeItem(at: listURL) }
-        let result = try await CommandRunner.run(executable: zipExecutable, arguments: ["-q", "-@", saveArchive.path],
-                                                 workingDirectory: folder.deletingLastPathComponent(), standardInput: listURL)
-        guard result.status == 0 else { throw InstallError.extractionFailed(status: result.status, output: result.output) }
+        let result = try await CommandRunner.run(
+            executable: zipExecutable, arguments: ["-q", "-@", saveArchive.path],
+            workingDirectory: folder.deletingLastPathComponent(), standardInput: listURL)
+        guard result.status == 0 else {
+            throw InstallError.extractionFailed(status: result.status, output: result.output)
+        }
         return changed.count
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
+
 #if canImport(FoundationXML)
-import FoundationXML
+    import FoundationXML
 #endif
 
 /// One top-level record of a LaunchBox XML file: the element name (`Game`,
@@ -84,8 +85,10 @@ nonisolated private final class RecordDelegate: NSObject, XMLParserDelegate {
         self.onRecord = onRecord
     }
 
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
-                qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
+    func parser(
+        _ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
+        qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]
+    ) {
         depth += 1
         switch depth {
         case 2:
@@ -107,7 +110,9 @@ nonisolated private final class RecordDelegate: NSObject, XMLParserDelegate {
         if depth == 3, let string = String(data: CDATABlock, encoding: .utf8) { text += string }
     }
 
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+    func parser(
+        _ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?
+    ) {
         switch depth {
         case 3:
             if let field = currentField { fields[field] = text }
@@ -219,7 +224,10 @@ nonisolated public enum LaunchBoxDate {
             while end < value.endIndex, value[end].isNumber { end = value.index(after: end) }
             value.removeSubrange(secondsEnd..<end)
         }
-        if value.hasSuffix("Z") { value.removeLast(); value += "+00:00" }
+        if value.hasSuffix("Z") {
+            value.removeLast()
+            value += "+00:00"
+        }
         return zoned.date(from: value) ?? unzoned.date(from: value)
     }
 

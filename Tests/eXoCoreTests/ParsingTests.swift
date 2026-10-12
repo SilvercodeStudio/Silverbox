@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 @Suite("LaunchBox dates")
@@ -74,9 +75,12 @@ struct LaunchBoxXMLTests {
     }
 
     @Test func parsesInMemoryXML() throws {
-        let xml = "<LaunchBox><Parent><PlatformName>A &amp; B</PlatformName><ParentPlatformCategoryName>C</ParentPlatformCategoryName></Parent></LaunchBox>"
+        let xml =
+            "<LaunchBox><Parent><PlatformName>A &amp; B</PlatformName><ParentPlatformCategoryName>C</ParentPlatformCategoryName></Parent></LaunchBox>"
         var links: [ParentLink] = []
-        try LaunchBoxXMLParser.parse(data: Data(xml.utf8)) { if let link = ParentLink(record: $0) { links.append(link) } }
+        try LaunchBoxXMLParser.parse(data: Data(xml.utf8)) {
+            if let link = ParentLink(record: $0) { links.append(link) }
+        }
         #expect(links == [ParentLink(child: .platform("A & B"), parent: .category("C"))])
     }
 }
@@ -85,7 +89,9 @@ struct LaunchBoxXMLTests {
 struct WindowsPathTests {
     @Test func splitsAndResolves() {
         #expect(WindowsPath.components(of: "eXo\\eXoDOS\\!dos\\ultima5") == ["eXo", "eXoDOS", "!dos", "ultima5"])
-        #expect(WindowsPath.baseName(of: "eXo\\eXoDOS\\!dos\\ultima5\\Ultima V - Warriors of Destiny (1988).bat") == "Ultima V - Warriors of Destiny (1988)")
+        #expect(
+            WindowsPath.baseName(of: "eXo\\eXoDOS\\!dos\\ultima5\\Ultima V - Warriors of Destiny (1988).bat")
+                == "Ultima V - Warriors of Destiny (1988)")
         #expect(WindowsPath.fileExtension(of: "a\\b.PDF") == "PDF")
         #expect(WindowsPath.isAbsolute("C:\\Games"))
         #expect(!WindowsPath.isAbsolute(".\\mt32"))
@@ -96,8 +102,12 @@ struct WindowsPathTests {
 
     @Test func libraryRootResolvesRelativePaths() {
         let root = LibraryRoot(url: URL(fileURLWithPath: "/Volumes/eXoDOS"))
-        #expect(root.url(forWindowsRelativePath: "Manuals\\MS-DOS\\Foo.pdf").path == "/Volumes/eXoDOS/Manuals/MS-DOS/Foo.pdf")
+        #expect(
+            root.url(forWindowsRelativePath: "Manuals\\MS-DOS\\Foo.pdf").path
+                == "/Volumes/eXoDOS/Manuals/MS-DOS/Foo.pdf")
         #expect(root.gameConfigsDirectory.path == "/Volumes/eXoDOS/eXo/eXoDOS/!dos")
-        #expect(root.platformFile(named: "MS-DOS Magazines & Newsletters").lastPathComponent == "MS-DOS Magazines & Newsletters.xml")
+        #expect(
+            root.platformFile(named: "MS-DOS Magazines & Newsletters").lastPathComponent
+                == "MS-DOS Magazines & Newsletters.xml")
     }
 }

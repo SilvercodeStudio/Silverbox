@@ -1,25 +1,36 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 @Suite("Path substitutions")
 struct PathSubstitutionTests {
     @Test func mapsAbsoluteAndRelativePrefixes() {
-        let root = LibraryRoot(url: URL(fileURLWithPath: "/Volumes/LB"), substitutions: [
-            PathSubstitution(windowsPrefix: "X:\\Emulation", macPath: "/Volumes/storage/Emulation"),
-            PathSubstitution(windowsPrefix: "Games", macPath: "/Volumes/nas/Games"),
-        ])
-        #expect(root.url(forWindowsRelativePath: "X:\\Emulation\\PSX\\Game.chd").path == "/Volumes/storage/Emulation/PSX/Game.chd")
-        #expect(root.url(forWindowsRelativePath: "x:\\emulation\\PSX\\Game.chd").path == "/Volumes/storage/Emulation/PSX/Game.chd")
-        #expect(root.url(forWindowsRelativePath: "Games\\Sega Genesis\\Sonic.zip").path == "/Volumes/nas/Games/Sega Genesis/Sonic.zip")
+        let root = LibraryRoot(
+            url: URL(fileURLWithPath: "/Volumes/LB"),
+            substitutions: [
+                PathSubstitution(windowsPrefix: "X:\\Emulation", macPath: "/Volumes/storage/Emulation"),
+                PathSubstitution(windowsPrefix: "Games", macPath: "/Volumes/nas/Games"),
+            ])
+        #expect(
+            root.url(forWindowsRelativePath: "X:\\Emulation\\PSX\\Game.chd").path
+                == "/Volumes/storage/Emulation/PSX/Game.chd")
+        #expect(
+            root.url(forWindowsRelativePath: "x:\\emulation\\PSX\\Game.chd").path
+                == "/Volumes/storage/Emulation/PSX/Game.chd")
+        #expect(
+            root.url(forWindowsRelativePath: "Games\\Sega Genesis\\Sonic.zip").path
+                == "/Volumes/nas/Games/Sega Genesis/Sonic.zip")
         #expect(root.url(forWindowsRelativePath: "GamesX\\foo.zip").path == "/Volumes/LB/GamesX/foo.zip")
-        #expect(root.url(forWindowsRelativePath: "..\\Emulation\\Amiga\\a.lha").path == "/Volumes/Emulation/Amiga/a.lha")
+        #expect(
+            root.url(forWindowsRelativePath: "..\\Emulation\\Amiga\\a.lha").path == "/Volumes/Emulation/Amiga/a.lha")
         #expect(root.url(forWindowsRelativePath: "Images\\MS-DOS\\x.png").path == "/Volumes/LB/Images/MS-DOS/x.png")
     }
 
     @Test func collectionRoundTripsThroughJSON() throws {
-        let collection = LibraryCollection(name: "Consoles", rootPath: "/Volumes/LB",
-                                           substitutions: [PathSubstitution(windowsPrefix: "Games", macPath: "/nas/Games")])
+        let collection = LibraryCollection(
+            name: "Consoles", rootPath: "/Volumes/LB",
+            substitutions: [PathSubstitution(windowsPrefix: "Games", macPath: "/nas/Games")])
         let data = try JSONEncoder().encode(collection)
         let decoded = try JSONDecoder().decode(LibraryCollection.self, from: data)
         #expect(decoded == collection)
@@ -31,8 +42,10 @@ struct PathSubstitutionTests {
 @Suite("Library aggregate")
 struct LibraryAggregateTests {
     @Test func keepsTwoCopiesOfTheSameLibraryApart() throws {
-        let first = try LibraryLoader(collection: LibraryCollection(name: "A", rootPath: FixtureLibrary.rootURL.path)).load()
-        let second = try LibraryLoader(collection: LibraryCollection(name: "B", rootPath: FixtureLibrary.rootURL.path)).load()
+        let first = try LibraryLoader(collection: LibraryCollection(name: "A", rootPath: FixtureLibrary.rootURL.path))
+            .load()
+        let second = try LibraryLoader(collection: LibraryCollection(name: "B", rootPath: FixtureLibrary.rootURL.path))
+            .load()
         let library = Library(snapshots: [first, second])
         #expect(library.games.count == 8)
         #expect(Set(library.games.map(\.id)).count == 8, "composite ids must be unique")

@@ -26,7 +26,7 @@ let package = Package(
     name: "eXoMAC",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "eXoCore", targets: ["eXoCore"]),
+        .library(name: "eXoCore", targets: ["eXoCore"])
     ],
     targets: [
         // stb_vorbis: Ogg Vorbis decoder (public domain / MIT), one C file.

@@ -80,7 +80,9 @@ nonisolated public struct EXoDOSBuild: Hashable, Sendable, Codable {
     public var displayName: String {
         switch family {
         case .vanilla: return "DOSBox 0.74"
-        case .ece: return "DOSBox ECE \(folder.dropFirst(3).isEmpty ? "" : "r" + folder.dropFirst(3))".trimmingCharacters(in: .whitespaces)
+        case .ece:
+            return "DOSBox ECE \(folder.dropFirst(3).isEmpty ? "" : "r" + folder.dropFirst(3))".trimmingCharacters(
+                in: .whitespaces)
         case .staging: return "DOSBox Staging \(folder.dropFirst(7))".trimmingCharacters(in: .whitespaces)
         case .daum: return "DOSBox SVN Daum"
         case .x: return "DOSBox-X"

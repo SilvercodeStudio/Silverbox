@@ -53,8 +53,10 @@ nonisolated public struct LibraryCollection: Identifiable, Hashable, Sendable, C
     public var substitutions: [PathSubstitution]
     public var isEnabled: Bool
 
-    public init(id: UUID = UUID(), name: String, kind: CollectionKind = .launchBox, rootPath: String,
-                substitutions: [PathSubstitution] = [], isEnabled: Bool = true) {
+    public init(
+        id: UUID = UUID(), name: String, kind: CollectionKind = .launchBox, rootPath: String,
+        substitutions: [PathSubstitution] = [], isEnabled: Bool = true
+    ) {
         self.id = id
         self.name = name
         self.kind = kind

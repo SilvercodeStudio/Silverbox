@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 /// The grid or list of games for the current scope and search.
 struct GameCollectionView: View {
@@ -44,8 +44,10 @@ struct GameGridView: View {
         let tile = CGFloat(model.settings.tileSize)
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: tile, maximum: tile * 1.3), spacing: 18, alignment: .bottom)],
-                          alignment: .leading, spacing: 24) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: tile, maximum: tile * 1.3), spacing: 18, alignment: .bottom)],
+                    alignment: .leading, spacing: 24
+                ) {
                     ForEach(games) { game in
                         GameTileView(game: game, width: tile, isSelected: model.selectedGameID == game.id)
                             .onTapGesture(count: 2) { model.play(game) }
@@ -228,7 +230,8 @@ struct GameListView: View {
             }
             .width(100)
             TableColumn("Played") { game in
-                Text(model.playCount(game) == 0 ? "" : String(model.playCount(game))).foregroundStyle(Theme.textSecondary)
+                Text(model.playCount(game) == 0 ? "" : String(model.playCount(game))).foregroundStyle(
+                    Theme.textSecondary)
             }
             .width(52)
         }

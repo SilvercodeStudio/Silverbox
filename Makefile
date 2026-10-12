@@ -12,7 +12,7 @@ ARGS ?=
 
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination 'platform=macOS'
 
-.PHONY: help build run app test core typecheck sweep
+.PHONY: help build run app test core typecheck sweep format
 
 help:
 	@echo "make build          build the app ($(CONFIG)) with xcodebuild"
@@ -22,6 +22,7 @@ help:
 	@echo "make core           build the core package only (swift build)"
 	@echo "make typecheck      type-check the app sources against the package build, without Xcode"
 	@echo "make sweep          translate every eXoDOS config in the mounted library and print a summary"
+	@echo "make format         reformat the Swift sources with swift-format (settings in .swift-format)"
 	@echo "Set CONFIG=Release for a release build."
 
 build:
@@ -45,6 +46,11 @@ core:
 # reports configs, builds and translation notes without starting anything.
 sweep:
 	EXOMAC_SWEEP=1 swift test --filter LaunchSweep 2>&1 | grep -v '^\[' 
+
+# Reformats the Swift sources; .swift-format at the repo root holds the
+# settings (4-space indent, 120 columns). Vendored C targets are untouched.
+format:
+	xcrun swift-format format --in-place --recursive Package.swift Sources/eXoCore eXoMAC eXoMACTests eXoMACUITests Tests
 
 # Checks that the app only uses public core API, using the package's build
 # products instead of Xcode. SwiftUI and AVFoundation come from the SDK.

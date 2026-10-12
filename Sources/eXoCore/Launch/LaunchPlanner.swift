@@ -14,9 +14,11 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
     /// Folders to create before launch (writable overlays).
     public var directoriesToCreate: [URL]
 
-    public init(game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, arguments: [String],
-                workingDirectory: URL, configURL: URL, configText: String, sourceConfigURL: URL, notes: [String],
-                directoriesToCreate: [URL] = []) {
+    public init(
+        game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, arguments: [String],
+        workingDirectory: URL, configURL: URL, configText: String, sourceConfigURL: URL, notes: [String],
+        directoriesToCreate: [URL] = []
+    ) {
         self.game = game
         self.variant = variant
         self.emulator = emulator
@@ -32,7 +34,8 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
     /// Writes the generated config where the arguments point and creates
     /// any overlay folders the config mounts.
     public func writeConfig() throws {
-        try FileManager.default.createDirectory(at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         for directory in directoriesToCreate {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         }
@@ -63,10 +66,12 @@ nonisolated extension LaunchPlanError: LocalizedError {
         switch self {
         case .notADOSGame: return "This item is not a DOS game and cannot be launched in DOSBox."
         case .missingGameFolder: return "The game record has no root folder."
-        case .notInstalled(let folder): return "The game is not installed: folder \(folder) is missing under eXo/eXoDOS."
+        case .notInstalled(let folder):
+            return "The game is not installed: folder \(folder) is missing under eXo/eXoDOS."
         case .missingConfig(let url): return "The DOSBox config is missing: \(url.path)"
         case .emulatorMissing(let kind): return "\(kind.displayName) was not found. Set its location in Settings."
-        case .notADOSBoxEmulator(let kind): return "\(kind.displayName) cannot run DOS games; choose DOSBox Staging or DOSBox-X."
+        case .notADOSBoxEmulator(let kind):
+            return "\(kind.displayName) cannot run DOS games; choose DOSBox Staging or DOSBox-X."
         }
     }
 }
@@ -122,16 +127,21 @@ nonisolated public struct LaunchPlanner: Sendable {
         eXoDOSBuild(for: game)?.recommendedEmulator ?? .dosboxStaging
     }
 
-    public func plan(game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions) throws -> LaunchPlan {
+    public func plan(game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions) throws
+        -> LaunchPlan
+    {
         guard game.isDOSGame else { throw LaunchPlanError.notADOSGame }
         guard let folderName = game.gameFolderName, let configFolder = configFolder(for: game) else {
             throw LaunchPlanError.missingGameFolder
         }
-        guard let location = snapshot.installedLocation(for: game) else { throw LaunchPlanError.notInstalled(folderName: folderName) }
+        guard let location = snapshot.installedLocation(for: game) else {
+            throw LaunchPlanError.notInstalled(folderName: folderName)
+        }
         guard emulator.kind.isDOSBox else { throw LaunchPlanError.notADOSBoxEmulator(emulator.kind) }
         guard emulator.exists else { throw LaunchPlanError.emulatorMissing(emulator.kind) }
 
-        let sourceURL = overrideConfigURL(for: game, variant: variant)
+        let sourceURL =
+            overrideConfigURL(for: game, variant: variant)
             ?? variant?.configURL
             ?? configFolder.appendingPathComponent("dosbox.conf")
         guard let data = FileManager.default.contents(atPath: sourceURL.path) else {
@@ -156,27 +166,36 @@ nonisolated public struct LaunchPlanner: Sendable {
             }
         }
         let fallbacks: [URL] = [location.url, configFolder]
-        let translator = ConfigTranslator(root: snapshot.root, emulator: emulator.kind, options: options,
-                                          fluidSynthAvailable: EmulatorCapabilities.fluidSynthAvailable(for: emulator),
-                                          fallbackDirectories: fallbacks, pathMappings: mappings, overlay: overlay)
+        let translator = ConfigTranslator(
+            root: snapshot.root, emulator: emulator.kind, options: options,
+            fluidSynthAvailable: EmulatorCapabilities.fluidSynthAvailable(for: emulator),
+            fallbackDirectories: fallbacks, pathMappings: mappings, overlay: overlay)
         var translation = translator.translate(source)
         if overlay != nil {
-            translation.notes.append("The library is read-only; saves are written to \(localStore?.overlayDirectory.path ?? "the local overlay folder").")
+            translation.notes.append(
+                "The library is read-only; saves are written to \(localStore?.overlayDirectory.path ?? "the local overlay folder")."
+            )
         }
 
         if let build = eXoDOSBuild(for: game), build.recommendedEmulator != emulator.kind {
-            translation.notes.insert("eXoDOS runs this game with \(build.displayName); \(build.recommendedEmulator.displayName) is the closer match on the Mac.", at: 0)
+            translation.notes.insert(
+                "eXoDOS runs this game with \(build.displayName); \(build.recommendedEmulator.displayName) is the closer match on the Mac.",
+                at: 0)
         }
 
         let variantSuffix = variant.map { "-" + $0.configURL.deletingPathExtension().lastPathComponent } ?? ""
-        let configURL = scratchDirectory
-            .appendingPathComponent("\(Self.safeFileName(game.launchBoxID))\(variantSuffix)-\(emulator.kind.rawValue).conf")
+        let configURL =
+            scratchDirectory
+            .appendingPathComponent(
+                "\(Self.safeFileName(game.launchBoxID))\(variantSuffix)-\(emulator.kind.rawValue).conf")
         let workingDirectory = snapshot.root.eXoDirectory
 
         let arguments: [String]
         switch emulator.kind {
         case .dosboxStaging:
-            arguments = ["--noprimaryconf", "--nolocalconf", "--working-dir", workingDirectory.path, "--conf", configURL.path]
+            arguments = [
+                "--noprimaryconf", "--nolocalconf", "--working-dir", workingDirectory.path, "--conf", configURL.path,
+            ]
         case .dosboxX:
             arguments = ["-defaultdir", workingDirectory.path, "-conf", configURL.path, "-fastlaunch"]
         case .retroArch, .dolphin, .mame, .mednafen:

@@ -50,7 +50,8 @@ nonisolated public struct DOSBoxConfigDocument: Sendable, Hashable {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("["), let close = line.firstIndex(of: "]") {
                 flush()
-                let name = line[line.index(after: line.startIndex)..<close].trimmingCharacters(in: .whitespaces).lowercased()
+                let name = line[line.index(after: line.startIndex)..<close].trimmingCharacters(in: .whitespaces)
+                    .lowercased()
                 current = Section(name: name)
                 continue
             }
@@ -102,7 +103,8 @@ nonisolated public struct DOSBoxConfigDocument: Sendable, Hashable {
     /// Sets `key` in `section`, replacing any existing entries for it and
     /// creating the section when needed.
     public mutating func set(_ section: String, _ key: String, _ value: String) {
-        let name = section.lowercased(), lowerKey = key.lowercased()
+        let name = section.lowercased()
+        let lowerKey = key.lowercased()
         if let offset = sections.firstIndex(where: { $0.name == name }) {
             sections[offset].entries.removeAll { $0.key == lowerKey }
             sections[offset].entries.append(Entry(key: lowerKey, value: value))
@@ -118,7 +120,8 @@ nonisolated public struct DOSBoxConfigDocument: Sendable, Hashable {
     }
 
     public mutating func remove(_ section: String, _ key: String) {
-        let name = section.lowercased(), lowerKey = key.lowercased()
+        let name = section.lowercased()
+        let lowerKey = key.lowercased()
         guard let offset = sections.firstIndex(where: { $0.name == name }) else { return }
         sections[offset].entries.removeAll { $0.key == lowerKey }
     }

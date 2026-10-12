@@ -1,6 +1,6 @@
-import eXoCore
 import QuickLook
 import SwiftUI
+import eXoCore
 
 /// The manual and the documents in a game's Extras folder.
 struct ExtrasList: View {

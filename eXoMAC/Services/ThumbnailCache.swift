@@ -1,7 +1,7 @@
-import eXoCore
-import Foundation
 import CoreGraphics
+import Foundation
 import ImageIO
+import eXoCore
 
 /// A decoded image that can cross isolation boundaries. `CGImage` is
 /// immutable, so sharing it is safe.

@@ -1,5 +1,5 @@
-import eXoCore
 import Foundation
+import eXoCore
 
 /// How eXoMAC picks an emulator for a game.
 enum EmulatorPolicy: String, CaseIterable, Codable, Identifiable {
@@ -66,10 +66,14 @@ struct AppSettings: Codable, Equatable {
         showLaunchOptions = try c.decodeIfPresent(Bool.self, forKey: .showLaunchOptions) ?? true
         emulatorPaths = try c.decodeIfPresent([String: String].self, forKey: .emulatorPaths) ?? [:]
         // Paths saved before every emulator had a slot in the dictionary.
-        if let legacy = try c.decodeIfPresent(String.self, forKey: .stagingExecutablePath), emulatorPaths[EmulatorKind.dosboxStaging.rawValue] == nil {
+        if let legacy = try c.decodeIfPresent(String.self, forKey: .stagingExecutablePath),
+            emulatorPaths[EmulatorKind.dosboxStaging.rawValue] == nil
+        {
             emulatorPaths[EmulatorKind.dosboxStaging.rawValue] = legacy
         }
-        if let legacy = try c.decodeIfPresent(String.self, forKey: .dosboxXExecutablePath), emulatorPaths[EmulatorKind.dosboxX.rawValue] == nil {
+        if let legacy = try c.decodeIfPresent(String.self, forKey: .dosboxXExecutablePath),
+            emulatorPaths[EmulatorKind.dosboxX.rawValue] == nil
+        {
             emulatorPaths[EmulatorKind.dosboxX.rawValue] = legacy
         }
         retroArchCoresPath = try c.decodeIfPresent(String.self, forKey: .retroArchCoresPath)
@@ -88,7 +92,8 @@ struct AppSettings: Codable, Equatable {
     static func load(from defaults: UserDefaults = .standard) -> AppSettings {
         var settings = AppSettings()
         if let data = defaults.data(forKey: defaultsKey),
-           let saved = try? JSONDecoder().decode(AppSettings.self, from: data) {
+            let saved = try? JSONDecoder().decode(AppSettings.self, from: data)
+        {
             settings = saved
         }
         // A library chosen before collections existed becomes the first collection.
@@ -104,7 +109,8 @@ struct AppSettings: Codable, Equatable {
             settings.collections = paths.split(separator: "|").enumerated().map { offset, path in
                 let url = URL(fileURLWithPath: String(path), isDirectory: true)
                 let id = UUID(uuidString: String(format: "11111111-1111-1111-1111-%012d", offset + 1))!
-                return LibraryCollection(id: id, name: LibraryCollection.suggestedName(for: url), rootPath: String(path))
+                return LibraryCollection(
+                    id: id, name: LibraryCollection.suggestedName(for: url), rootPath: String(path))
             }
             settings.transient = true
         }
@@ -123,8 +129,8 @@ struct AppSettings: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
-             dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
-             musicEnabled, musicVolume, tileSize, viewMode, sortOrder, showHiddenGames, inspectorShown
+            dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
+            musicEnabled, musicVolume, tileSize, viewMode, sortOrder, showHiddenGames, inspectorShown
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -199,7 +205,8 @@ struct AppSettings: Codable, Equatable {
 /// Folders eXoMAC writes to under Application Support.
 enum AppPaths {
     static var applicationSupport: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let base =
+            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
         return base.appendingPathComponent("eXoMAC", isDirectory: true)
     }

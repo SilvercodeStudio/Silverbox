@@ -9,7 +9,9 @@ nonisolated public struct EmulatorLaunch: Sendable, Hashable {
     public var workingDirectory: URL
     public var notes: [String]
 
-    public init(game: Game, emulator: EmulatorInstallation, arguments: [String], workingDirectory: URL, notes: [String] = []) {
+    public init(
+        game: Game, emulator: EmulatorInstallation, arguments: [String], workingDirectory: URL, notes: [String] = []
+    ) {
         self.game = game
         self.emulator = emulator
         self.arguments = arguments
@@ -25,7 +27,8 @@ nonisolated public struct EmulatorLaunch: Sendable, Hashable {
 
 nonisolated extension LaunchPlan {
     public var launch: EmulatorLaunch {
-        EmulatorLaunch(game: game, emulator: emulator, arguments: arguments, workingDirectory: workingDirectory, notes: notes)
+        EmulatorLaunch(
+            game: game, emulator: emulator, arguments: arguments, workingDirectory: workingDirectory, notes: notes)
     }
 }
 
@@ -46,7 +49,8 @@ nonisolated extension RomLaunchError: LocalizedError {
         case .emulatorMissing(let kind): return "\(kind.displayName) was not found. Choose it in Settings › Emulators."
         case .coreMissing(let core): return "The RetroArch core \(core) is not installed."
         case .fileMissing(let url): return "The game file is not present: \(url.path)"
-        case .unsupportedFile(let ext, let kind): return "\(kind.displayName) cannot open .\(ext) files. Unpack the game first."
+        case .unsupportedFile(let ext, let kind):
+            return "\(kind.displayName) cannot open .\(ext) files. Unpack the game first."
         }
     }
 }
@@ -64,8 +68,10 @@ nonisolated public struct RomLaunchPlanner: Sendable {
         snapshot.root.url(forWindowsRelativePath: game.applicationPath)
     }
 
-    public func plan(game: Game, resolved: ResolvedEmulatorAssignment, emulator: EmulatorInstallation,
-                     retroArch: RetroArchSetup?, options: LaunchOptions) throws -> EmulatorLaunch {
+    public func plan(
+        game: Game, resolved: ResolvedEmulatorAssignment, emulator: EmulatorInstallation,
+        retroArch: RetroArchSetup?, options: LaunchOptions
+    ) throws -> EmulatorLaunch {
         guard game.launchKind == .emulator else { throw RomLaunchError.notAnEmulatedGame }
         guard let assignment = resolved.assignment, resolved.problem == nil else {
             throw RomLaunchError.noEmulator(resolved.problem ?? "No emulator is assigned to \(game.platform).")
@@ -106,7 +112,10 @@ nonisolated public struct RomLaunchPlanner: Sendable {
             arguments += extra + gameArguments
         case .mame:
             extra.removeAll { $0.lowercased() == "-skip_gameinfo" }
-            arguments = [file.deletingPathExtension().lastPathComponent, "-rompath", file.deletingLastPathComponent().path, "-skip_gameinfo"]
+            arguments = [
+                file.deletingPathExtension().lastPathComponent, "-rompath", file.deletingLastPathComponent().path,
+                "-skip_gameinfo",
+            ]
             if !options.fullscreen { arguments.append("-window") }
             arguments += extra + gameArguments
         case .mednafen:
@@ -116,10 +125,12 @@ nonisolated public struct RomLaunchPlanner: Sendable {
         }
 
         if ["zip", "7z"].contains(ext), emulator.kind == .retroArch {
-            notes.append("The game is an archive; RetroArch unpacks it to its cache folder when the core needs the plain file.")
+            notes.append(
+                "The game is an archive; RetroArch unpacks it to its cache folder when the core needs the plain file.")
         }
-        return EmulatorLaunch(game: game, emulator: emulator, arguments: arguments,
-                              workingDirectory: file.deletingLastPathComponent(), notes: notes)
+        return EmulatorLaunch(
+            game: game, emulator: emulator, arguments: arguments,
+            workingDirectory: file.deletingLastPathComponent(), notes: notes)
     }
 
     /// File types an emulator cannot open directly.

@@ -44,7 +44,9 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
             if let rest = substitution.remainder(of: path) {
                 var target = URL(fileURLWithPath: substitution.macPath, isDirectory: true)
                 for component in rest {
-                    target = component == ".." ? target.deletingLastPathComponent() : target.appendingPathComponent(component)
+                    target =
+                        component == ".."
+                        ? target.deletingLastPathComponent() : target.appendingPathComponent(component)
                 }
                 return target.standardizedFileURL
             }

@@ -1,11 +1,13 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 /// Walks every eXoDOS game in the real library and translates its config
 /// without starting anything. Opt in with `EXOMAC_SWEEP=1 swift test
 /// --filter LaunchSweep` (or `make sweep`); it reads thousands of files.
-@Suite("Launch sweep", .enabled(if: ProcessInfo.processInfo.environment["EXOMAC_SWEEP"] == "1" && RealLibrary.isAvailable))
+@Suite(
+    "Launch sweep", .enabled(if: ProcessInfo.processInfo.environment["EXOMAC_SWEEP"] == "1" && RealLibrary.isAvailable))
 struct LaunchSweepTests {
     struct Tally {
         var games = 0
@@ -55,8 +57,9 @@ struct LaunchSweepTests {
             }
             let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
             let kind = planner.recommendedEmulator(for: game)
-            let translator = ConfigTranslator(root: snapshot.root, emulator: kind, options: LaunchOptions(),
-                                              fluidSynthAvailable: false, fallbackDirectories: [folder])
+            let translator = ConfigTranslator(
+                root: snapshot.root, emulator: kind, options: LaunchOptions(),
+                fluidSynthAvailable: false, fallbackDirectories: [folder])
             let result = translator.translate(DOSBoxConfigDocument.parse(text))
             if result.document.autoexecLines.isEmpty { tally.emptyAutoexec.append(game.title) }
             if result.document.serialized().isEmpty { tally.translateFailures.append(game.title) }
@@ -66,18 +69,19 @@ struct LaunchSweepTests {
         }
 
         let seconds = Date().timeIntervalSince(started)
-        print("""
-        === Launch sweep over \(tally.games) eXoDOS games in \(String(format: "%.0f", seconds)) s
-        config folder missing: \(tally.missingConfigFolder.count) \(tally.missingConfigFolder.prefix(10))
-        dosbox.conf missing:   \(tally.missingConfig.count) \(tally.missingConfig.prefix(10))
-        archive missing:       \(tally.missingArchive)
-        build unknown:         \(tally.unknownBuild.count) \(tally.unknownBuild.prefix(10))
-        builds:                \(tally.builds.sorted { $0.value > $1.value })
-        variants per game:     \(tally.variantsPerGame.sorted { $0.key < $1.key })
-        windows helper menus:  \(tally.windowsHelpers)
-        empty autoexec:        \(tally.emptyAutoexec.count) \(tally.emptyAutoexec.prefix(10))
-        notes:
-        """)
+        print(
+            """
+            === Launch sweep over \(tally.games) eXoDOS games in \(String(format: "%.0f", seconds)) s
+            config folder missing: \(tally.missingConfigFolder.count) \(tally.missingConfigFolder.prefix(10))
+            dosbox.conf missing:   \(tally.missingConfig.count) \(tally.missingConfig.prefix(10))
+            archive missing:       \(tally.missingArchive)
+            build unknown:         \(tally.unknownBuild.count) \(tally.unknownBuild.prefix(10))
+            builds:                \(tally.builds.sorted { $0.value > $1.value })
+            variants per game:     \(tally.variantsPerGame.sorted { $0.key < $1.key })
+            windows helper menus:  \(tally.windowsHelpers)
+            empty autoexec:        \(tally.emptyAutoexec.count) \(tally.emptyAutoexec.prefix(10))
+            notes:
+            """)
         for (note, count) in tally.notes.sorted(by: { $0.value > $1.value }) {
             print("  \(count)\t\(note)")
         }

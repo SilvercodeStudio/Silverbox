@@ -23,7 +23,8 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
 
     public var saveArchiveDate: Date? {
         guard let saveArchiveURL else { return nil }
-        return (try? FileManager.default.attributesOfItem(atPath: saveArchiveURL.path)[.modificationDate] as? Date) ?? nil
+        return (try? FileManager.default.attributesOfItem(atPath: saveArchiveURL.path)[.modificationDate] as? Date)
+            ?? nil
     }
 }
 
@@ -39,9 +40,12 @@ nonisolated extension InstallError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notADOSGame: return "This item is not a DOS game."
-        case .archiveMissing(let url): return "The game archive is not present: \(url.lastPathComponent). This copy of eXoDOS may be the Lite edition; downloading is not supported yet."
+        case .archiveMissing(let url):
+            return
+                "The game archive is not present: \(url.lastPathComponent). This copy of eXoDOS may be the Lite edition; downloading is not supported yet."
         case .extractionFailed(let status, let output): return "Unzip failed (exit code \(status)). \(output)"
-        case .folderMissingAfterExtract(let url): return "The archive did not create the expected folder \(url.lastPathComponent)."
+        case .folderMissingAfterExtract(let url):
+            return "The archive did not create the expected folder \(url.lastPathComponent)."
         case .notInstalled: return "The game is not installed."
         }
     }
@@ -62,9 +66,10 @@ nonisolated public struct UnzipCommandExtractor: ArchiveExtractor {
 
     public func extract(archive: URL, into directory: URL) async throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let result = try await CommandRunner.run(executable: executableURL,
-                                                 arguments: ["-o", "-q", archive.path, "-d", directory.path],
-                                                 workingDirectory: directory)
+        let result = try await CommandRunner.run(
+            executable: executableURL,
+            arguments: ["-o", "-q", archive.path, "-d", directory.path],
+            workingDirectory: directory)
         // unzip returns 1 for warnings (for example, mismatched timestamps) and still extracts.
         guard result.status == 0 || result.status == 1 else {
             throw InstallError.extractionFailed(status: result.status, output: result.output)
@@ -79,7 +84,9 @@ nonisolated public struct CommandResult: Sendable, Hashable {
 
 /// Runs a command to completion and collects its output.
 nonisolated public enum CommandRunner {
-    public static func run(executable: URL, arguments: [String], workingDirectory: URL? = nil, standardInput: URL? = nil) async throws -> CommandResult {
+    public static func run(
+        executable: URL, arguments: [String], workingDirectory: URL? = nil, standardInput: URL? = nil
+    ) async throws -> CommandResult {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             process.executableURL = executable
@@ -153,7 +160,9 @@ nonisolated public struct GameInstaller: Sendable {
         )
     }
 
-    public func install(_ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor()) async throws {
+    public func install(
+        _ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor()
+    ) async throws {
         guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
         try FileManager.default.createDirectory(at: plan.destinationDirectory, withIntermediateDirectories: true)
         try await extractor.extract(archive: plan.archiveURL, into: plan.destinationDirectory)
@@ -174,7 +183,8 @@ nonisolated public struct GameInstaller: Sendable {
         guard plan.isInstalled else { throw InstallError.notInstalled }
         var saved = 0
         if backupSaves, plan.archiveExists {
-            saved = try await SaveArchiver.backup(folder: plan.installedFolderURL, originalArchive: plan.archiveURL, to: plan.saveBackupURL)
+            saved = try await SaveArchiver.backup(
+                folder: plan.installedFolderURL, originalArchive: plan.archiveURL, to: plan.saveBackupURL)
         }
         try FileManager.default.removeItem(at: plan.installedFolderURL)
         return saved

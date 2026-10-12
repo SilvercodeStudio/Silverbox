@@ -55,7 +55,9 @@ nonisolated public struct AutoexecRewriter: Sendable {
     /// second, writable overlay mount.
     public let overlay: OverlayMount?
 
-    public init(baseDirectory: URL, fallbackDirectories: [URL] = [], mappings: [PathMapping] = [], overlay: OverlayMount? = nil) {
+    public init(
+        baseDirectory: URL, fallbackDirectories: [URL] = [], mappings: [PathMapping] = [], overlay: OverlayMount? = nil
+    ) {
         self.baseDirectory = baseDirectory
         self.fallbackDirectories = fallbackDirectories
         self.mappings = mappings
@@ -70,7 +72,9 @@ nonisolated public struct AutoexecRewriter: Sendable {
     }
 
     private static let pathCommands: Set<String> = ["mount", "imgmount", "boot"]
-    private static let droppedFlags: Set<String> = ["-ioctl", "-ioctl_dx", "-ioctl_dio", "-ioctl_mci", "-noioctl", "-aspi"]
+    private static let droppedFlags: Set<String> = [
+        "-ioctl", "-ioctl_dx", "-ioctl_dio", "-ioctl_mci", "-noioctl", "-aspi",
+    ]
     private static let droppedFlagsWithValue: Set<String> = ["-usecd"]
     private static let flagsWithValue: Set<String> = ["-t", "-label", "-freesize", "-fs", "-size", "-ide", "-l", "-o"]
 
@@ -146,7 +150,8 @@ nonisolated public struct AutoexecRewriter: Sendable {
         }
         var lines = [prefix + rebuilt.joined(separator: " ")]
         if command == "mount", let overlay, let drive = driveToken, let folder = mountedFolder,
-           mountType == nil || mountType == "dir", let overlayFolder = overlay.overlayFolder(for: folder) {
+            mountType == nil || mountType == "dir", let overlayFolder = overlay.overlayFolder(for: folder)
+        {
             lines.append("\(prefix)mount \(drive) \"\(overlayFolder.path)\" -t overlay")
             overlayFolders.append(overlayFolder)
         }
@@ -187,7 +192,8 @@ nonisolated public struct AutoexecRewriter: Sendable {
         for fallback in fallbackDirectories {
             let candidate = mapped(WindowsPath.resolve(text, against: fallback))
             if FileManager.default.fileExists(atPath: candidate.path) {
-                notes.append("Resolved \(text) relative to \(fallback.lastPathComponent) because it does not exist under eXo.")
+                notes.append(
+                    "Resolved \(text) relative to \(fallback.lastPathComponent) because it does not exist under eXo.")
                 return ResolvedPath(quoted: "\"\(candidate.path)\"", url: candidate)
             }
         }

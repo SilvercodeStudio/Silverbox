@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 /// The console-style LaunchBox library under `Fixtures/ConsoleLibrary`, plus
@@ -13,7 +14,9 @@ nonisolated enum ConsoleFixture {
 
     /// A RetroArch "install" in `directory`: an executable, a cores folder
     /// with fceumm and fbneo, and an info file for fceumm.
-    static func fakeRetroArch(in directory: URL, cores: [String] = ["fceumm_libretro", "fbneo_libretro"]) throws -> RetroArchSetup {
+    static func fakeRetroArch(in directory: URL, cores: [String] = ["fceumm_libretro", "fbneo_libretro"]) throws
+        -> RetroArchSetup
+    {
         let installation = try FixtureLibrary.fakeEmulator(.retroArch, in: directory)
         let coresDirectory = directory.appendingPathComponent("cores", isDirectory: true)
         let infoDirectory = directory.appendingPathComponent("info", isDirectory: true)
@@ -47,9 +50,17 @@ struct LaunchKindTests {
         let dos = try FixtureLibrary.snapshot()
         #expect(dos.game(id: FixtureLibrary.ultimaID)?.launchKind == .dosBox)
         #expect(dos.game(id: "bbbbbbbb-0000-0000-0000-000000000001")?.launchKind == .document)
-        #expect(Game(id: "x", title: "Steam", platform: "Windows", applicationPath: "steam://rungameid/1").launchKind == .link)
-        #expect(Game(id: "x", title: "Player", platform: "Soundtracks", applicationPath: "eXo\\emulators\\audio\\foobar2000\\foobar2000.exe").launchKind == .windowsProgram)
-        #expect(Game(id: "x", title: "Folder", platform: "Arcade", applicationPath: "Games\\Arcade\\pacman").launchKind == .emulator)
+        #expect(
+            Game(id: "x", title: "Steam", platform: "Windows", applicationPath: "steam://rungameid/1").launchKind
+                == .link)
+        #expect(
+            Game(
+                id: "x", title: "Player", platform: "Soundtracks",
+                applicationPath: "eXo\\emulators\\audio\\foobar2000\\foobar2000.exe"
+            ).launchKind == .windowsProgram)
+        #expect(
+            Game(id: "x", title: "Folder", platform: "Arcade", applicationPath: "Games\\Arcade\\pacman").launchKind
+                == .emulator)
     }
 }
 
@@ -90,16 +101,21 @@ struct RetroArchSetupTests {
         #expect(setup.coresDirectory == cores)
         #expect(RetroArchSetup.directory(fromConfigValue: "~/x", bundleResources: nil)?.path.hasSuffix("/x") == true)
         let resources = URL(fileURLWithPath: "/Applications/RetroArch.app/Contents/Resources", isDirectory: true)
-        #expect(RetroArchSetup.directory(fromConfigValue: ":/cores", bundleResources: resources)?.path == resources.appendingPathComponent("cores").path)
+        #expect(
+            RetroArchSetup.directory(fromConfigValue: ":/cores", bundleResources: resources)?.path
+                == resources.appendingPathComponent("cores").path)
         #expect(RetroArchSetup.directory(fromConfigValue: "default", bundleResources: resources) == nil)
     }
 }
 
 @Suite("Emulator assignments")
 struct EmulatorAssignmentTests {
-    func resolver(installed: Set<EmulatorKind>, retroArch: RetroArchSetup?, user: [PlatformEmulatorAssignment] = []) throws -> EmulatorAssignmentResolver {
+    func resolver(installed: Set<EmulatorKind>, retroArch: RetroArchSetup?, user: [PlatformEmulatorAssignment] = [])
+        throws -> EmulatorAssignmentResolver
+    {
         let snapshot = try ConsoleFixture.snapshot()
-        return EmulatorAssignmentResolver(userAssignments: user, snapshots: [snapshot], installedKinds: installed, retroArch: retroArch)
+        return EmulatorAssignmentResolver(
+            userAssignments: user, snapshots: [snapshot], installedKinds: installed, retroArch: retroArch)
     }
 
     @Test func followsLaunchBoxWhenTheEmulatorIsInstalled() throws {
@@ -151,8 +167,11 @@ struct EmulatorAssignmentTests {
     @Test func userChoiceWinsAndReportsMissingCore() throws {
         let scratch = try FixtureLibrary.scratchDirectory()
         let retroArch = try ConsoleFixture.fakeRetroArch(in: scratch)
-        let user = [PlatformEmulatorAssignment(platform: "Nintendo Entertainment System", emulator: .retroArch, core: "nestopia"),
-                    PlatformEmulatorAssignment(platform: "Apple II", emulator: .mednafen)]
+        let user = [
+            PlatformEmulatorAssignment(
+                platform: "Nintendo Entertainment System", emulator: .retroArch, core: "nestopia"),
+            PlatformEmulatorAssignment(platform: "Apple II", emulator: .mednafen),
+        ]
         let resolver = try resolver(installed: [.retroArch, .mednafen], retroArch: retroArch, user: user)
         let nes = resolver.resolve(platform: "Nintendo Entertainment System")
         #expect(nes.source == .user)
@@ -162,7 +181,9 @@ struct EmulatorAssignmentTests {
         #expect(apple.isReady && apple.assignment?.emulator == .mednafen)
 
         let noRetroArch = try self.resolver(installed: [], retroArch: nil, user: user)
-        #expect(noRetroArch.resolve(platform: "Nintendo Entertainment System").problem?.contains("RetroArch is not installed") == true)
+        #expect(
+            noRetroArch.resolve(platform: "Nintendo Entertainment System").problem?.contains(
+                "RetroArch is not installed") == true)
     }
 
     @Test func replacedCoresAreNoted() throws {
@@ -179,7 +200,8 @@ struct EmulatorAssignmentTests {
         let assignment = PlatformEmulatorAssignment(platform: "Arcade", emulator: .mame, arguments: "-skip_gameinfo")
         let data = try JSONEncoder().encode(assignment)
         #expect(try JSONDecoder().decode(PlatformEmulatorAssignment.self, from: data) == assignment)
-        let minimal = try JSONDecoder().decode(PlatformEmulatorAssignment.self, from: Data(#"{"platform":"NES","emulator":"retroArch"}"#.utf8))
+        let minimal = try JSONDecoder().decode(
+            PlatformEmulatorAssignment.self, from: Data(#"{"platform":"NES","emulator":"retroArch"}"#.utf8))
         #expect(minimal.core == nil && minimal.arguments.isEmpty)
     }
 }
@@ -190,25 +212,34 @@ struct RomLaunchPlannerTests {
         let scratch = try FixtureLibrary.scratchDirectory()
         let retroArch = try ConsoleFixture.fakeRetroArch(in: scratch)
         let snapshot = try ConsoleFixture.snapshot()
-        let resolver = EmulatorAssignmentResolver(snapshots: [snapshot], installedKinds: [.retroArch], retroArch: retroArch)
+        let resolver = EmulatorAssignmentResolver(
+            snapshots: [snapshot], installedKinds: [.retroArch], retroArch: retroArch)
         let planner = RomLaunchPlanner(snapshot: snapshot)
         let game = try #require(snapshot.game(id: ConsoleFixture.blasterID))
         let resolved = resolver.resolve(platform: game.platform)
-        let launch = try planner.plan(game: game, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch, options: LaunchOptions())
+        let launch = try planner.plan(
+            game: game, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
+            options: LaunchOptions())
         let rom = ConsoleFixture.rootURL.appendingPathComponent("Games/Nintendo Entertainment System/Test Blaster.zip")
-        #expect(launch.arguments == ["-L", retroArch.coresDirectory!.appendingPathComponent("fceumm_libretro.dylib").path, rom.path])
+        #expect(
+            launch.arguments == [
+                "-L", retroArch.coresDirectory!.appendingPathComponent("fceumm_libretro.dylib").path, rom.path,
+            ])
         #expect(launch.workingDirectory == rom.deletingLastPathComponent())
         #expect(launch.notes.contains { $0.contains("archive") })
         #expect(launch.commandLine.contains("-L"))
 
-        let fullscreen = try planner.plan(game: game, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
-                                          options: LaunchOptions(fullscreen: true))
+        let fullscreen = try planner.plan(
+            game: game, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
+            options: LaunchOptions(fullscreen: true))
         #expect(fullscreen.arguments[2] == "-f")
 
         // A game-level `-L` in LaunchBox asks for another core, which is missing here.
         let other = try #require(snapshot.game(id: ConsoleFixture.otherCoreID))
         #expect(throws: RomLaunchError.coreMissing("nestopia_libretro")) {
-            try planner.plan(game: other, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch, options: LaunchOptions())
+            try planner.plan(
+                game: other, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
+                options: LaunchOptions())
         }
     }
 
@@ -218,21 +249,28 @@ struct RomLaunchPlannerTests {
         let dolphin = try FixtureLibrary.fakeEmulator(.dolphin, in: scratch)
         let mame = try FixtureLibrary.fakeEmulator(.mame, in: scratch)
         let snapshot = try ConsoleFixture.snapshot()
-        let resolver = EmulatorAssignmentResolver(snapshots: [snapshot], installedKinds: [.retroArch, .dolphin, .mame], retroArch: retroArch)
+        let resolver = EmulatorAssignmentResolver(
+            snapshots: [snapshot], installedKinds: [.retroArch, .dolphin, .mame], retroArch: retroArch)
         let planner = RomLaunchPlanner(snapshot: snapshot)
 
         let cube = try #require(snapshot.game(id: ConsoleFixture.cubeID))
-        let cubeLaunch = try planner.plan(game: cube, resolved: resolver.resolve(platform: cube.platform), emulator: dolphin, retroArch: retroArch,
-                                          options: LaunchOptions(fullscreen: true))
+        let cubeLaunch = try planner.plan(
+            game: cube, resolved: resolver.resolve(platform: cube.platform), emulator: dolphin, retroArch: retroArch,
+            options: LaunchOptions(fullscreen: true))
         let image = ConsoleFixture.rootURL.appendingPathComponent("Games/Nintendo GameCube/Cube Demo.rvz")
         #expect(cubeLaunch.arguments == ["-b", "-e", image.path, "--config=Dolphin.Display.Fullscreen=True"])
         #expect(cubeLaunch.notes.first?.contains("no Mac build") == true)
 
         let pacman = try #require(snapshot.game(id: ConsoleFixture.pacmanID))
-        let pacmanLaunch = try planner.plan(game: pacman, resolved: resolver.resolve(platform: pacman.platform), emulator: mame, retroArch: retroArch,
-                                            options: LaunchOptions())
+        let pacmanLaunch = try planner.plan(
+            game: pacman, resolved: resolver.resolve(platform: pacman.platform), emulator: mame, retroArch: retroArch,
+            options: LaunchOptions())
         let folder = ConsoleFixture.rootURL.appendingPathComponent("Games/Arcade")
-        #expect(pacmanLaunch.arguments == ["pacman", "-rompath", folder.path, "-skip_gameinfo", "-window", "-artwork_crop", "-waitvsync", "-nofilter"])
+        #expect(
+            pacmanLaunch.arguments == [
+                "pacman", "-rompath", folder.path, "-skip_gameinfo", "-window", "-artwork_crop", "-waitvsync",
+                "-nofilter",
+            ])
         #expect(pacmanLaunch.workingDirectory == folder)
     }
 
@@ -242,34 +280,49 @@ struct RomLaunchPlannerTests {
         let dolphin = try FixtureLibrary.fakeEmulator(.dolphin, in: scratch)
         let snapshot = try ConsoleFixture.snapshot()
         let planner = RomLaunchPlanner(snapshot: snapshot)
-        let resolver = EmulatorAssignmentResolver(snapshots: [snapshot], installedKinds: [.retroArch, .dolphin], retroArch: retroArch)
+        let resolver = EmulatorAssignmentResolver(
+            snapshots: [snapshot], installedKinds: [.retroArch, .dolphin], retroArch: retroArch)
 
         let conan = try #require(snapshot.game(id: ConsoleFixture.conanID))
         #expect(throws: RomLaunchError.self) {
-            try planner.plan(game: conan, resolved: resolver.resolve(platform: conan.platform), emulator: retroArch.installation, retroArch: retroArch, options: LaunchOptions())
+            try planner.plan(
+                game: conan, resolved: resolver.resolve(platform: conan.platform), emulator: retroArch.installation,
+                retroArch: retroArch, options: LaunchOptions())
         }
 
         let packed = try #require(snapshot.game(id: ConsoleFixture.packedID))
-        let psx = ResolvedEmulatorAssignment(platform: packed.platform, assignment: PlatformEmulatorAssignment(platform: packed.platform, emulator: .retroArch, core: "fceumm"))
+        let psx = ResolvedEmulatorAssignment(
+            platform: packed.platform,
+            assignment: PlatformEmulatorAssignment(platform: packed.platform, emulator: .retroArch, core: "fceumm"))
         #expect(throws: RomLaunchError.unsupportedFile("rar", .retroArch)) {
-            try planner.plan(game: packed, resolved: psx, emulator: retroArch.installation, retroArch: retroArch, options: LaunchOptions())
+            try planner.plan(
+                game: packed, resolved: psx, emulator: retroArch.installation, retroArch: retroArch,
+                options: LaunchOptions())
         }
 
         let blaster = try #require(snapshot.game(id: ConsoleFixture.blasterID))
-        let zipForDolphin = ResolvedEmulatorAssignment(platform: blaster.platform, assignment: PlatformEmulatorAssignment(platform: blaster.platform, emulator: .dolphin))
+        let zipForDolphin = ResolvedEmulatorAssignment(
+            platform: blaster.platform,
+            assignment: PlatformEmulatorAssignment(platform: blaster.platform, emulator: .dolphin))
         #expect(throws: RomLaunchError.unsupportedFile("zip", .dolphin)) {
-            try planner.plan(game: blaster, resolved: zipForDolphin, emulator: dolphin, retroArch: nil, options: LaunchOptions())
+            try planner.plan(
+                game: blaster, resolved: zipForDolphin, emulator: dolphin, retroArch: nil, options: LaunchOptions())
         }
 
         // The wrong emulator for the assignment, and a DOS game.
-        let mismatch = ResolvedEmulatorAssignment(platform: blaster.platform, assignment: PlatformEmulatorAssignment(platform: blaster.platform, emulator: .mame))
+        let mismatch = ResolvedEmulatorAssignment(
+            platform: blaster.platform,
+            assignment: PlatformEmulatorAssignment(platform: blaster.platform, emulator: .mame))
         #expect(throws: RomLaunchError.emulatorMissing(.mame)) {
-            try planner.plan(game: blaster, resolved: mismatch, emulator: dolphin, retroArch: nil, options: LaunchOptions())
+            try planner.plan(
+                game: blaster, resolved: mismatch, emulator: dolphin, retroArch: nil, options: LaunchOptions())
         }
         let dos = try FixtureLibrary.snapshot()
         let ultima = try #require(dos.game(id: FixtureLibrary.ultimaID))
         #expect(throws: RomLaunchError.notAnEmulatedGame) {
-            try RomLaunchPlanner(snapshot: dos).plan(game: ultima, resolved: psx, emulator: retroArch.installation, retroArch: retroArch, options: LaunchOptions())
+            try RomLaunchPlanner(snapshot: dos).plan(
+                game: ultima, resolved: psx, emulator: retroArch.installation, retroArch: retroArch,
+                options: LaunchOptions())
         }
     }
 

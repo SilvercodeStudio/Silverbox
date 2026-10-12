@@ -34,9 +34,11 @@ nonisolated public struct LibraryLoader: Sendable {
     }
 
     public init(root: LibraryRoot, localStore: LocalStore? = nil) {
-        self.init(collection: LibraryCollection(name: LibraryCollection.suggestedName(for: root.url), rootPath: root.url.path,
-                                                substitutions: root.substitutions),
-                  localStore: localStore)
+        self.init(
+            collection: LibraryCollection(
+                name: LibraryCollection.suggestedName(for: root.url), rootPath: root.url.path,
+                substitutions: root.substitutions),
+            localStore: localStore)
     }
 
     public func load(progress: (@Sendable (LibraryLoadProgress) -> Void)? = nil) throws -> LibrarySnapshot {
@@ -47,7 +49,8 @@ nonisolated public struct LibraryLoader: Sendable {
 
         let fingerprint = cache.map { _ in LibraryCache.fingerprint(for: root) }
         if let cache, let fingerprint, let payload = cache.load(collectionID: collection.id, fingerprint: fingerprint) {
-            progress?(LibraryLoadProgress(stage: "Loading saved library", fraction: 0.9, gamesLoaded: payload.games.count))
+            progress?(
+                LibraryLoadProgress(stage: "Loading saved library", fraction: 0.9, gamesLoaded: payload.games.count))
             return snapshot(from: payload)
         }
 
@@ -85,7 +88,8 @@ nonisolated public struct LibraryLoader: Sendable {
         var doneSize = 0
         for (entry, size) in zip(platformFiles, sizes) {
             let base = 0.1 + 0.85 * Double(doneSize) / Double(totalSize)
-            progress?(LibraryLoadProgress(stage: "Reading \(entry.platform.name)", fraction: base, gamesLoaded: games.count))
+            progress?(
+                LibraryLoadProgress(stage: "Reading \(entry.platform.name)", fraction: base, gamesLoaded: games.count))
             var countInFile = 0
             try LaunchBoxXMLParser.parse(url: entry.url) { record in
                 switch record.element {
@@ -95,7 +99,9 @@ nonisolated public struct LibraryLoader: Sendable {
                         games.append(game)
                         countInFile += 1
                         if countInFile % 500 == 0 {
-                            progress?(LibraryLoadProgress(stage: "Reading \(entry.platform.name)", fraction: base, gamesLoaded: games.count))
+                            progress?(
+                                LibraryLoadProgress(
+                                    stage: "Reading \(entry.platform.name)", fraction: base, gamesLoaded: games.count))
                         }
                     }
                 case "AlternateName":
@@ -116,7 +122,8 @@ nonisolated public struct LibraryLoader: Sendable {
             try? LaunchBoxXMLParser.parse(url: root.emulatorsFile) { record in
                 switch record.element {
                 case "Emulator": if let e = LaunchBoxEmulator(record: record) { emulators.append(e) }
-                case "EmulatorPlatform": if let e = LaunchBoxEmulatorPlatform(record: record) { emulatorPlatforms.append(e) }
+                case "EmulatorPlatform":
+                    if let e = LaunchBoxEmulatorPlatform(record: record) { emulatorPlatforms.append(e) }
                 default: break
                 }
             }
@@ -125,8 +132,13 @@ nonisolated public struct LibraryLoader: Sendable {
 
         let payload = LibraryCache.Payload(
             version: LibraryCache.version, fingerprint: fingerprint ?? "",
-            games: games.map { var g = $0; g.collectionID = collection.id; return g },
-            platforms: platforms, categories: categories, platformFolders: folders, playlists: playlists, parents: parents,
+            games: games.map {
+                var g = $0
+                g.collectionID = collection.id
+                return g
+            },
+            platforms: platforms, categories: categories, platformFolders: folders, playlists: playlists,
+            parents: parents,
             alternateNames: alternates, additionalApplications: extraApps, dosboxIndex: dosboxIndex,
             emulators: emulators, emulatorPlatforms: emulatorPlatforms)
         if let cache, fingerprint != nil {
@@ -190,8 +202,11 @@ nonisolated public struct LibraryLoader: Sendable {
     /// Lists the sub-folders of `eXo/eXoDOS/` (installed games), skipping `!dos`.
     public static func installedFolderNames(in gamesDirectory: URL) -> Set<String> {
         let fm = FileManager.default
-        guard let entries = try? fm.contentsOfDirectory(at: gamesDirectory, includingPropertiesForKeys: [.isDirectoryKey],
-                                                        options: [.skipsHiddenFiles]) else { return [] }
+        guard
+            let entries = try? fm.contentsOfDirectory(
+                at: gamesDirectory, includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles])
+        else { return [] }
         var names: Set<String> = []
         for entry in entries {
             let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false

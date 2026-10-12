@@ -32,6 +32,7 @@ make run ARGS='-libraryPath /Volumes/eXoDOS_ro -musicEnabled 0'
 make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
 make sweep                # translate every eXoDOS config in the mounted library
+make format               # reformat the Swift sources with swift-format
 ```
 
 The core library (XML parsing, media lookup, config translation, music

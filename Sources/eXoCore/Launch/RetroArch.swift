@@ -14,7 +14,10 @@ nonisolated public struct RetroArchCore: Hashable, Sendable, Identifiable, Codab
     public var id: String { name }
     public var title: String { displayName ?? name }
 
-    public init(name: String, url: URL, displayName: String? = nil, systemName: String? = nil, supportedExtensions: [String] = []) {
+    public init(
+        name: String, url: URL, displayName: String? = nil, systemName: String? = nil,
+        supportedExtensions: [String] = []
+    ) {
         self.name = name
         self.url = url
         self.displayName = displayName
@@ -47,8 +50,10 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
 
     /// Reads `retroarch.cfg` for the cores and info folders, falling back to
     /// the default places. `coresDirectoryOverride` wins when given.
-    public static func discover(installation: EmulatorInstallation, coresDirectoryOverride: URL? = nil,
-                                configFile: URL = RetroArchSetup.configFile) -> RetroArchSetup {
+    public static func discover(
+        installation: EmulatorInstallation, coresDirectoryOverride: URL? = nil,
+        configFile: URL = RetroArchSetup.configFile
+    ) -> RetroArchSetup {
         let fm = FileManager.default
         let config = Self.parseConfig(at: configFile)
         let bundleResources = installation.appBundleURL?.appendingPathComponent("Contents/Resources", isDirectory: true)
@@ -57,13 +62,19 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
             candidates.compactMap { $0 }.first { fm.fileExists(atPath: $0.path) }
         }
 
-        let cores = coresDirectoryOverride ?? firstExisting([
-            config["libretro_directory"].flatMap { Self.directory(fromConfigValue: $0, bundleResources: bundleResources) },
-            userDirectory.appendingPathComponent("cores", isDirectory: true),
-            bundleResources?.appendingPathComponent("cores", isDirectory: true),
-        ])
+        let cores =
+            coresDirectoryOverride
+            ?? firstExisting([
+                config["libretro_directory"].flatMap {
+                    Self.directory(fromConfigValue: $0, bundleResources: bundleResources)
+                },
+                userDirectory.appendingPathComponent("cores", isDirectory: true),
+                bundleResources?.appendingPathComponent("cores", isDirectory: true),
+            ])
         let info = firstExisting([
-            config["libretro_info_path"].flatMap { Self.directory(fromConfigValue: $0, bundleResources: bundleResources) },
+            config["libretro_info_path"].flatMap {
+                Self.directory(fromConfigValue: $0, bundleResources: bundleResources)
+            },
             userDirectory.appendingPathComponent("info", isDirectory: true),
             bundleResources?.appendingPathComponent("info", isDirectory: true),
             cores,
@@ -101,7 +112,8 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
         if value.hasPrefix(":") {
             guard let bundleResources else { return nil }
             let rest = value.dropFirst().drop(while: { $0 == "/" })
-            return rest.isEmpty ? bundleResources : bundleResources.appendingPathComponent(String(rest), isDirectory: true)
+            return rest.isEmpty
+                ? bundleResources : bundleResources.appendingPathComponent(String(rest), isDirectory: true)
         }
         return URL(fileURLWithPath: value, isDirectory: true)
     }
@@ -154,15 +166,22 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
     /// Every `*_libretro.dylib` in the cores folder, sorted by title.
     public func installedCores() -> [RetroArchCore] {
         guard let coresDirectory,
-              let entries = try? FileManager.default.contentsOfDirectory(at: coresDirectory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else {
+            let entries = try? FileManager.default.contentsOfDirectory(
+                at: coresDirectory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        else {
             return []
         }
         var cores: [RetroArchCore] = []
-        for url in entries where url.pathExtension == "dylib" && url.deletingPathExtension().lastPathComponent.hasSuffix("_libretro") {
+        for url in entries
+        where url.pathExtension == "dylib" && url.deletingPathExtension().lastPathComponent.hasSuffix("_libretro") {
             let name = url.deletingPathExtension().lastPathComponent
             let info = coreInfo(named: name)
-            cores.append(RetroArchCore(name: name, url: url, displayName: info["display_name"], systemName: info["systemname"],
-                                       supportedExtensions: (info["supported_extensions"] ?? "").split(separator: "|").map { String($0).lowercased() }))
+            cores.append(
+                RetroArchCore(
+                    name: name, url: url, displayName: info["display_name"], systemName: info["systemname"],
+                    supportedExtensions: (info["supported_extensions"] ?? "").split(separator: "|").map {
+                        String($0).lowercased()
+                    }))
         }
         return cores.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
     }

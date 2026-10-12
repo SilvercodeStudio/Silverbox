@@ -1,6 +1,6 @@
-import eXoCore
 import SwiftUI
 import WebKit
+import eXoCore
 
 /// One help page, read from the bundled Markdown files.
 struct HelpTopic: Identifiable, Hashable {
@@ -12,13 +12,16 @@ struct HelpTopic: Identifiable, Hashable {
 enum HelpLibrary {
     static func topics() -> [HelpTopic] {
         let urls = Bundle.main.urls(forResourcesWithExtension: "md", subdirectory: nil) ?? []
-        return urls
+        return
+            urls
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
             .compactMap { url in
                 guard let markdown = try? String(contentsOf: url, encoding: .utf8) else { return nil }
                 let fallback = url.deletingPathExtension().lastPathComponent
                     .drop(while: { $0.isNumber || $0 == " " })
-                return HelpTopic(id: url.lastPathComponent, title: MarkdownHTML.title(of: markdown) ?? String(fallback), markdown: markdown)
+                return HelpTopic(
+                    id: url.lastPathComponent, title: MarkdownHTML.title(of: markdown) ?? String(fallback),
+                    markdown: markdown)
             }
     }
 }
@@ -97,8 +100,10 @@ struct HelpWebView: NSViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate {
         var lastHTML: String?
 
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        func webView(
+            _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
             if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
                 NSWorkspace.shared.open(url)
                 decisionHandler(.cancel)
@@ -150,10 +155,12 @@ struct AboutView: View {
                     Link(AboutPanel.projectURL.absoluteString, destination: AboutPanel.projectURL)
                 }
                 Text("Emulation by DOSBox Staging and DOSBox-X.")
-                Text("Includes stb_vorbis by Sean Barrett and libxmp-lite by Claudio Matsuoka and Hipolito Carraro Jr, both MIT licensed.")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textTertiary)
-                    .padding(.top, 4)
+                Text(
+                    "Includes stb_vorbis by Sean Barrett and libxmp-lite by Claudio Matsuoka and Hipolito Carraro Jr, both MIT licensed."
+                )
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
+                .padding(.top, 4)
             }
             .font(.callout)
             .frame(width: 330, alignment: .leading)

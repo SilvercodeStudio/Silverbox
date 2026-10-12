@@ -5,8 +5,8 @@
 //  An emulation front-end for the eXoDOS and eXoWin9x collections on the Mac.
 //
 
-import eXoCore
 import SwiftUI
+import eXoCore
 
 @main
 struct eXoMACApp: App {

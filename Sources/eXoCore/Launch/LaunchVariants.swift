@@ -29,7 +29,10 @@ nonisolated public enum LaunchVariantDetector {
             let parsed = parseExceptionScript(text, folder: folder)
             if !parsed.isEmpty { return parsed }
         }
-        guard let entries = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else {
+        guard
+            let entries = try? fm.contentsOfDirectory(
+                at: folder, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        else {
             return []
         }
         let confs = entries.filter { $0.pathExtension.lowercased() == "conf" }
@@ -41,16 +44,18 @@ nonisolated public enum LaunchVariantDetector {
         }
     }
 
-    nonisolated(unsafe) private static let pressPattern = #/(?i)^\s*echo\s+Press\s+(?<key>\S)\s+(?:to|for)\s+(?:play|run|launch|start)?\s*(?<title>.+?)\s*$/#
+    nonisolated(unsafe) private static let pressPattern =
+        #/(?i)^\s*echo\s+Press\s+(?<key>\S)\s+(?:to|for)\s+(?:play|run|launch|start)?\s*(?<title>.+?)\s*$/#
     nonisolated(unsafe) private static let choicePattern = #/(?i)choice\s+/C:(?<keys>\S+)/#
-    nonisolated(unsafe) private static let errorlevelPattern = #/(?i)^\s*if\s+errorlevel\s*=?\s*(?<level>\d+)\s+goto\s+(?<label>\S+)/#
+    nonisolated(unsafe) private static let errorlevelPattern =
+        #/(?i)^\s*if\s+errorlevel\s*=?\s*(?<level>\d+)\s+goto\s+(?<label>\S+)/#
     nonisolated(unsafe) private static let labelPattern = #/^\s*:(?<label>\S+)\s*$/#
     nonisolated(unsafe) private static let confPattern = #/(?i)-conf\s+"?%var%\\(?<name>[^"\s]+\.conf)"?/#
 
     /// Parses an eXoDOS `exception.bat` menu into variants.
     static func parseExceptionScript(_ text: String, folder: URL) -> [LaunchVariant] {
         let lines = text.components(separatedBy: .newlines)
-        var titles: [String: String] = [:]          // menu key → title
+        var titles: [String: String] = [:]  // menu key → title
         var orderedKeys: [String] = []
         var choiceKeys: [Character] = []
         var labelForLevel: [Int: String] = [:]
@@ -93,7 +98,8 @@ nonisolated public enum LaunchVariantDetector {
             guard let label = labelForLevel[level], let conf = confForLabel[label] else { continue }
             let url = folder.appendingPathComponent(conf)
             guard FileManager.default.fileExists(atPath: url.path) else { continue }
-            variants.append(LaunchVariant(title: title, configURL: url, needsWindowsHelper: helperForLabel.contains(label)))
+            variants.append(
+                LaunchVariant(title: title, configURL: url, needsWindowsHelper: helperForLabel.contains(label)))
         }
         return variants
     }

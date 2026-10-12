@@ -15,9 +15,11 @@ nonisolated public struct Playlist: Identifiable, Hashable, Sendable, Codable {
     public var filters: [PlaylistFilter]
     public var games: [PlaylistGame]
 
-    public init(id: String, name: String, nestedName: String? = nil, sortTitle: String? = nil,
-                notes: String? = nil, autoPopulate: Bool = false, includeWithPlatforms: Bool = false,
-                filters: [PlaylistFilter] = [], games: [PlaylistGame] = []) {
+    public init(
+        id: String, name: String, nestedName: String? = nil, sortTitle: String? = nil,
+        notes: String? = nil, autoPopulate: Bool = false, includeWithPlatforms: Bool = false,
+        filters: [PlaylistFilter] = [], games: [PlaylistGame] = []
+    ) {
         self.id = id
         self.name = name
         self.nestedName = nestedName
@@ -49,7 +51,9 @@ nonisolated public struct PlaylistGame: Hashable, Sendable, Codable {
     public var platform: String?
     public var manualOrder: Int
 
-    public init(gameID: String, title: String? = nil, fileName: String? = nil, platform: String? = nil, manualOrder: Int = -1) {
+    public init(
+        gameID: String, title: String? = nil, fileName: String? = nil, platform: String? = nil, manualOrder: Int = -1
+    ) {
         self.gameID = gameID
         self.title = title
         self.fileName = fileName

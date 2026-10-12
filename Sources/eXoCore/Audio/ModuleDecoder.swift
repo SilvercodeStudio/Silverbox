@@ -50,7 +50,7 @@ nonisolated public final class ModuleDecoder: MusicDecoder {
 
     public func rewind() {
         xmp_restart_module(context)
-        _ = xmp_play_buffer(context, nil, 0, 0)   // resets the buffered frame
+        _ = xmp_play_buffer(context, nil, 0, 0)  // resets the buffered frame
     }
 
     private static func string<T>(fromCArray array: T) -> String {

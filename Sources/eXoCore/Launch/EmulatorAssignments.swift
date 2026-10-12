@@ -56,8 +56,11 @@ nonisolated public struct ResolvedEmulatorAssignment: Sendable, Hashable {
 
     public var isReady: Bool { assignment != nil && problem == nil }
 
-    public init(platform: String, assignment: PlatformEmulatorAssignment? = nil, source: EmulatorAssignmentSource = .none,
-                launchBoxEmulatorTitle: String? = nil, launchBoxCore: String? = nil, problem: String? = nil, notes: [String] = []) {
+    public init(
+        platform: String, assignment: PlatformEmulatorAssignment? = nil, source: EmulatorAssignmentSource = .none,
+        launchBoxEmulatorTitle: String? = nil, launchBoxCore: String? = nil, problem: String? = nil,
+        notes: [String] = []
+    ) {
         self.platform = platform
         self.assignment = assignment
         self.source = source
@@ -98,9 +101,14 @@ nonisolated extension LaunchBoxEmulator {
         var result: [String] = []
         var skipNext = false
         for token in tokens {
-            if skipNext { skipNext = false; continue }
+            if skipNext {
+                skipNext = false
+                continue
+            }
             let lowered = token.lowercased()
-            if ["-keyboardprovider", "-mouseprovider", "-joystickprovider", "-lightgunprovider", "-uimodekey", "-video"].contains(lowered) {
+            if [
+                "-keyboardprovider", "-mouseprovider", "-joystickprovider", "-lightgunprovider", "-uimodekey", "-video",
+            ].contains(lowered) {
                 skipNext = true
                 continue
             }
@@ -147,10 +155,13 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
     public var installedKinds: Set<EmulatorKind>
     public var retroArch: RetroArchSetup?
 
-    public init(userAssignments: [PlatformEmulatorAssignment] = [], launchBoxEmulators: [LaunchBoxEmulator] = [],
-                launchBoxPlatforms: [LaunchBoxEmulatorPlatform] = [], installedKinds: Set<EmulatorKind> = [],
-                retroArch: RetroArchSetup? = nil) {
-        self.userAssignments = Dictionary(userAssignments.map { ($0.platform, $0) }, uniquingKeysWith: { _, last in last })
+    public init(
+        userAssignments: [PlatformEmulatorAssignment] = [], launchBoxEmulators: [LaunchBoxEmulator] = [],
+        launchBoxPlatforms: [LaunchBoxEmulatorPlatform] = [], installedKinds: Set<EmulatorKind> = [],
+        retroArch: RetroArchSetup? = nil
+    ) {
+        self.userAssignments = Dictionary(
+            userAssignments.map { ($0.platform, $0) }, uniquingKeysWith: { _, last in last })
         self.launchBoxEmulators = launchBoxEmulators
         self.launchBoxPlatforms = launchBoxPlatforms
         self.installedKinds = installedKinds
@@ -158,16 +169,21 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
     }
 
     /// Everything the user could pick from, taken from several libraries.
-    public init(userAssignments: [PlatformEmulatorAssignment] = [], snapshots: [LibrarySnapshot],
-                installedKinds: Set<EmulatorKind>, retroArch: RetroArchSetup?) {
-        self.init(userAssignments: userAssignments,
-                  launchBoxEmulators: snapshots.flatMap(\.emulators),
-                  launchBoxPlatforms: snapshots.flatMap(\.emulatorPlatforms),
-                  installedKinds: installedKinds, retroArch: retroArch)
+    public init(
+        userAssignments: [PlatformEmulatorAssignment] = [], snapshots: [LibrarySnapshot],
+        installedKinds: Set<EmulatorKind>, retroArch: RetroArchSetup?
+    ) {
+        self.init(
+            userAssignments: userAssignments,
+            launchBoxEmulators: snapshots.flatMap(\.emulators),
+            launchBoxPlatforms: snapshots.flatMap(\.emulatorPlatforms),
+            installedKinds: installedKinds, retroArch: retroArch)
     }
 
     /// LaunchBox's choices for a platform, the default first.
-    public func launchBoxCandidates(for platform: String) -> [(emulator: LaunchBoxEmulator, entry: LaunchBoxEmulatorPlatform)] {
+    public func launchBoxCandidates(for platform: String) -> [(
+        emulator: LaunchBoxEmulator, entry: LaunchBoxEmulatorPlatform
+    )] {
         let entries = launchBoxPlatforms.filter { $0.platform == platform }
             .sorted { $0.isDefault && !$1.isDefault }
         return entries.compactMap { entry in
@@ -181,10 +197,13 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
         let launchBoxCore = candidates.first?.entry.retroArchCore
 
         if let chosen = userAssignments[platform] {
-            var resolved = ResolvedEmulatorAssignment(platform: platform, assignment: chosen, source: .user,
-                                                      launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
+            var resolved = ResolvedEmulatorAssignment(
+                platform: platform, assignment: chosen, source: .user,
+                launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
             resolved.problem = problem(for: chosen, notes: &resolved.notes)
-            if let core = resolved.assignment?.core, chosen.emulator == .retroArch, let found = retroArch?.resolveCore(named: core) {
+            if let core = resolved.assignment?.core, chosen.emulator == .retroArch,
+                let found = retroArch?.resolveCore(named: core)
+            {
                 resolved.assignment?.core = found.name
             }
             return resolved
@@ -197,22 +216,31 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
             var attempts: [PlatformEmulatorAssignment] = []
             let core = candidate.entry.retroArchCore
             if kind == .retroArch, let core, let replacement = RetroArchSetup.standaloneReplacements[core],
-               retroArch?.coreURL(named: core) == nil {
+                retroArch?.coreURL(named: core) == nil
+            {
                 // The core has no Mac build; the standalone app is the match.
                 attempts.append(PlatformEmulatorAssignment(platform: platform, emulator: replacement))
             }
-            attempts.append(PlatformEmulatorAssignment(platform: platform, emulator: kind, core: core,
-                                                       arguments: kind == .retroArch || kind == .dolphin ? "" : candidate.emulator.portableArguments.joined(separator: " ")))
+            attempts.append(
+                PlatformEmulatorAssignment(
+                    platform: platform, emulator: kind, core: core,
+                    arguments: kind == .retroArch || kind == .dolphin
+                        ? "" : candidate.emulator.portableArguments.joined(separator: " ")))
             for attempt in attempts {
-                var resolved = ResolvedEmulatorAssignment(platform: platform, assignment: attempt, source: source,
-                                                          launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
+                var resolved = ResolvedEmulatorAssignment(
+                    platform: platform, assignment: attempt, source: source,
+                    launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
                 resolved.problem = problem(for: attempt, notes: &resolved.notes)
                 if resolved.problem == nil {
-                    if attempt.emulator == .retroArch, let core = attempt.core, let found = retroArch?.resolveCore(named: core) {
+                    if attempt.emulator == .retroArch, let core = attempt.core,
+                        let found = retroArch?.resolveCore(named: core)
+                    {
                         resolved.assignment?.core = found.name
                     }
                     if attempt.emulator != kind {
-                        resolved.notes.insert("LaunchBox runs this platform with the \(core ?? "") core, which has no Mac build; \(attempt.emulator.displayName) runs it instead.", at: 0)
+                        resolved.notes.insert(
+                            "LaunchBox runs this platform with the \(core ?? "") core, which has no Mac build; \(attempt.emulator.displayName) runs it instead.",
+                            at: 0)
                     }
                     return resolved
                 }
@@ -221,10 +249,12 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
         }
         if let firstFailure { return firstFailure }
 
-        var resolved = ResolvedEmulatorAssignment(platform: platform, source: candidates.isEmpty ? .none : .launchBox(launchBoxTitle ?? ""),
-                                                  launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
+        var resolved = ResolvedEmulatorAssignment(
+            platform: platform, source: candidates.isEmpty ? .none : .launchBox(launchBoxTitle ?? ""),
+            launchBoxEmulatorTitle: launchBoxTitle, launchBoxCore: launchBoxCore)
         if let launchBoxTitle {
-            resolved.problem = "LaunchBox runs this platform with \(launchBoxTitle), which has no Mac version here. Choose an emulator in Settings › Emulators."
+            resolved.problem =
+                "LaunchBox runs this platform with \(launchBoxTitle), which has no Mac version here. Choose an emulator in Settings › Emulators."
         } else {
             resolved.problem = "No emulator is assigned to this platform. Choose one in Settings › Emulators."
         }
@@ -245,7 +275,8 @@ nonisolated public struct EmulatorAssignmentResolver: Sendable {
         }
         let wanted = RetroArchSetup.coreName(from: core)
         guard let found = retroArch.resolveCore(named: wanted) else {
-            return "The RetroArch core \(wanted) is not installed. Download it in RetroArch (Online Updater › Core Downloader) or choose another core."
+            return
+                "The RetroArch core \(wanted) is not installed. Download it in RetroArch (Online Updater › Core Downloader) or choose another core."
         }
         if found.name != wanted {
             notes.append("The \(wanted) core is not installed; \(found.name) runs the game instead.")

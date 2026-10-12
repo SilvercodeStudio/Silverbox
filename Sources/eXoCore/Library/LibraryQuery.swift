@@ -45,7 +45,10 @@ nonisolated public struct LibraryQuery: Sendable {
             guard let overlay else { return [] }
             return library.games
                 .filter { overlay.state(for: $0.launchBoxID).lastPlayed != nil }
-                .sorted { (overlay.state(for: $0.launchBoxID).lastPlayed ?? .distantPast) > (overlay.state(for: $1.launchBoxID).lastPlayed ?? .distantPast) }
+                .sorted {
+                    (overlay.state(for: $0.launchBoxID).lastPlayed ?? .distantPast)
+                        > (overlay.state(for: $1.launchBoxID).lastPlayed ?? .distantPast)
+                }
         case .node(let collectionID, let ref):
             guard let snapshot = library.snapshot(id: collectionID) else { return [] }
             switch ref {
@@ -82,19 +85,23 @@ nonisolated public struct LibraryQuery: Sendable {
         return parts.joined(separator: "\n").folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
     }
 
-    public func sort(_ games: [Game], by order: GameSortOrder, ascending: Bool = true, overlay: UserLibraryState? = nil) -> [Game] {
+    public func sort(_ games: [Game], by order: GameSortOrder, ascending: Bool = true, overlay: UserLibraryState? = nil)
+        -> [Game]
+    {
         let sorted: [Game]
         switch order {
         case .title:
             sorted = games.sorted { Self.titleLess($0, $1) }
         case .releaseYear:
             sorted = games.sorted {
-                let a = $0.releaseDate ?? .distantFuture, b = $1.releaseDate ?? .distantFuture
+                let a = $0.releaseDate ?? .distantFuture
+                let b = $1.releaseDate ?? .distantFuture
                 return a == b ? Self.titleLess($0, $1) : a < b
             }
         case .developer:
             sorted = games.sorted {
-                let a = $0.developer ?? "\u{FFFF}", b = $1.developer ?? "\u{FFFF}"
+                let a = $0.developer ?? "\u{FFFF}"
+                let b = $1.developer ?? "\u{FFFF}"
                 let c = a.localizedCaseInsensitiveCompare(b)
                 return c == .orderedSame ? Self.titleLess($0, $1) : c == .orderedAscending
             }
@@ -106,7 +113,8 @@ nonisolated public struct LibraryQuery: Sendable {
             }
         case .dateAdded:
             sorted = games.sorted {
-                let a = $0.dateAdded ?? .distantPast, b = $1.dateAdded ?? .distantPast
+                let a = $0.dateAdded ?? .distantPast
+                let b = $1.dateAdded ?? .distantPast
                 return a == b ? Self.titleLess($0, $1) : a > b
             }
         case .playCount:
@@ -117,7 +125,8 @@ nonisolated public struct LibraryQuery: Sendable {
             }
         case .communityRating:
             sorted = games.sorted {
-                let a = $0.communityStarRating ?? -1, b = $1.communityStarRating ?? -1
+                let a = $0.communityStarRating ?? -1
+                let b = $1.communityStarRating ?? -1
                 return a == b ? Self.titleLess($0, $1) : a > b
             }
         }
@@ -180,10 +189,14 @@ nonisolated public struct PlaylistResolver: Sendable {
         case "IsFalse":
             return boolValue(of: game, key: filter.fieldKey) == false
         case "GreaterThan":
-            guard let lhs = values.compactMap({ Double($0) }).first, let rhs = Double(filter.value) else { return false }
+            guard let lhs = values.compactMap({ Double($0) }).first, let rhs = Double(filter.value) else {
+                return false
+            }
             return lhs > rhs
         case "LessThan":
-            guard let lhs = values.compactMap({ Double($0) }).first, let rhs = Double(filter.value) else { return false }
+            guard let lhs = values.compactMap({ Double($0) }).first, let rhs = Double(filter.value) else {
+                return false
+            }
             return lhs < rhs
         default:
             return false

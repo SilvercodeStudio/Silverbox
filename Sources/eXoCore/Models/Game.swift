@@ -224,7 +224,9 @@ nonisolated extension Game {
 
     /// Series entries that are neither playlist nor theme markers.
     public var seriesNames: [String] {
-        series.filter { Self.strip(prefix: "Playlist:", from: $0) == nil && Self.strip(prefix: "Theme:", from: $0) == nil }
+        series.filter {
+            Self.strip(prefix: "Playlist:", from: $0) == nil && Self.strip(prefix: "Theme:", from: $0) == nil
+        }
     }
 
     /// True when the launcher is an eXoDOS batch file in a `!dos` config
@@ -233,7 +235,8 @@ nonisolated extension Game {
     public var isDOSGame: Bool {
         guard applicationPath.lowercased().hasSuffix(".bat") else { return false }
         let folder = (rootFolder ?? applicationPath).lowercased()
-        return folder.contains("\\!dos\\") || folder.contains("/!dos/") || folder.hasSuffix("\\!dos") || folder.contains("exo\\exodos\\")
+        return folder.contains("\\!dos\\") || folder.contains("/!dos/") || folder.hasSuffix("\\!dos")
+            || folder.contains("exo\\exodos\\")
     }
 
     /// How the item starts: in DOSBox, in another emulator, in a document
@@ -250,8 +253,10 @@ nonisolated extension Game {
     }
 
     /// Files that open in their default app instead of an emulator.
-    public static let documentExtensions: Set<String> = ["pdf", "txt", "cbz", "cbr", "epub", "html", "htm", "mp3", "ogg", "flac",
-                                                          "m4a", "wav", "mp4", "mkv", "avi", "mov", "jpg", "jpeg", "png", "gif"]
+    public static let documentExtensions: Set<String> = [
+        "pdf", "txt", "cbz", "cbr", "epub", "html", "htm", "mp3", "ogg", "flac",
+        "m4a", "wav", "mp4", "mkv", "avi", "mov", "jpg", "jpeg", "png", "gif",
+    ]
     public static let windowsProgramExtensions: Set<String> = ["exe", "bat", "cmd", "lnk", "url", "msi", "com"]
 
     /// The key used for sorting: LaunchBox's `SortTitle` when present.

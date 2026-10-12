@@ -1,7 +1,7 @@
-import eXoCore
+import AppKit
 import Foundation
 import Observation
-import AppKit
+import eXoCore
 
 /// The app's state: the loaded library, the current selection, user data,
 /// and the services that play music and launch games.
@@ -163,10 +163,16 @@ final class AppModel {
             await withTaskGroup(of: (UUID, Result<LibrarySnapshot, Error>).self) { group in
                 for collection in collections {
                     let report: @Sendable (LibraryLoadProgress) -> Void = { progress in
-                        Task { @MainActor in self?.reportLoadProgress(progress, collection: collection.id, name: names[collection.id] ?? "") }
+                        Task { @MainActor in
+                            self?.reportLoadProgress(
+                                progress, collection: collection.id, name: names[collection.id] ?? "")
+                        }
                     }
                     group.addTask {
-                        let result = Result { try LibraryLoader(collection: collection, localStore: localStore, cache: cache).load(progress: report) }
+                        let result = Result {
+                            try LibraryLoader(collection: collection, localStore: localStore, cache: cache).load(
+                                progress: report)
+                        }
                         return (collection.id, result)
                     }
                 }
@@ -192,7 +198,8 @@ final class AppModel {
             self.romPlatforms = Self.romPlatforms(in: library)
             var catalogs: [UUID: MediaCatalog] = [:]
             for snapshot in ordered {
-                catalogs[snapshot.collection.id] = MediaCatalog(snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
+                catalogs[snapshot.collection.id] = MediaCatalog(
+                    snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
             }
             self.media = catalogs
             self.searchIndex = index
@@ -200,7 +207,10 @@ final class AppModel {
             self.refreshVisibleGames()
             if ProcessInfo.processInfo.environment["EXOMAC_LOG"] != nil {
                 let summary = ordered.map { "\($0.collection.name)=\($0.games.count)" }.joined(separator: ", ")
-                FileHandle.standardError.write(Data("library: loaded \(library.games.count) games (\(summary)) in \(String(format: "%.2f", Date().timeIntervalSince(started))) s\n".utf8))
+                FileHandle.standardError.write(
+                    Data(
+                        "library: loaded \(library.games.count) games (\(summary)) in \(String(format: "%.2f", Date().timeIntervalSince(started))) s\n"
+                            .utf8))
             }
             // Biggest platforms first, so the main grid gets its covers soonest.
             for snapshot in ordered {
@@ -250,7 +260,10 @@ final class AppModel {
     }
 
     func refreshVisibleGames() {
-        guard let query else { visibleGames = []; return }
+        guard let query else {
+            visibleGames = []
+            return
+        }
         var games = query.games(in: scope, overlay: userState)
         if !settings.showHiddenGames {
             games = games.filter { !(userState.state(for: $0.launchBoxID).hidden ?? $0.hidden) }
@@ -291,7 +304,8 @@ final class AppModel {
         case .favorites: return "Favorites"
         case .installed: return "Installed"
         case .recentlyPlayed: return "Recently Played"
-        case .node(let collectionID, let ref): return library?.node(collectionID: collectionID, ref: ref)?.title ?? "Library"
+        case .node(let collectionID, let ref):
+            return library?.node(collectionID: collectionID, ref: ref)?.title ?? "Library"
         }
     }
 
@@ -352,7 +366,8 @@ final class AppModel {
         case .alwaysDOSBoxX: return .dosboxX
         case .recommended:
             guard let snapshot = snapshot(for: game) else { return .dosboxStaging }
-            return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).recommendedEmulator(for: game)
+            return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).recommendedEmulator(
+                for: game)
         }
     }
 
@@ -373,7 +388,8 @@ final class AppModel {
     func preferredVariant(for game: Game, in variants: [LaunchVariant]) -> LaunchVariant? {
         guard !variants.isEmpty else { return nil }
         if let preferred = userState.state(for: game.launchBoxID).preferredVariantID,
-           let variant = variants.first(where: { $0.id == preferred }) {
+            let variant = variants.first(where: { $0.id == preferred })
+        {
             return variant
         }
         return variants.first { !$0.needsWindowsHelper } ?? variants.first
@@ -393,8 +409,11 @@ final class AppModel {
             return
         }
         guard snapshot(for: game)?.root.hasEXoDOS == true else {
-            alert = AppAlert(title: "Not an eXoDOS game",
-                             message: "This game's launcher is a batch file, but its collection is not an eXoDOS install, so it cannot be translated.")
+            alert = AppAlert(
+                title: "Not an eXoDOS game",
+                message:
+                    "This game's launcher is a batch file, but its collection is not an eXoDOS install, so it cannot be translated."
+            )
             return
         }
         guard library.isInstalled(game) else {
@@ -406,8 +425,9 @@ final class AppModel {
             pendingLaunch = PendingLaunch(game: game, variants: variants)
             return
         }
-        launch(game, variant: variant ?? preferredVariant(for: game, in: variants),
-               options: effectiveLaunchOptions(for: game), emulatorKind: emulatorKind(for: game))
+        launch(
+            game, variant: variant ?? preferredVariant(for: game, in: variants),
+            options: effectiveLaunchOptions(for: game), emulatorKind: emulatorKind(for: game))
     }
 
     /// Opens the launch options dialog to save choices for a game without
@@ -424,8 +444,9 @@ final class AppModel {
     func launch(_ game: Game, variant: LaunchVariant?, options: LaunchOptions, emulatorKind kind: EmulatorKind) {
         guard let snapshot = snapshot(for: game) else { return }
         guard let emulator = settings.emulatorInstallation(kind), emulator.exists else {
-            alert = AppAlert(title: "\(kind.displayName) not found",
-                             message: "Choose the \(kind.displayName) application in Settings › Emulators.")
+            alert = AppAlert(
+                title: "\(kind.displayName) not found",
+                message: "Choose the \(kind.displayName) application in Settings › Emulators.")
             return
         }
         let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs)
@@ -441,7 +462,9 @@ final class AppModel {
     }
 
     /// Keeps the launch dialog's choices for next time.
-    func rememberLaunchChoices(for game: Game, options: LaunchOptions, variant: LaunchVariant?, emulatorKind kind: EmulatorKind) {
+    func rememberLaunchChoices(
+        for game: Game, options: LaunchOptions, variant: LaunchVariant?, emulatorKind kind: EmulatorKind
+    ) {
         let overrides = LaunchOverrides(base: settings.launchOptions, chosen: options)
         let defaultKind = defaultEmulatorKind(for: game)
         userState.update(game.launchBoxID) { state in
@@ -463,7 +486,8 @@ final class AppModel {
 
     func overrideConfigURL(for game: Game) -> URL? {
         guard let snapshot = snapshot(for: game) else { return nil }
-        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).overrideConfigURL(for: game, variant: nil)
+        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).overrideConfigURL(
+            for: game, variant: nil)
     }
 
     /// Copies the game's config into the local store (once) and opens it.
@@ -473,7 +497,8 @@ final class AppModel {
         let target = localStore.overrideConfigURL(for: game, configName: "dosbox.conf")
         do {
             if !FileManager.default.fileExists(atPath: target.path) {
-                try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try FileManager.default.createDirectory(
+                    at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try FileManager.default.copyItem(at: source, to: target)
             }
             NSWorkspace.shared.open(target)
@@ -492,8 +517,9 @@ final class AppModel {
     /// Weighs the user's platform choices, the libraries' `Emulators.xml`
     /// and what is installed on this Mac.
     func emulatorResolver() -> EmulatorAssignmentResolver {
-        EmulatorAssignmentResolver(userAssignments: settings.platformEmulators, snapshots: library?.snapshots ?? [],
-                                   installedKinds: settings.installedRomEmulators, retroArch: settings.retroArchSetup)
+        EmulatorAssignmentResolver(
+            userAssignments: settings.platformEmulators, snapshots: library?.snapshots ?? [],
+            installedKinds: settings.installedRomEmulators, retroArch: settings.retroArchSetup)
     }
 
     func resolvedEmulator(for game: Game) -> ResolvedEmulatorAssignment {
@@ -505,17 +531,21 @@ final class AppModel {
         guard let snapshot = snapshot(for: game) else { return }
         let resolved = resolvedEmulator(for: game)
         guard let assignment = resolved.assignment, resolved.problem == nil else {
-            alert = AppAlert(title: "Could not start \(game.title)", message: resolved.problem ?? "No emulator is assigned to \(game.platform).")
+            alert = AppAlert(
+                title: "Could not start \(game.title)",
+                message: resolved.problem ?? "No emulator is assigned to \(game.platform).")
             return
         }
         guard let emulator = settings.emulatorInstallation(assignment.emulator), emulator.exists else {
-            alert = AppAlert(title: "\(assignment.emulator.displayName) not found",
-                             message: "Choose the \(assignment.emulator.displayName) application in Settings › Emulators.")
+            alert = AppAlert(
+                title: "\(assignment.emulator.displayName) not found",
+                message: "Choose the \(assignment.emulator.displayName) application in Settings › Emulators.")
             return
         }
         do {
-            let launch = try RomLaunchPlanner(snapshot: snapshot).plan(game: game, resolved: resolved, emulator: emulator,
-                                                                       retroArch: settings.retroArchSetup, options: effectiveLaunchOptions(for: game))
+            let launch = try RomLaunchPlanner(snapshot: snapshot).plan(
+                game: game, resolved: resolved, emulator: emulator,
+                retroArch: settings.retroArchSetup, options: effectiveLaunchOptions(for: game))
             music.pause()
             try launcher.launch(launch)
         } catch {
@@ -530,9 +560,17 @@ final class AppModel {
         guard let snapshot = snapshot(for: game) else { return }
         switch game.launchKind {
         case .link:
-            alert = AppAlert(title: "Link", message: "\(game.title) is a link in the LaunchBox library (\(game.applicationPath)) and is not opened by this app.")
+            alert = AppAlert(
+                title: "Link",
+                message:
+                    "\(game.title) is a link in the LaunchBox library (\(game.applicationPath)) and is not opened by this app."
+            )
         case .windowsProgram:
-            alert = AppAlert(title: "Windows program", message: "\(game.title) starts a Windows program (\(WindowsPath.lastComponent(of: game.applicationPath))), which cannot run on the Mac.")
+            alert = AppAlert(
+                title: "Windows program",
+                message:
+                    "\(game.title) starts a Windows program (\(WindowsPath.lastComponent(of: game.applicationPath))), which cannot run on the Mac."
+            )
         default:
             let url = snapshot.root.url(forWindowsRelativePath: game.applicationPath)
             guard FileManager.default.fileExists(atPath: url.path) else {
@@ -552,8 +590,9 @@ final class AppModel {
         let seconds = Int(Date().timeIntervalSince(session.startedAt))
         userState.recordPlay(session.game.launchBoxID, seconds: seconds)
         if session.exitStatus != 0, let log = session.logURL {
-            alert = AppAlert(title: "\(session.game.title) exited with code \(session.exitStatus)",
-                             message: "The emulator log is at \(log.path)")
+            alert = AppAlert(
+                title: "\(session.game.title) exited with code \(session.exitStatus)",
+                message: "The emulator log is at \(log.path)")
         }
         updateMusic()
         if scope == .recentlyPlayed { refreshVisibleGames() }
@@ -583,8 +622,10 @@ final class AppModel {
             let saved = try await installer.uninstall(plan, backupSaves: backupSaves)
             await refreshInstalledFolders(for: game)
             if saved > 0 {
-                alert = AppAlert(title: "\(game.title) uninstalled",
-                                 message: "\(saved) changed file\(saved == 1 ? "" : "s") were backed up to \(plan.saveBackupURL.path).")
+                alert = AppAlert(
+                    title: "\(game.title) uninstalled",
+                    message:
+                        "\(saved) changed file\(saved == 1 ? "" : "s") were backed up to \(plan.saveBackupURL.path).")
             }
         } catch {
             alert = AppAlert(title: "Could not uninstall \(game.title)", message: error.localizedDescription)
@@ -597,12 +638,15 @@ final class AppModel {
         let gamesDirectory = snapshot.root.gamesDirectory
         let localGames = snapshot.localStore?.gamesDirectory
         let (names, local) = await Task.detached {
-            (LibraryLoader.installedFolderNames(in: gamesDirectory),
-             localGames.map { LibraryLoader.installedFolderNames(in: $0) } ?? [])
+            (
+                LibraryLoader.installedFolderNames(in: gamesDirectory),
+                localGames.map { LibraryLoader.installedFolderNames(in: $0) } ?? []
+            )
         }.value
         let updated = snapshot.replacingInstalledFolders(library: names, local: local)
         self.library = library.replacing(updated)
-        media[updated.collection.id] = MediaCatalog(snapshot: updated, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
+        media[updated.collection.id] = MediaCatalog(
+            snapshot: updated, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
         refreshVisibleGames()
     }
 

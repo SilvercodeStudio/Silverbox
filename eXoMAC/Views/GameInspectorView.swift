@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 /// The right-hand inspector for the selected game.
 struct GameInspectorView: View {
@@ -31,12 +31,18 @@ struct GameInspectorContent: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Spacer()
-                        InspectorIconButton(systemImage: model.isFavorite(game) ? "heart.fill" : "heart", help: "Favorite") {
+                        InspectorIconButton(
+                            systemImage: model.isFavorite(game) ? "heart.fill" : "heart", help: "Favorite"
+                        ) {
                             model.toggleFavorite(game)
                         }
                         .foregroundStyle(model.isFavorite(game) ? Theme.accent : Theme.textPrimary)
-                        InspectorIconButton(systemImage: "pencil", help: "Edit game info") { model.pendingInfoGame = game }
-                        InspectorIconButton(systemImage: "arrow.up.forward.square", help: "Open game page") { model.openedGameID = game.id }
+                        InspectorIconButton(systemImage: "pencil", help: "Edit game info") {
+                            model.pendingInfoGame = game
+                        }
+                        InspectorIconButton(systemImage: "arrow.up.forward.square", help: "Open game page") {
+                            model.openedGameID = game.id
+                        }
                     }
                     MediaGalleryView(game: game)
                     Text(game.title)
@@ -131,7 +137,9 @@ struct PlayButtonRow: View {
         let variants = game.isDOSGame && installed ? model.launchVariants(for: game) : []
         HStack(spacing: 8) {
             if game.isDOSGame, !installed {
-                Button { model.pendingInstall = game } label: {
+                Button {
+                    model.pendingInstall = game
+                } label: {
                     Label("Install…", systemImage: "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
                         .frame(height: large ? 40 : 30)
@@ -139,7 +147,9 @@ struct PlayButtonRow: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.accent)
             } else {
-                Button { model.play(game) } label: {
+                Button {
+                    model.play(game)
+                } label: {
                     Label(model.isDocumentItem(game) ? "Open" : "Play", systemImage: "play.fill")
                         .frame(maxWidth: .infinity)
                         .frame(height: large ? 40 : 30)
@@ -209,7 +219,9 @@ struct TagRow: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let tags = game.playlistTags.map { ($0, "list.bullet") } + game.themeTags.map { ("Theme: \($0)", "tag") } + game.seriesNames.map { ($0, "square.stack") }
+        let tags =
+            game.playlistTags.map { ($0, "list.bullet") } + game.themeTags.map { ("Theme: \($0)", "tag") }
+            + game.seriesNames.map { ($0, "square.stack") }
         if !tags.isEmpty {
             FlowLayout(spacing: 6) {
                 ForEach(tags, id: \.0) { tag in
@@ -248,7 +260,9 @@ struct MetadataGrid: View {
                 row("Mac emulator", model.emulatorKind(for: game).displayName)
             } else if game.launchKind == .emulator {
                 let resolved = model.resolvedEmulator(for: game)
-                if let title = resolved.launchBoxEmulatorTitle { row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? "")) }
+                if let title = resolved.launchBoxEmulatorTitle {
+                    row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? ""))
+                }
                 row("Mac emulator", resolved.isReady ? resolved.summary : "Not ready")
             } else if game.launchKind == .windowsProgram {
                 row("Launcher", "Windows program, not supported on the Mac")
@@ -318,7 +332,9 @@ struct FlowLayout: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? 320
-        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
             if x + size.width > width, x > 0 {
@@ -333,7 +349,9 @@ struct FlowLayout: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
             if x + size.width > bounds.maxX, x > bounds.minX {

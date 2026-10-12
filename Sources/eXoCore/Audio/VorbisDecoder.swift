@@ -27,7 +27,9 @@ nonisolated public final class VorbisDecoder: MusicDecoder {
     }
 
     public func read(into buffer: UnsafeMutablePointer<Int16>, frameCount: Int) -> Int {
-        Int(stb_vorbis_get_samples_short_interleaved(handle, Int32(channelCount), buffer, Int32(frameCount * channelCount)))
+        Int(
+            stb_vorbis_get_samples_short_interleaved(
+                handle, Int32(channelCount), buffer, Int32(frameCount * channelCount)))
     }
 
     public func rewind() {

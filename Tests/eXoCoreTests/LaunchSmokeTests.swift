@@ -1,10 +1,13 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 /// Starts real games in the real emulator for a few seconds. Opt in with
 /// `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke`.
-@Suite("Launch smoke", .enabled(if: ProcessInfo.processInfo.environment["EXOMAC_LAUNCH_SMOKE"] == "1" && RealLibrary.isAvailable))
+@Suite(
+    "Launch smoke",
+    .enabled(if: ProcessInfo.processInfo.environment["EXOMAC_LAUNCH_SMOKE"] == "1" && RealLibrary.isAvailable))
 struct LaunchSmokeTests {
     @Test func runsUnpackedGamesInStaging() async throws {
         let scratch = try FixtureLibrary.scratchDirectory()
@@ -14,7 +17,8 @@ struct LaunchSmokeTests {
         let snapshot = try LibraryLoader(root: RealLibrary.root, localStore: localStore).load()
         let emulator = try #require(EmulatorLocator.discover(.dosboxStaging))
         let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
-        let titles = ProcessInfo.processInfo.environment["EXOMAC_SMOKE_TITLES"]?.components(separatedBy: "|")
+        let titles =
+            ProcessInfo.processInfo.environment["EXOMAC_SMOKE_TITLES"]?.components(separatedBy: "|")
             ?? ["Super Tetris", "Western Front: The Liberation of Europe 1944-1945"]
         for title in titles {
             let game = try #require(snapshot.games.first { $0.title == title }, "game \(title) not found")
@@ -43,12 +47,15 @@ struct LaunchSmokeTests {
             // Only the start-up part of the log reflects the generated config;
             // later CONFIG lines come from the game's own batch menus.
             let startup = output.components(separatedBy: "AUTOEXEC:").first ?? output
-            let invalid = startup.components(separatedBy: "\n").filter { $0.contains("Invalid '") || $0.contains("unknown") && $0.contains("CONFIG") }
+            let invalid = startup.components(separatedBy: "\n").filter {
+                $0.contains("Invalid '") || $0.contains("unknown") && $0.contains("CONFIG")
+            }
             #expect(invalid.isEmpty, "the emulator rejected generated settings: \(invalid)")
             if planner.libraryIsReadOnly {
                 #expect(plan.configText.contains("-t overlay"), "no overlay mount for a read-only library")
                 #expect(!output.contains("file creation failed"), "the game could not write despite the overlay")
-                let written = (try? FileManager.default.subpathsOfDirectory(atPath: localStore.overlayDirectory.path)) ?? []
+                let written =
+                    (try? FileManager.default.subpathsOfDirectory(atPath: localStore.overlayDirectory.path)) ?? []
                 print("--- overlay folder now holds: \(written)")
             }
         }

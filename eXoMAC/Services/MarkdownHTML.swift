@@ -1,5 +1,5 @@
-import eXoCore
 import Foundation
+import eXoCore
 
 /// A small Markdown-to-HTML converter for the help pages: headings,
 /// paragraphs, bullet and numbered lists, fenced code, inline code, bold,
@@ -24,7 +24,8 @@ enum MarkdownHTML {
         for rawLine in markdown.components(separatedBy: "\n") {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("```") {
-                flushParagraph(); closeList()
+                flushParagraph()
+                closeList()
                 html.append(inCode ? "</code></pre>" : "<pre><code>")
                 inCode.toggle()
                 continue
@@ -34,31 +35,43 @@ enum MarkdownHTML {
                 continue
             }
             if line.isEmpty {
-                flushParagraph(); closeList()
+                flushParagraph()
+                closeList()
                 continue
             }
             if let heading = headingLevel(line) {
-                flushParagraph(); closeList()
+                flushParagraph()
+                closeList()
                 let text = line.drop(while: { $0 == "#" }).trimmingCharacters(in: .whitespaces)
                 html.append("<h\(heading)>\(inline(text))</h\(heading)>")
                 continue
             }
             if line.hasPrefix("- ") || line.hasPrefix("* ") {
                 flushParagraph()
-                if listKind != "ul" { closeList(); listKind = "ul"; html.append("<ul>") }
+                if listKind != "ul" {
+                    closeList()
+                    listKind = "ul"
+                    html.append("<ul>")
+                }
                 html.append("<li>\(inline(String(line.dropFirst(2))))</li>")
                 continue
             }
             if let dot = line.firstIndex(of: "."), line[..<dot].allSatisfy(\.isNumber), !line[..<dot].isEmpty,
-               line.index(after: dot) < line.endIndex, line[line.index(after: dot)] == " " {
+                line.index(after: dot) < line.endIndex, line[line.index(after: dot)] == " "
+            {
                 flushParagraph()
-                if listKind != "ol" { closeList(); listKind = "ol"; html.append("<ol>") }
+                if listKind != "ol" {
+                    closeList()
+                    listKind = "ol"
+                    html.append("<ol>")
+                }
                 html.append("<li>\(inline(String(line[line.index(dot, offsetBy: 2)...])))</li>")
                 continue
             }
             paragraph.append(line)
         }
-        flushParagraph(); closeList()
+        flushParagraph()
+        closeList()
         if inCode { html.append("</code></pre>") }
         return html.joined(separator: "\n")
     }
@@ -89,7 +102,8 @@ enum MarkdownHTML {
 
     private static func replace(_ text: String, pattern: String, with template: String) -> String {
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
-        return regex.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: template)
+        return regex.stringByReplacingMatches(
+            in: text, range: NSRange(text.startIndex..., in: text), withTemplate: template)
     }
 
     static func escape(_ text: String) -> String {

@@ -34,7 +34,9 @@ nonisolated public struct LibraryCache: Sendable {
         var files: [URL] = [root.platformsFile, root.parentsFile, root.emulatorsFile, root.dosboxIndexFile]
         for directory in [root.platformsDirectory, root.playlistsDirectory] {
             if let names = try? fm.contentsOfDirectory(atPath: directory.path) {
-                files += names.sorted().filter { $0.lowercased().hasSuffix(".xml") }.map { directory.appendingPathComponent($0) }
+                files += names.sorted().filter { $0.lowercased().hasSuffix(".xml") }.map {
+                    directory.appendingPathComponent($0)
+                }
             }
         }
         var parts: [String] = ["v\(version)"]
@@ -53,7 +55,8 @@ nonisolated public struct LibraryCache: Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         guard let payload = try? decoder.decode(Payload.self, from: data),
-              payload.version == Self.version, payload.fingerprint == fingerprint else { return nil }
+            payload.version == Self.version, payload.fingerprint == fingerprint
+        else { return nil }
         return payload
     }
 

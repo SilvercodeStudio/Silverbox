@@ -1,5 +1,5 @@
-import eXoCore
 import SwiftUI
+import eXoCore
 
 struct AppCommands: Commands {
     let model: AppModel
@@ -60,11 +60,18 @@ struct AppCommands: Commands {
 
         CommandMenu("Music") {
             Button(model.music.isPlaying ? "Pause Menu Music" : "Play Menu Music") {
-                if model.music.isPlaying { model.music.pause() } else { model.updateMusic(); model.music.resume() }
+                if model.music.isPlaying {
+                    model.music.pause()
+                } else {
+                    model.updateMusic()
+                    model.music.resume()
+                }
             }
             .keyboardShortcut("p", modifiers: [.command, .shift])
             .disabled(!model.settings.musicEnabled)
-            Toggle("Menu Music", isOn: Binding(get: { model.settings.musicEnabled }, set: { model.settings.musicEnabled = $0 }))
+            Toggle(
+                "Menu Music",
+                isOn: Binding(get: { model.settings.musicEnabled }, set: { model.settings.musicEnabled = $0 }))
         }
     }
 }

@@ -29,8 +29,10 @@ nonisolated public struct LibraryNode: Identifiable, Hashable, Sendable {
 
 /// Builds the sidebar tree from LaunchBox's flat parent/child rules.
 nonisolated public enum LibraryTreeBuilder {
-    public static func build(categories: [PlatformCategory], platforms: [Platform],
-                             playlists: [Playlist], parents: [ParentLink]) -> [LibraryNode] {
+    public static func build(
+        categories: [PlatformCategory], platforms: [Platform],
+        playlists: [Playlist], parents: [ParentLink]
+    ) -> [LibraryNode] {
         var titles: [LibraryEntityRef: String] = [:]
         for category in categories { titles[.category(category.name)] = category.name }
         for platform in platforms { titles[.platform(platform.name)] = platform.name }
@@ -52,7 +54,10 @@ nonisolated public enum LibraryTreeBuilder {
             var cyclic = false
             var cursor = parent
             while let current = cursor {
-                if seen.contains(current) { cyclic = true; break }
+                if seen.contains(current) {
+                    cyclic = true
+                    break
+                }
                 seen.insert(current)
                 cursor = parentOf[current] ?? nil
             }

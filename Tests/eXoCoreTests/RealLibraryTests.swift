@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import eXoCore
 
 /// Checks against a real eXoDOS install when one is mounted. Skipped otherwise.
@@ -9,7 +10,9 @@ struct RealLibraryTests {
         let start = Date()
         let snapshot = try LibraryLoader(root: RealLibrary.root).load()
         let seconds = Date().timeIntervalSince(start)
-        print("Loaded \(snapshot.games.count) games from \(snapshot.platforms.count) platforms in \(String(format: "%.2f", seconds)) s")
+        print(
+            "Loaded \(snapshot.games.count) games from \(snapshot.platforms.count) platforms in \(String(format: "%.2f", seconds)) s"
+        )
         #expect(snapshot.games.count > 7000)
         #expect(snapshot.platforms.contains { $0.name == "MS-DOS" })
         #expect(snapshot.dosboxIndex.count > 7000)
@@ -33,12 +36,16 @@ struct RealLibraryTests {
             var frames = 0
             var peak = 0
             while frames < decoder.sampleRate * 2 {
-                let got = buffer.withUnsafeMutableBufferPointer { decoder.read(into: $0.baseAddress!, frameCount: 4096) }
+                let got = buffer.withUnsafeMutableBufferPointer {
+                    decoder.read(into: $0.baseAddress!, frameCount: 4096)
+                }
                 if got == 0 { break }
                 frames += got
                 peak = max(peak, buffer[..<(got * decoder.channelCount)].map { abs(Int($0)) }.max() ?? 0)
             }
-            print("\(url.lastPathComponent): \(decoder.sampleRate) Hz, \(decoder.channelCount) ch, title \(decoder.title ?? "-"), \(frames) frames, peak \(peak)")
+            print(
+                "\(url.lastPathComponent): \(decoder.sampleRate) Hz, \(decoder.channelCount) ch, title \(decoder.title ?? "-"), \(frames) frames, peak \(peak)"
+            )
             #expect(frames > 0, Comment(rawValue: url.lastPathComponent))
             #expect(peak > 0, Comment(rawValue: url.lastPathComponent))
         }
@@ -61,9 +68,14 @@ struct RealLibraryTests {
         #expect(variants.count == 4)
 
         // Translate a sample of configs of each family and make sure nothing explodes.
-        let titles = ["Super Tetris", "Ultima I: The First Age of Darkness", "The 7th Guest", "Western Front: The Liberation of Europe 1944-1945", "3 Skulls of the Toltecs"]
+        let titles = [
+            "Super Tetris", "Ultima I: The First Age of Darkness", "The 7th Guest",
+            "Western Front: The Liberation of Europe 1944-1945", "3 Skulls of the Toltecs",
+        ]
         for title in titles {
-            guard let game = snapshot.games.first(where: { $0.title == title }), let folder = planner.configFolder(for: game) else { continue }
+            guard let game = snapshot.games.first(where: { $0.title == title }),
+                let folder = planner.configFolder(for: game)
+            else { continue }
             let url = folder.appendingPathComponent("dosbox.conf")
             guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
             for kind in EmulatorKind.dosBox {
@@ -77,6 +89,7 @@ struct RealLibraryTests {
 }
 
 nonisolated enum RealLibrary {
-    static let root = LibraryRoot(url: URL(fileURLWithPath: ProcessInfo.processInfo.environment["EXOMAC_TEST_LIBRARY"] ?? "/Volumes/eXoDOS_ro"))
+    static let root = LibraryRoot(
+        url: URL(fileURLWithPath: ProcessInfo.processInfo.environment["EXOMAC_TEST_LIBRARY"] ?? "/Volumes/eXoDOS_ro"))
     static var isAvailable: Bool { FileManager.default.fileExists(atPath: root.platformsFile.path) }
 }
