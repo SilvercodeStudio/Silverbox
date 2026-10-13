@@ -274,6 +274,8 @@ struct MetadataGrid: View {
                 row("Mac emulator", resolved.isReady ? resolved.summary : "Not ready")
             } else if game.launchKind == .soundtrack {
                 row("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
+            } else if game.launchKind == .video {
+                row("Launcher", "Video, opened by \(model.videoPlayer?.name ?? "the default video player")")
             } else if game.launchKind == .windowsProgram {
                 row("Launcher", "Windows program, not supported on the Mac")
             }

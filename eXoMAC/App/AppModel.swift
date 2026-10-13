@@ -121,6 +121,8 @@ final class AppModel {
     var albumUnpackingID: String?
     /// An unpacked album waiting for the user to confirm its removal.
     var pendingAlbumRemoval: Game?
+    /// A video entry with several videos, waiting for the user to choose one.
+    var pendingVideoChoice: VideoChoice?
 
     private let userStateStore = UserLibraryStateStore(url: AppPaths.userLibraryState)
     private var saveTask: Task<Void, Never>?
@@ -543,6 +545,9 @@ final class AppModel {
             return
         case .soundtrack:
             playAlbum(game)
+            return
+        case .video:
+            playVideo(game)
             return
         }
         guard snapshot(for: game)?.root.hasEXoDOS == true else {

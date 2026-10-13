@@ -31,6 +31,12 @@ The inspector lists the game's manual and extras: reference cards, maps, clueboo
 
 The Soundtracks platform holds album zips of FLAC and MP3 tracks that eXoDOS plays with foobar2000. Play unpacks the album into the local data folder the first time, then plays it in the bar at the bottom of the window: previous, pause, next, a position slider and the volume. The inspector and the game page list the tracks; click one to start there. The album keeps playing while you browse, pauses when a game starts, and stops with the X in the bar or Music › Stop Album. Menu music waits until the album stops. Right-click an album to open its tracks in another app: Open in … names the app macOS uses for those files, Open With lists every app registered for them plus Other… to pick any app, and Remove Unpacked Album deletes the local copy; the zip in the library stays.
 
+## Videos
+
+The MS-DOS Videos platform holds documentaries, interviews and old video catalogs that eXoDOS plays with VLC. Play opens the video in the app chosen in Settings › General, or in the app macOS uses for MP4 files, such as QuickTime Player. QuickTime Player cannot play some of these videos, such as A Visit to id Software, which uses VP9 video; choose VLC in Settings, or right-click the video and use Open With to pick a player once. Open With lists every app registered for video files, plus Other… to pick any app.
+
+When an entry has several videos (episodes or discs), a list opens first; choose one and press Return, or double-click it. Some entries, such as BBS: The Documentary and Get Lamp, are DVD disc images. QuickTime Player cannot play these, so Play opens them in VLC; install VLC from videolan.org to play them.
+
 ## Menu music
 
 Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Autoexec.Mac. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General. The music pauses when another app comes to the front and resumes when you come back, unless Music › Play in Background is on.

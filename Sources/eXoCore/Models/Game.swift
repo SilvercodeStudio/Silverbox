@@ -253,9 +253,19 @@ nonisolated extension Game {
             return .soundtrack
         }
         let ext = WindowsPath.fileExtension(of: path)?.lowercased() ?? ""
+        if ext == "bat", isVideoLauncher { return .video }
         if Self.documentExtensions.contains(ext) { return .document }
         if Self.windowsProgramExtensions.contains(ext) { return .windowsProgram }
         return .emulator
+    }
+
+    /// True for a launcher under `eXo\Videos` or on a videos platform, such
+    /// as `MS-DOS Videos`.
+    private var isVideoLauncher: Bool {
+        platform.range(of: "videos", options: .caseInsensitive) != nil
+            || WindowsPath.components(of: applicationPath).dropLast().contains {
+                $0.caseInsensitiveCompare("Videos") == .orderedSame
+            }
     }
 
     /// Files that open in their default app instead of an emulator.
@@ -291,4 +301,6 @@ nonisolated public enum GameLaunchKind: Sendable, Hashable {
     case windowsProgram
     /// A soundtrack album: a zip of audio tracks that eXoDOS opens in foobar2000.
     case soundtrack
+    /// A video or a menu of videos: a batch file that eXoDOS uses to start VLC.
+    case video
 }

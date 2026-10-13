@@ -73,6 +73,8 @@ struct AppSettings: Codable, Equatable {
     var musicVolume: Double = 0.6
     /// Keep the menu music playing while another app is in front.
     var musicInBackground = false
+    /// The app that plays videos; nil for the macOS default for MP4 files.
+    var videoPlayerPath: String?
     var tileSize: Double = Self.defaultTileSize
     static let defaultTileSize: Double = 150
     static let tileSizeRange: ClosedRange<Double> = 96...260
@@ -119,6 +121,7 @@ struct AppSettings: Codable, Equatable {
         musicEnabled = try c.decodeIfPresent(Bool.self, forKey: .musicEnabled) ?? true
         musicVolume = try c.decodeIfPresent(Double.self, forKey: .musicVolume) ?? 0.6
         musicInBackground = try c.decodeIfPresent(Bool.self, forKey: .musicInBackground) ?? false
+        videoPlayerPath = try c.decodeIfPresent(String.self, forKey: .videoPlayerPath)
         tileSize = try c.decodeIfPresent(Double.self, forKey: .tileSize) ?? Self.defaultTileSize
         viewMode = try c.decodeIfPresent(LibraryViewMode.self, forKey: .viewMode) ?? .grid
         sortOrder = try c.decodeIfPresent(GameSortOrder.self, forKey: .sortOrder) ?? .title
@@ -177,7 +180,8 @@ struct AppSettings: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
             dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
-            musicEnabled, musicVolume, musicInBackground, tileSize, viewMode, sortOrder, showHiddenGames,
+            musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder,
+            showHiddenGames,
             inspectorShown,
             appIcon
     }
@@ -197,6 +201,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(musicEnabled, forKey: .musicEnabled)
         try c.encode(musicVolume, forKey: .musicVolume)
         try c.encode(musicInBackground, forKey: .musicInBackground)
+        try c.encodeIfPresent(videoPlayerPath, forKey: .videoPlayerPath)
         try c.encode(tileSize, forKey: .tileSize)
         try c.encode(viewMode, forKey: .viewMode)
         try c.encode(sortOrder, forKey: .sortOrder)

@@ -4,7 +4,7 @@ Open Settings with Command-Comma.
 
 ## General
 
-The app icon, amber or green, which the Dock and the About window show; menu music on or off, its volume, and whether it keeps playing when another app is in front; whether to show the launch options dialog before each game; whether hidden games appear in the library.
+The app icon, amber or green, which the Dock and the About window show; menu music on or off, its volume, and whether it keeps playing when another app is in front; the app that plays videos (the macOS default for MP4 files unless you choose one); whether to show the launch options dialog before each game; whether hidden games appear in the library.
 
 ## Library
 

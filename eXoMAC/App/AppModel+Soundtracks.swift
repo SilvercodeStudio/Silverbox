@@ -92,20 +92,6 @@ extension AppModel {
         return await loadAlbum(for: game, force: true)
     }
 
-    /// An app that can open the album's audio files.
-    struct ExternalPlayer: Identifiable {
-        let name: String
-        let url: URL
-        let isDefault: Bool
-        var id: URL { url }
-
-        var icon: NSImage {
-            let image = NSWorkspace.shared.icon(forFile: url.path)
-            image.size = NSSize(width: 16, height: 16)
-            return image
-        }
-    }
-
     /// The album's file type; FLAC until the album is read.
     private func albumFileType(for game: Game) -> UTType? {
         let ext =
@@ -115,25 +101,12 @@ extension AppModel {
 
     /// The app macOS opens the album's files with, for "Open in …".
     func externalPlayer(for game: Game) -> ExternalPlayer? {
-        guard let type = albumFileType(for: game), let app = NSWorkspace.shared.urlForApplication(toOpen: type)
-        else { return nil }
-        return ExternalPlayer(name: Self.appName(app), url: app, isDefault: true)
+        albumFileType(for: game).flatMap { ExternalPlayer.systemDefault(for: $0) }
     }
 
     /// Every app registered for the album's file type, the default first.
     func externalPlayers(for game: Game) -> [ExternalPlayer] {
-        guard let type = albumFileType(for: game) else { return [] }
-        let preferred = NSWorkspace.shared.urlForApplication(toOpen: type)
-        return NSWorkspace.shared.urlsForApplications(toOpen: type)
-            .map { ExternalPlayer(name: Self.appName($0), url: $0, isDefault: $0 == preferred) }
-            .sorted { lhs, rhs in
-                if lhs.isDefault != rhs.isDefault { return lhs.isDefault }
-                return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
-            }
-    }
-
-    private static func appName(_ url: URL) -> String {
-        FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
+        albumFileType(for: game).map { ExternalPlayer.all(for: $0) } ?? []
     }
 
     /// Hands the unpacked tracks to an app (the default one when nil),
@@ -158,14 +131,9 @@ extension AppModel {
 
     /// "Other…": lets the user pick any app for the album's tracks.
     func chooseAlbumPlayer(_ game: Game) {
-        let panel = NSOpenPanel()
-        panel.message = "Choose an app to open the tracks of \(game.title)"
-        panel.prompt = "Open"
-        panel.allowedContentTypes = [.application]
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
-        guard panel.runModal() == .OK, let app = panel.url else { return }
+        guard let app = ExternalPlayer.choose(message: "Choose an app to open the tracks of \(game.title)") else {
+            return
+        }
         openAlbum(game, with: app)
     }
 

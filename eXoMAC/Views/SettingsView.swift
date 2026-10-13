@@ -74,6 +74,7 @@ struct GeneralSettingsView: View {
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
+            VideoPlayerSettingsSection()
             Section("Playing") {
                 Toggle("Show launch options before each game", isOn: $model.settings.showLaunchOptions)
                 Text(

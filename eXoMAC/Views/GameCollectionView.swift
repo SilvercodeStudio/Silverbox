@@ -398,6 +398,9 @@ struct GameContextMenu: View {
             if model.albumInfo(for: game)?.album.isUnpacked == true {
                 Button("Remove Unpacked Album…") { model.pendingAlbumRemoval = game }
             }
+        } else if game.launchKind == .video {
+            Button("Play") { model.play(game) }
+            VideoOpenWithMenu(game: game)
         } else {
             Button(model.isDocumentItem(game) ? "Open" : "Play") { model.play(game) }
         }

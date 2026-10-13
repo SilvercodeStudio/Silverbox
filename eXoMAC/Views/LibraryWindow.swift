@@ -61,6 +61,9 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingUninstall) { game in
             UninstallSheet(game: game)
         }
+        .sheet(item: $model.pendingVideoChoice) { choice in
+            VideoChoiceSheet(choice: choice)
+        }
         .confirmationDialog(
             "Remove the unpacked album?",
             isPresented: Binding(
