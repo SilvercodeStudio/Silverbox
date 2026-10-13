@@ -99,8 +99,8 @@ Makefile).
   `~/Library/Application Support/eXoMAC/`): `Games/eXoDOS/` (unpacked games),
   `Saves/` (backups of changed files made on uninstall), `Overrides/<gameID>/`
   (edited configs), `Overlay/eXoDOS/` (writable overlay mounts for games
-  unpacked inside a read-only library), `Launch/`, `Logs/`, `MediaIndex/`,
-  `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
+  unpacked inside a read-only library), `Soundtracks/` (albums unpacked from
+  the library's zips), `Launch/`, `Logs/`, `MediaIndex/`, `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
 - Emulators. `EmulatorKind` covers DOSBox Staging and DOSBox-X for eXoDOS
   games plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
   arcade platforms (`Game.launchKind` tells them apart). Each platform's
@@ -109,6 +109,11 @@ Makefile).
   that are installed (`RetroArchSetup` finds cores through `retroarch.cfg`,
   with aliases for renamed cores). `RomLaunchPlanner` builds the command
   line. Never call another front-end such as OpenEmu.
+- Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
+  `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
+  lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
+  files, `AlbumBar` replaces the music bar while it does, and
+  `AppModel+Soundtracks` holds the cache and the unpack-on-play flow.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers

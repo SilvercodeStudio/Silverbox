@@ -375,6 +375,29 @@ struct GameContextMenu: View {
             } else {
                 Button("Install…") { model.pendingInstall = game }
             }
+        } else if game.launchKind == .soundtrack {
+            Button("Play") { model.play(game) }
+            if let player = model.externalPlayer(for: game) {
+                Button("Open in \(player.name)") { model.openAlbum(game, with: player.url) }
+            }
+            Menu("Open With") {
+                ForEach(model.externalPlayers(for: game)) { player in
+                    Button {
+                        model.openAlbum(game, with: player.url)
+                    } label: {
+                        Label {
+                            Text(player.isDefault ? "\(player.name) (default)" : player.name)
+                        } icon: {
+                            Image(nsImage: player.icon)
+                        }
+                    }
+                }
+                Divider()
+                Button("Other…") { model.chooseAlbumPlayer(game) }
+            }
+            if model.albumInfo(for: game)?.album.isUnpacked == true {
+                Button("Remove Unpacked Album…") { model.pendingAlbumRemoval = game }
+            }
         } else {
             Button(model.isDocumentItem(game) ? "Open" : "Play") { model.play(game) }
         }

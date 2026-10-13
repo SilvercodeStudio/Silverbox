@@ -25,6 +25,9 @@ The library can be browsed without the mouse. Click a game once, or press Tab un
 | Command-Plus, Command-Minus, Command-0 | Larger, smaller or default tiles |
 | Command-1, Command-2 | Show as grid or list |
 | Command-Option-I | Show or hide the inspector |
+| Command-Shift-P | Pause or play the menu music, or the album |
+| Command-Option-Left, Command-Option-Right | Previous or next album track |
+| Command-. | Stop the album |
 | Escape | Close the Quick Look panel or the game page, or clear the search |
 | Command-/ | Keyboard Shortcuts window |
 

@@ -61,6 +61,18 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingUninstall) { game in
             UninstallSheet(game: game)
         }
+        .confirmationDialog(
+            "Remove the unpacked album?",
+            isPresented: Binding(
+                get: { model.pendingAlbumRemoval != nil }, set: { if !$0 { model.pendingAlbumRemoval = nil } }),
+            presenting: model.pendingAlbumRemoval
+        ) { game in
+            Button("Remove", role: .destructive) { model.removeAlbum(game) }
+        } message: { game in
+            Text(
+                "\(game.title) is deleted from the local data folder. The zip in the library stays, so Play unpacks it again."
+            )
+        }
         .alert(
             model.alert?.title ?? "",
             isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } }),
@@ -101,7 +113,11 @@ struct ContentColumn: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 if model.launcher.isRunning { NowPlayingBar() }
-                if model.settings.musicEnabled, model.loadState == .loaded { MusicBar() }
+                if model.album.isActive || model.albumUnpackingID != nil {
+                    AlbumBar()
+                } else if model.settings.musicEnabled, model.loadState == .loaded {
+                    MusicBar()
+                }
             }
         }
         .navigationTitle(model.openedGame?.title ?? model.scopeTitle(model.scope))

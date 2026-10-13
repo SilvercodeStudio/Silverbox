@@ -246,6 +246,12 @@ nonisolated extension Game {
         let path = applicationPath.trimmingCharacters(in: .whitespaces)
         if path.isEmpty { return .windowsProgram }
         if path.range(of: "://") != nil { return .link }
+        if commandLine?.lowercased().contains(".zip") == true,
+            WindowsPath.lastComponent(of: path).lowercased() == "foobar2000.exe"
+                || platform.caseInsensitiveCompare("Soundtracks") == .orderedSame
+        {
+            return .soundtrack
+        }
         let ext = WindowsPath.fileExtension(of: path)?.lowercased() ?? ""
         if Self.documentExtensions.contains(ext) { return .document }
         if Self.windowsProgramExtensions.contains(ext) { return .windowsProgram }
@@ -283,4 +289,6 @@ nonisolated public enum GameLaunchKind: Sendable, Hashable {
     case link
     /// A Windows program or script with no Mac equivalent.
     case windowsProgram
+    /// A soundtrack album: a zip of audio tracks that eXoDOS opens in foobar2000.
+    case soundtrack
 }

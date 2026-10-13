@@ -18,7 +18,10 @@ final class AppModel {
         didSet {
             guard settings != oldValue else { return }
             settings.save()
-            if settings.musicVolume != oldValue.musicVolume { music.volume = settings.musicVolume }
+            if settings.musicVolume != oldValue.musicVolume {
+                music.volume = settings.musicVolume
+                album.volume = settings.musicVolume
+            }
             if settings.musicEnabled != oldValue.musicEnabled { updateMusic() }
             if settings.appIcon != oldValue.appIcon { applyAppIcon() }
             if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
@@ -106,6 +109,13 @@ final class AppModel {
     let music = MenuMusicPlayer()
     let launcher = GameLauncher()
     let gamepad = GamepadInput()
+    let album = AlbumPlayer()
+    /// Soundtrack albums by game id: tracks, cover and durations.
+    var albumCache: [String: AlbumInfo] = [:]
+    /// The soundtrack being unpacked right now, shown in the album bar.
+    var albumUnpackingID: String?
+    /// An unpacked album waiting for the user to confirm its removal.
+    var pendingAlbumRemoval: Game?
 
     private let userStateStore = UserLibraryStateStore(url: AppPaths.userLibraryState)
     private var saveTask: Task<Void, Never>?
@@ -124,6 +134,7 @@ final class AppModel {
         settings = AppSettings.load()
         userState = (try? userStateStore.load()) ?? UserLibraryState()
         music.volume = settings.musicVolume
+        album.volume = settings.musicVolume
         applyAppIcon()
         // Debug conveniences: `-searchText ultima -selectTitle "Ultima V: Warriors of Destiny"`.
         if let text = UserDefaults.standard.string(forKey: "searchText") { searchText = text }
@@ -226,6 +237,7 @@ final class AppModel {
         loadTask?.cancel()
         extrasCache = [:]
         extrasTasks = []
+        albumCache = [:]
         if clearMediaCache {
             MediaIndexStore(directory: AppPaths.mediaIndexes).clear()
             LibraryCache(directory: AppPaths.libraryCache).clear()
@@ -495,6 +507,9 @@ final class AppModel {
         case .document, .link, .windowsProgram:
             openNonGameItem(game)
             return
+        case .soundtrack:
+            playAlbum(game)
+            return
         }
         guard snapshot(for: game)?.root.hasEXoDOS == true else {
             alert = AppAlert(
@@ -542,6 +557,7 @@ final class AppModel {
             let plan = try planner.plan(game: game, variant: variant, emulator: emulator, options: options)
             try plan.writeConfig()
             music.pause()
+            album.pause()
             try launcher.launch(plan)
         } catch {
             alert = AppAlert(title: "Could not start \(game.title)", message: error.localizedDescription)
@@ -635,6 +651,7 @@ final class AppModel {
                 game: game, resolved: resolved, emulator: emulator,
                 retroArch: settings.retroArchSetup, options: effectiveLaunchOptions(for: game))
             music.pause()
+            album.pause()
             try launcher.launch(launch)
         } catch {
             alert = AppAlert(title: "Could not start \(game.title)", message: error.localizedDescription)
@@ -741,7 +758,7 @@ final class AppModel {
     // MARK: - Music
 
     func updateMusic() {
-        guard settings.musicEnabled, launcher.sessions.isEmpty else {
+        guard settings.musicEnabled, launcher.sessions.isEmpty, !album.isActive else {
             music.pause()
             return
         }
@@ -783,6 +800,12 @@ final class AppModel {
 
     func revealInFinder(_ game: Game) {
         guard let snapshot = snapshot(for: game) else { return }
+        if game.launchKind == .soundtrack, let info = albumCache[game.id] {
+            NSWorkspace.shared.activateFileViewerSelecting([
+                info.album.isUnpacked ? info.album.folderURL : info.album.archiveURL
+            ])
+            return
+        }
         var url = snapshot.root.url(forWindowsRelativePath: game.rootFolder ?? game.applicationPath)
         if let location = snapshot.installedLocation(for: game) {
             url = location.url

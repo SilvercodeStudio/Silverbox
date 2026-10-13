@@ -55,6 +55,12 @@ enum Formatters {
         return "\(hours)h \(String(format: "%02d", minutes))m"
     }
 
+    /// "3:07" for a track position or length.
+    static func clock(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds.rounded(.down))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
     static func elapsed(_ interval: TimeInterval) -> String {
         let total = Int(interval)
         return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)

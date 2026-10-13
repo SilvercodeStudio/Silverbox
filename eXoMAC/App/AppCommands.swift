@@ -6,6 +6,11 @@ struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
 
+    private var pauseTitle: String {
+        if model.album.isActive { return model.album.isPlaying ? "Pause Album" : "Play Album" }
+        return model.music.isPlaying ? "Pause Menu Music" : "Play Menu Music"
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.displayName)") { openWindow(id: "about") }
@@ -100,8 +105,10 @@ struct AppCommands: Commands {
         }
 
         CommandMenu("Music") {
-            Button(model.music.isPlaying ? "Pause Menu Music" : "Play Menu Music") {
-                if model.music.isPlaying {
+            Button(pauseTitle) {
+                if model.album.isActive {
+                    model.album.togglePlayPause()
+                } else if model.music.isPlaying {
                     model.music.pause()
                 } else {
                     model.updateMusic()
@@ -109,7 +116,17 @@ struct AppCommands: Commands {
                 }
             }
             .keyboardShortcut("p", modifiers: [.command, .shift])
-            .disabled(!model.settings.musicEnabled)
+            .disabled(!model.settings.musicEnabled && !model.album.isActive)
+            Button("Previous Track") { model.album.previous() }
+                .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
+                .disabled(!model.album.isActive)
+            Button("Next Track") { model.album.next() }
+                .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
+                .disabled(!model.album.isActive)
+            Button("Stop Album") { model.stopAlbum() }
+                .keyboardShortcut(".", modifiers: .command)
+                .disabled(!model.album.isActive)
+            Divider()
             Toggle(
                 "Menu Music",
                 isOn: Binding(get: { model.settings.musicEnabled }, set: { model.settings.musicEnabled = $0 }))

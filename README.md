@@ -86,12 +86,6 @@ place inside `eXo/eXoDOS`, as eXoDOS does on Windows, is available in Settings.
 - Windows 9x games from eXoWin9x. The library is on the volume (the 1994-1996
   set, 648 titles) but there is no launch path yet: the `9xlaunch.bat` scripts
   and the 86Box, PCBox and DOSBox-X profiles still need translating.
-- Soundtracks. The 126 entries on the Soundtracks platform launch foobar2000
-  with a zip of FLAC and MP3 tracks from `eXo/Soundtracks/`, so Play shows the
-  Windows-program message. macOS plays both formats natively, so the fix is an
-  album player of our own: unpack the zip to the local data folder (or read it
-  in place) and queue the tracks with AVQueuePlayer, with a track list in the
-  inspector.
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
 - Later: BitTorrent downloads of the eXoDOS packs, and metadata and media

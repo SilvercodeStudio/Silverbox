@@ -18,6 +18,8 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
     public var savesDirectory: URL { directory.appendingPathComponent("Saves", isDirectory: true) }
     /// Per-game edited copies of DOSBox configs.
     public var overridesDirectory: URL { directory.appendingPathComponent("Overrides", isDirectory: true) }
+    /// Soundtrack albums unpacked from the library's zips.
+    public var soundtracksDirectory: URL { directory.appendingPathComponent("Soundtracks", isDirectory: true) }
 
     public func ensureDirectories() throws {
         for url in [gamesDirectory, overlayDirectory, savesDirectory, overridesDirectory] {

@@ -114,6 +114,9 @@ extension AppModel {
     /// context menu, which cannot change once it is open. Called when the
     /// pointer enters a tile or row.
     func prefetchExtras(for game: Game) {
+        if game.launchKind == .soundtrack, albumCache[game.id] == nil {
+            Task { await loadAlbum(for: game) }
+        }
         guard extrasCache[game.id] == nil, !extrasTasks.contains(game.id), let media = media(for: game) else {
             return
         }

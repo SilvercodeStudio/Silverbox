@@ -59,6 +59,9 @@ struct GameDetailView: View {
                             }
                             .frame(maxWidth: 560, alignment: .leading)
                             VStack(alignment: .leading, spacing: 18) {
+                                if game.launchKind == .soundtrack {
+                                    AlbumTrackList(game: game)
+                                }
                                 MetadataGrid(game: game)
                                 FilesSection(game: game)
                             }

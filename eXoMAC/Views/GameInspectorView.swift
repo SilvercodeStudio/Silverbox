@@ -75,6 +75,9 @@ struct GameInspectorContent: View {
                             }
                         }
                     }
+                    if game.launchKind == .soundtrack {
+                        AlbumTrackList(game: game)
+                    }
                     VStack(alignment: .leading, spacing: 6) {
                         SectionTitle("Extras")
                         ExtrasList(game: game, limit: 6)
@@ -135,6 +138,8 @@ struct PlayButtonRow: View {
     var body: some View {
         let installed = model.isInstalled(game)
         let variants = game.isDOSGame && installed ? model.launchVariants(for: game) : []
+        let albumLoaded = game.launchKind == .soundtrack && model.album.game?.id == game.id
+        let albumPlaying = albumLoaded && model.album.isPlaying
         HStack(spacing: 8) {
             if game.isDOSGame, !installed {
                 Button {
@@ -148,11 +153,14 @@ struct PlayButtonRow: View {
                 .tint(Theme.accent)
             } else {
                 Button {
-                    model.play(game)
+                    if albumLoaded { model.album.togglePlayPause() } else { model.play(game) }
                 } label: {
-                    Label(model.isDocumentItem(game) ? "Open" : "Play", systemImage: "play.fill")
-                        .frame(maxWidth: .infinity)
-                        .frame(height: large ? 40 : 30)
+                    Label(
+                        albumPlaying ? "Pause" : albumLoaded ? "Resume" : model.isDocumentItem(game) ? "Open" : "Play",
+                        systemImage: albumPlaying ? "pause.fill" : "play.fill"
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: large ? 40 : 30)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.accent)
@@ -264,6 +272,8 @@ struct MetadataGrid: View {
                     row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? ""))
                 }
                 row("Mac emulator", resolved.isReady ? resolved.summary : "Not ready")
+            } else if game.launchKind == .soundtrack {
+                row("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
             } else if game.launchKind == .windowsProgram {
                 row("Launcher", "Windows program, not supported on the Mac")
             }

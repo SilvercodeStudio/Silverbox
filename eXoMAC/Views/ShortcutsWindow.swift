@@ -29,6 +29,9 @@ enum ShortcutReference {
         Entry(keys: "⌘+ ⌘− ⌘0", action: "Larger, smaller or default tiles"),
         Entry(keys: "⌘1 ⌘2", action: "Grid or list"),
         Entry(keys: "⌥⌘I", action: "Show or hide the inspector"),
+        Entry(keys: "⇧⌘P", action: "Pause or play the music or album"),
+        Entry(keys: "⌥⌘← ⌥⌘→", action: "Previous or next album track"),
+        Entry(keys: "⌘.", action: "Stop the album"),
         Entry(keys: "Esc", action: "Close the panel or page; clear the search"),
         Entry(keys: "⌘/", action: "This window"),
     ]
