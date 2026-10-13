@@ -143,6 +143,7 @@ struct RelatedGamesView: View {
                             model.openedGameID = other.id
                         }
                         .contextMenu { GameContextMenu(game: other) }
+                        .onHover { if $0 { model.prefetchExtras(for: other) } }
                 }
             }
         }

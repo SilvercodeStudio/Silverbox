@@ -77,8 +77,20 @@ final class AppModel {
     var galleryItems: [GameMediaItem] = []
     var galleryIndex = 0
     var selectedManual: URL?
+    /// The selected game's extras (maps, clue books, cards), for Quick Look.
+    var selectedExtras: [GameExtra] = []
+    /// Extras and manual per game, loaded ahead of the context menu because an
+    /// open menu does not update. Filled on hover and selection by
+    /// `prefetchExtras(for:)`; cleared on reload.
+    var extrasCache: [String: GameExtrasEntry] = [:]
+    @ObservationIgnored var extrasTasks: Set<String> = []
+    @ObservationIgnored var musicPausedForBackground = false
     /// The file the Quick Look panel shows, if any.
     var quickLookURL: URL?
+    /// Bumped by Search Games (Cmd-F); the search field takes focus when it changes.
+    var searchFocusRequest = 0
+    /// True while the Keyboard Shortcuts window is open, so Cmd-/ toggles it.
+    var shortcutsShown = false
     @ObservationIgnored var mediaTask: Task<Void, Never>?
 
     /// A game waiting in the launch options dialog.
@@ -120,6 +132,15 @@ final class AppModel {
             self?.sessionEnded(session)
         }
         gamepad.model = self
+        let center = NotificationCenter.default
+        center.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) {
+            [weak self] _ in
+            Task { @MainActor in self?.applicationActiveChanged(false) }
+        }
+        center.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) {
+            [weak self] _ in
+            Task { @MainActor in self?.applicationActiveChanged(true) }
+        }
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
         }
@@ -169,6 +190,8 @@ final class AppModel {
     /// explicit rescan, so saved indexes and parsed libraries are rebuilt.
     func reloadLibrary(clearMediaCache: Bool = false) {
         loadTask?.cancel()
+        extrasCache = [:]
+        extrasTasks = []
         if clearMediaCache {
             MediaIndexStore(directory: AppPaths.mediaIndexes).clear()
             LibraryCache(directory: AppPaths.libraryCache).clear()
@@ -688,6 +711,11 @@ final class AppModel {
             music.pause()
             return
         }
+        if !settings.musicInBackground, !NSApplication.shared.isActive {
+            music.pause()
+            musicPausedForBackground = true
+            return
+        }
         guard let game = selectedGame, let media = media(for: game) else {
             music.pause()
             return
@@ -700,6 +728,20 @@ final class AppModel {
             } else {
                 self.music.pause()
             }
+        }
+    }
+
+    /// Pauses the menu music while another app is in front, unless the
+    /// setting allows it, and resumes it when the app comes back. Music the
+    /// user paused stays paused.
+    func applicationActiveChanged(_ active: Bool) {
+        if active {
+            guard musicPausedForBackground else { return }
+            musicPausedForBackground = false
+            updateMusic()
+        } else if !settings.musicInBackground, music.isPlaying {
+            music.pause()
+            musicPausedForBackground = true
         }
     }
 

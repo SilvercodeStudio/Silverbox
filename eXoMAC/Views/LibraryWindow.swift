@@ -29,6 +29,9 @@ struct LibraryWindow: View {
                 if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty {
                     if id == "settings" { openSettings() } else { openWindow(id: id) }
                 }
+                if let page = UserDefaults.standard.string(forKey: "helpPage"), !page.isEmpty {
+                    HelpState.shared.show(topicPrefix: page)
+                }
             #endif
         }
         .sheet(item: $model.pendingInstall) { game in
@@ -58,6 +61,7 @@ struct LibraryWindow: View {
 /// The middle column: setup, loading, the collection, or an opened game page.
 struct ContentColumn: View {
     @Environment(AppModel.self) private var model
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         @Bindable var model = model
@@ -88,6 +92,8 @@ struct ContentColumn: View {
         .navigationTitle(model.openedGame?.title ?? model.scopeTitle(model.scope))
         .navigationSubtitle(subtitle)
         .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search games")
+        .searchFocused($searchFocused)
+        .onChange(of: model.searchFocusRequest) { searchFocused = true }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.openedGame != nil {
@@ -98,7 +104,7 @@ struct ContentColumn: View {
                     }
                 }
                 if model.settings.viewMode == .grid, model.openedGame == nil {
-                    Slider(value: $model.settings.tileSize, in: 96...260) { Text("Tile size") }
+                    Slider(value: $model.settings.tileSize, in: AppSettings.tileSizeRange) { Text("Tile size") }
                         .frame(width: 110)
                         .help("Tile size")
                 }

@@ -92,9 +92,6 @@ place inside `eXo/eXoDOS`, as eXoDOS does on Windows, is available in Settings.
   album player of our own: unpack the zip to the local data folder (or read it
   in place) and queue the tracks with AVQueuePlayer, with a track list in the
   inspector.
-- Shortcuts. Cmd-F should focus the search field (`searchFocused`), and
-  the menus should be checked against the usual Mac shortcuts (Select All,
-  Find Next, Close Window, zoom of the grid, and so on).
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
 - Later: BitTorrent downloads of the eXoDOS packs, and metadata and media

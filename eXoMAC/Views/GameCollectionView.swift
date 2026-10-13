@@ -65,6 +65,7 @@ struct GameGridView: View {
                                     focused = true
                                 }
                                 .contextMenu { GameContextMenu(game: game) }
+                                .onHover { if $0 { model.prefetchExtras(for: game) } }
                                 .id(game.id)
                         }
                     }
@@ -287,6 +288,7 @@ struct GameListView: View {
                         Image(systemName: "heart.fill").foregroundStyle(Theme.accent).font(.caption)
                     }
                 }
+                .onHover { if $0 { model.prefetchExtras(for: game) } }
             }
             .width(min: 240, ideal: 360)
             TableColumn("Year") { game in
@@ -391,30 +393,30 @@ struct GameContextMenu: View {
     }
 }
 
-/// The Extras submenu, loaded on demand.
+/// The Extras submenu. Menus cannot change once open, so it shows what
+/// `extrasCache` holds; hovering a tile or row fills the cache in time.
 struct GameExtrasMenu: View {
     let game: Game
     @Environment(AppModel.self) private var model
-    @State private var extras: [GameExtra] = []
-    @State private var manual: URL?
 
     var body: some View {
+        let entry = model.extrasCache[game.id]
         Menu("Extras") {
-            if let manual {
+            if let manual = entry?.manual {
                 Button("Manual") { model.open(manual) }
                 Divider()
             }
-            if extras.isEmpty {
-                Text("No extras")
-            }
-            ForEach(extras) { extra in
-                Button(extra.name) { model.open(extra.url) }
+            if let entry {
+                if entry.extras.isEmpty, entry.manual == nil {
+                    Text("No extras")
+                }
+                ForEach(entry.extras) { extra in
+                    Button(extra.name) { model.open(extra.url) }
+                }
+            } else {
+                Text("Loading…")
             }
         }
-        .task(id: game.id) {
-            guard let media = model.media(for: game) else { return }
-            extras = await media.extras(for: game)
-            manual = await media.manual(for: game)
-        }
+        .onAppear { model.prefetchExtras(for: game) }
     }
 }

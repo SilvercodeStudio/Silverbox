@@ -116,13 +116,18 @@ Makefile).
   the launch options dialog) on top of the translated config.
 - Help pages are Markdown files in `eXoMAC/Help/` (ordered by their numeric
   prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
-  Help window. Add or edit pages there.
+  Help window: headings, lists, pipe tables, code and links. Add or edit
+  pages there.
 - Navigation input. The grid and list handle arrows, Return, Space and
   Escape through SwiftUI focus (`GameGridView`, `GameListView`); media and
   page commands are menu shortcuts in `AppCommands`. `GamepadInput` turns
   controller buttons into the same key presses through `KeyPress.send`, so
-  new keyboard behaviour is controller behaviour too. Help page 07 lists
-  both maps; keep it in step.
+  new keyboard behaviour is controller behaviour too. The Quick Look panel
+  pages through `AppModel.quickLookItems` (gallery, manual, extras). A new
+  shortcut goes in three places: `AppCommands`, `ShortcutReference` (the
+  Keyboard Shortcuts window) and help page 07. Context menus are AppKit
+  menus and do not change once open, so anything loaded for them (the Extras
+  submenu) comes from `AppModel.extrasCache`, filled on hover and selection.
 - App icon. `eXoMAC/AppIcon.icon` (amber) is the Icon Composer file Xcode
   compiles into the bundle icon; `eXoMAC/AppIcon-Green.icon` is the alternate,
   compiled only when the target's "Include all app icon assets" is on. The app
@@ -146,7 +151,8 @@ Makefile).
   in its Configure (save only) mode; `-openWindow about` (or `help`, or
   `settings` with `-settingsTab emulators`) opens that window at start.
   `-keyPresses "right down space"` presses keys (names like `up`, `return`,
-  `opt-right`, `cmd-y`) before the screenshot, to test navigation. Example:
+  `opt-right`, `cmd-y`) before the screenshot, to test navigation;
+  `-helpPage 07` opens that help page. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

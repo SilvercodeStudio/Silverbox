@@ -30,6 +30,13 @@ struct eXoMACApp: App {
         }
         .defaultSize(width: 900, height: 620)
 
+        Window("Keyboard Shortcuts", id: "shortcuts") {
+            ShortcutsView()
+                .environment(model)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+
         Window("About \(AppInfo.displayName)", id: "about") {
             AboutView()
                 .environment(model)

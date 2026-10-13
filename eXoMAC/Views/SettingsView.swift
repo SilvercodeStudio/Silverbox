@@ -68,6 +68,7 @@ struct GeneralSettingsView: View {
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
                 Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
+                Toggle("Keep playing when another app is in front", isOn: $model.settings.musicInBackground)
                 Text(
                     "MP3, Ogg Vorbis and MOD, S3M, XM and IT tracker modules play. AMF modules and VOC files are listed but skipped."
                 )

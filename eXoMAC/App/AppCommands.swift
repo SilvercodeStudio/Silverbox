@@ -4,6 +4,7 @@ import eXoCore
 struct AppCommands: Commands {
     let model: AppModel
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
@@ -13,7 +14,16 @@ struct AppCommands: Commands {
         CommandGroup(replacing: .help) {
             Button("\(AppInfo.displayName) Help") { openWindow(id: "help") }
                 .keyboardShortcut("?", modifiers: .command)
+            Button("Keyboard Shortcuts") {
+                if model.shortcutsShown { dismissWindow(id: "shortcuts") } else { openWindow(id: "shortcuts") }
+            }
+            .keyboardShortcut("/", modifiers: .command)
             Link("eXo Project Website", destination: AboutPanel.projectURL)
+        }
+        // Before the standard Find submenu, so Cmd-F reaches the search field.
+        CommandGroup(before: .textEditing) {
+            Button("Search Games") { model.focusSearch() }
+                .keyboardShortcut("f", modifiers: .command)
         }
 
         CommandMenu("Game") {
@@ -23,6 +33,7 @@ struct AppCommands: Commands {
             Button("Install…") { if let game = model.selectedGame { model.pendingInstall = game } }
                 .disabled(model.selectedGame.map { !$0.isDOSGame || model.isInstalled($0) } ?? true)
             Button("Uninstall…") { if let game = model.selectedGame { model.pendingUninstall = game } }
+                .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(model.selectedGame.map { !$0.isDOSGame || !model.isInstalled($0) } ?? true)
             Button("Configure…") { if let game = model.selectedGame { model.configure(game) } }
                 .keyboardShortcut(.return, modifiers: [.command, .shift])
@@ -52,6 +63,9 @@ struct AppCommands: Commands {
             Button("Quick Look Manual") { model.quickLookManual() }
                 .keyboardShortcut("y", modifiers: [.command, .shift])
                 .disabled(model.selectedManual == nil)
+            Button("Quick Look Extras") { model.quickLookExtras() }
+                .keyboardShortcut("y", modifiers: [.command, .option])
+                .disabled(model.selectedExtras.isEmpty)
             Divider()
             Button("Show in Finder") { if let game = model.selectedGame { model.revealInFinder(game) } }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
@@ -65,6 +79,17 @@ struct AppCommands: Commands {
             Divider()
             Button("Show as Grid") { model.settings.viewMode = .grid }.keyboardShortcut("1", modifiers: .command)
             Button("Show as List") { model.settings.viewMode = .list }.keyboardShortcut("2", modifiers: .command)
+            Divider()
+            Button("Larger Tiles") { model.zoomTiles(by: 20) }
+                .keyboardShortcut("+", modifiers: .command)
+                .disabled(model.settings.viewMode != .grid)
+            Button("Smaller Tiles") { model.zoomTiles(by: -20) }
+                .keyboardShortcut("-", modifiers: .command)
+                .disabled(model.settings.viewMode != .grid)
+            Button("Default Tile Size") { model.resetTileSize() }
+                .keyboardShortcut("0", modifiers: .command)
+                .disabled(model.settings.viewMode != .grid)
+            Divider()
             Button(model.settings.inspectorShown ? "Hide Inspector" : "Show Inspector") {
                 model.settings.inspectorShown.toggle()
             }
@@ -88,6 +113,12 @@ struct AppCommands: Commands {
             Toggle(
                 "Menu Music",
                 isOn: Binding(get: { model.settings.musicEnabled }, set: { model.settings.musicEnabled = $0 }))
+            Toggle(
+                "Play in Background",
+                isOn: Binding(
+                    get: { model.settings.musicInBackground }, set: { model.settings.musicInBackground = $0 })
+            )
+            .disabled(!model.settings.musicEnabled)
         }
     }
 }

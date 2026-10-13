@@ -6,6 +6,12 @@ enum NavigationDirection {
     case up, down, left, right
 }
 
+/// A game's extras and manual, as cached for its context menu.
+struct GameExtrasEntry {
+    var extras: [GameExtra]
+    var manual: URL?
+}
+
 /// Keyboard and controller navigation: moving the selection, playing,
 /// going back, and stepping through the selected game's media.
 extension AppModel {
@@ -82,21 +88,42 @@ extension AppModel {
 
     // MARK: - Media of the selected game
 
-    /// Loads the gallery and manual whenever the selection changes.
+    /// Loads the gallery, manual and extras whenever the selection changes.
     func refreshSelectedMedia() {
         mediaTask?.cancel()
         galleryIndex = 0
         guard let game = selectedGame, let media = media(for: game) else {
             galleryItems = []
             selectedManual = nil
+            selectedExtras = []
             return
         }
         mediaTask = Task { [weak self] in
             let items = await media.gallery(for: game)
             let manual = await media.manual(for: game)
+            let extras = await media.extras(for: game)
             guard let self, !Task.isCancelled, self.selectedGameID == game.id else { return }
             self.galleryItems = items
             self.selectedManual = manual
+            self.selectedExtras = extras
+            self.extrasCache[game.id] = GameExtrasEntry(extras: extras, manual: manual)
+        }
+    }
+
+    /// Loads a game's extras and manual into `extrasCache` ahead of its
+    /// context menu, which cannot change once it is open. Called when the
+    /// pointer enters a tile or row.
+    func prefetchExtras(for game: Game) {
+        guard extrasCache[game.id] == nil, !extrasTasks.contains(game.id), let media = media(for: game) else {
+            return
+        }
+        extrasTasks.insert(game.id)
+        Task { [weak self] in
+            let extras = await media.extras(for: game)
+            let manual = await media.manual(for: game)
+            guard let self else { return }
+            self.extrasTasks.remove(game.id)
+            self.extrasCache[game.id] = GameExtrasEntry(extras: extras, manual: manual)
         }
     }
 
@@ -121,10 +148,35 @@ extension AppModel {
         quickLookURL = selectedManual
     }
 
-    /// What the Quick Look panel can page through: the gallery, then the manual.
+    /// Cmd-Option-Y: Quick Look the first extra; the panel pages on from there.
+    func quickLookExtras() {
+        guard let first = selectedExtras.first else { return }
+        quickLookURL = first.url
+    }
+
+    /// What the Quick Look panel can page through: the gallery, the manual,
+    /// then the extras.
     var quickLookItems: [URL] {
         var urls = galleryItems.map(\.url)
         if let selectedManual { urls.append(selectedManual) }
+        urls += selectedExtras.map(\.url)
         return urls
+    }
+
+    // MARK: - Window commands
+
+    /// Cmd-F: puts the cursor in the search field.
+    func focusSearch() {
+        searchFocusRequest += 1
+    }
+
+    /// Cmd-Plus and Cmd-Minus: grows or shrinks the grid tiles.
+    func zoomTiles(by delta: Double) {
+        let range = AppSettings.tileSizeRange
+        settings.tileSize = min(range.upperBound, max(range.lowerBound, settings.tileSize + delta))
+    }
+
+    func resetTileSize() {
+        settings.tileSize = AppSettings.defaultTileSize
     }
 }

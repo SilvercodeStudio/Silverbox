@@ -1,4 +1,3 @@
-import QuickLook
 import SwiftUI
 import eXoCore
 
@@ -10,22 +9,21 @@ struct ExtrasList: View {
     @State private var extras: [GameExtra] = []
     @State private var manual: URL?
     @State private var showAll = false
-    @State private var previewURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let manual {
-                ExtraRow(name: "Manual", kind: .pdf, url: manual, previewURL: $previewURL)
+                ExtraRow(name: "Manual", kind: .pdf, url: manual)
             }
             let inBox = extras.filter { !$0.isGuideBook }
             let guides = extras.filter(\.isGuideBook)
             let visibleInBox = limited(inBox)
             let visibleGuides = limited(guides, after: inBox.count)
             if !visibleInBox.isEmpty {
-                ExtrasGroup(title: "In the box", extras: visibleInBox, previewURL: $previewURL)
+                ExtrasGroup(title: "In the box", extras: visibleInBox)
             }
             if !visibleGuides.isEmpty {
-                ExtrasGroup(title: "Guide books", extras: visibleGuides, previewURL: $previewURL)
+                ExtrasGroup(title: "Guide books", extras: visibleGuides)
             }
             if extras.isEmpty, manual == nil {
                 Text("No extras for this game.")
@@ -38,7 +36,6 @@ struct ExtrasList: View {
                     .font(.caption)
             }
         }
-        .quickLookPreview($previewURL)
         .task(id: game.id) {
             showAll = false
             guard let media = model.media(for: game) else { return }
@@ -57,7 +54,6 @@ struct ExtrasList: View {
 struct ExtrasGroup: View {
     let title: String
     let extras: [GameExtra]
-    @Binding var previewURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -65,7 +61,7 @@ struct ExtrasGroup: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(Theme.textTertiary)
             ForEach(extras) { extra in
-                ExtraRow(name: extra.name, kind: extra.kind, url: extra.url, previewURL: $previewURL)
+                ExtraRow(name: extra.name, kind: extra.kind, url: extra.url)
             }
         }
     }
@@ -75,12 +71,13 @@ struct ExtraRow: View {
     let name: String
     let kind: GameExtra.Kind
     let url: URL
-    @Binding var previewURL: URL?
     @Environment(AppModel.self) private var model
 
+    /// Opens the window's Quick Look panel, which pages through the game's
+    /// images, manual and extras.
     var body: some View {
         Button {
-            previewURL = url
+            model.quickLookURL = url
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: icon)
@@ -95,7 +92,7 @@ struct ExtraRow: View {
         .buttonStyle(.plain)
         .padding(.vertical, 3)
         .contextMenu {
-            Button("Quick Look") { previewURL = url }
+            Button("Quick Look") { model.quickLookURL = url }
             Button("Open") { model.open(url) }
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
         }

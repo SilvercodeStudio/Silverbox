@@ -2,13 +2,14 @@ import Foundation
 import eXoCore
 
 /// A small Markdown-to-HTML converter for the help pages: headings,
-/// paragraphs, bullet and numbered lists, fenced code, inline code, bold,
-/// italics and links.
+/// paragraphs, bullet and numbered lists, pipe tables, fenced code, inline
+/// code, bold, italics and links.
 enum MarkdownHTML {
     static func render(_ markdown: String) -> String {
         var html: [String] = []
         var paragraph: [String] = []
         var listKind: String?
+        var tableLines: [String] = []
         var inCode = false
 
         func flushParagraph() {
@@ -20,11 +21,29 @@ enum MarkdownHTML {
             if let kind = listKind { html.append("</\(kind)>") }
             listKind = nil
         }
+        // A pipe table needs a header row and a `|---|---|` row; anything
+        // else that starts with a pipe is rendered as a paragraph.
+        func flushTable() {
+            guard !tableLines.isEmpty else { return }
+            let rows = tableLines.map(cells)
+            if rows.count >= 2, rows[1].allSatisfy(isSeparatorCell) {
+                html.append("<table><thead><tr>" + rows[0].map { "<th>\(inline($0))</th>" }.joined() + "</tr></thead>")
+                html.append("<tbody>")
+                for row in rows.dropFirst(2) {
+                    html.append("<tr>" + row.map { "<td>\(inline($0))</td>" }.joined() + "</tr>")
+                }
+                html.append("</tbody></table>")
+            } else {
+                html.append("<p>\(inline(tableLines.joined(separator: " ")))</p>")
+            }
+            tableLines = []
+        }
 
         for rawLine in markdown.components(separatedBy: "\n") {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("```") {
                 flushParagraph()
+                flushTable()
                 closeList()
                 html.append(inCode ? "</code></pre>" : "<pre><code>")
                 inCode.toggle()
@@ -34,6 +53,13 @@ enum MarkdownHTML {
                 html.append(escape(rawLine))
                 continue
             }
+            if line.hasPrefix("|") {
+                flushParagraph()
+                closeList()
+                tableLines.append(line)
+                continue
+            }
+            flushTable()
             if line.isEmpty {
                 flushParagraph()
                 closeList()
@@ -71,6 +97,7 @@ enum MarkdownHTML {
             paragraph.append(line)
         }
         flushParagraph()
+        flushTable()
         closeList()
         if inCode { html.append("</code></pre>") }
         return html.joined(separator: "\n")
@@ -82,6 +109,18 @@ enum MarkdownHTML {
             return line.dropFirst(2).trimmingCharacters(in: .whitespaces)
         }
         return nil
+    }
+
+    private static func cells(_ line: String) -> [String] {
+        var text = Substring(line)
+        if text.hasPrefix("|") { text = text.dropFirst() }
+        if text.hasSuffix("|") { text = text.dropLast() }
+        return text.split(separator: "|", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+
+    private static func isSeparatorCell(_ cell: String) -> Bool {
+        cell.contains("-") && cell.allSatisfy { $0 == "-" || $0 == ":" }
     }
 
     private static func headingLevel(_ line: String) -> Int? {
@@ -129,6 +168,10 @@ enum MarkdownHTML {
         pre { background: #1D1F23; border: 1px solid #2A2D32; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
         pre code { background: none; padding: 0; }
         ul, ol { padding-left: 22px; } li { margin: 4px 0; }
+        table { border-collapse: collapse; margin: 8px 0 18px; width: 100%; }
+        th, td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid #2A2D32; color: #C9CCD1; }
+        th { color: #ECEDEF; font-weight: 600; border-bottom-color: #3A3E45; }
+        td:first-child { white-space: nowrap; color: #ECEDEF; padding-right: 18px; }
         strong { color: #ECEDEF; }
         </style></head><body>\(body)</body></html>
         """

@@ -71,7 +71,11 @@ struct AppSettings: Codable, Equatable {
     var launchOptions = LaunchOptions()
     var musicEnabled = true
     var musicVolume: Double = 0.6
-    var tileSize: Double = 150
+    /// Keep the menu music playing while another app is in front.
+    var musicInBackground = false
+    var tileSize: Double = Self.defaultTileSize
+    static let defaultTileSize: Double = 150
+    static let tileSizeRange: ClosedRange<Double> = 96...260
     var viewMode: LibraryViewMode = .grid
     var sortOrder: GameSortOrder = .title
     var showHiddenGames = false
@@ -114,7 +118,8 @@ struct AppSettings: Codable, Equatable {
         launchOptions = try c.decodeIfPresent(LaunchOptions.self, forKey: .launchOptions) ?? LaunchOptions()
         musicEnabled = try c.decodeIfPresent(Bool.self, forKey: .musicEnabled) ?? true
         musicVolume = try c.decodeIfPresent(Double.self, forKey: .musicVolume) ?? 0.6
-        tileSize = try c.decodeIfPresent(Double.self, forKey: .tileSize) ?? 150
+        musicInBackground = try c.decodeIfPresent(Bool.self, forKey: .musicInBackground) ?? false
+        tileSize = try c.decodeIfPresent(Double.self, forKey: .tileSize) ?? Self.defaultTileSize
         viewMode = try c.decodeIfPresent(LibraryViewMode.self, forKey: .viewMode) ?? .grid
         sortOrder = try c.decodeIfPresent(GameSortOrder.self, forKey: .sortOrder) ?? .title
         showHiddenGames = try c.decodeIfPresent(Bool.self, forKey: .showHiddenGames) ?? false
@@ -172,7 +177,8 @@ struct AppSettings: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
             dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
-            musicEnabled, musicVolume, tileSize, viewMode, sortOrder, showHiddenGames, inspectorShown,
+            musicEnabled, musicVolume, musicInBackground, tileSize, viewMode, sortOrder, showHiddenGames,
+            inspectorShown,
             appIcon
     }
 
@@ -190,6 +196,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(launchOptions, forKey: .launchOptions)
         try c.encode(musicEnabled, forKey: .musicEnabled)
         try c.encode(musicVolume, forKey: .musicVolume)
+        try c.encode(musicInBackground, forKey: .musicInBackground)
         try c.encode(tileSize, forKey: .tileSize)
         try c.encode(viewMode, forKey: .viewMode)
         try c.encode(sortOrder, forKey: .sortOrder)

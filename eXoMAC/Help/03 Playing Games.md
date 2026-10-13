@@ -29,4 +29,4 @@ The inspector lists the game's manual and extras: reference cards, maps, clueboo
 
 ## Menu music
 
-Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Autoexec.Mac. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General.
+Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Autoexec.Mac. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General. The music pauses when another app comes to the front and resumes when you come back, unless Music › Play in Background is on.
