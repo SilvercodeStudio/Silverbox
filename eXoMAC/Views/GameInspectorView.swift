@@ -86,7 +86,7 @@ struct GameInspectorContent: View {
                     if let alternates = model.library.map({ $0.alternateNames(for: game) }), !alternates.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             SectionTitle("Also known as")
-                            ForEach(alternates, id: \.name) { alternate in
+                            ForEach(alternates, id: \.self) { alternate in
                                 HStack {
                                     Text(alternate.name).font(.system(size: 12))
                                     if let region = alternate.region {

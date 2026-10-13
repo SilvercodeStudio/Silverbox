@@ -88,6 +88,20 @@ struct LibraryQueryTests {
         #expect(query.filter(all, search: "   ").count == 4)
     }
 
+    /// eXoDOS lists most alternate names twice; the copies are dropped.
+    @Test func duplicateAlternateNamesAreDropped() {
+        let names = [
+            AlternateName(gameID: "g", name: "Ultima Underworld 1", region: "Origin release"),
+            AlternateName(gameID: "g", name: "Ultima Underworld 1", region: "Origin release"),
+            AlternateName(gameID: "g", name: "Ultima Underworld 1", region: "Japan"),
+        ]
+        let snapshot = LibrarySnapshot(
+            root: LibraryRoot(url: URL(fileURLWithPath: "/lib")), games: [], platforms: [], categories: [],
+            platformFolders: [], playlists: [], parents: [], alternateNames: names, additionalApplications: [],
+            dosboxIndex: DOSBoxIndex(), installedFolderNames: [])
+        #expect(snapshot.alternateNames["g"]?.map(\.region) == ["Origin release", "Japan"])
+    }
+
     @Test func sortsByTitleUsingSortTitle() throws {
         let snapshot = try FixtureLibrary.snapshot()
         let query = LibraryQuery(snapshot: snapshot)

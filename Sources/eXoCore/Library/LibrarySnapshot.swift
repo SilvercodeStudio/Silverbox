@@ -58,7 +58,9 @@ nonisolated public struct LibrarySnapshot: Sendable {
         self.parents = parents
         self.tree = LibraryTreeBuilder.build(
             categories: categories, platforms: platforms, playlists: playlists, parents: parents)
-        self.alternateNames = Dictionary(grouping: alternateNames, by: \.gameID)
+        // eXoDOS's MS-DOS.xml lists most alternate names twice, word for word.
+        var seen = Set<AlternateName>()
+        self.alternateNames = Dictionary(grouping: alternateNames.filter { seen.insert($0).inserted }, by: \.gameID)
         self.additionalApplications = Dictionary(grouping: additionalApplications, by: \.gameID)
         self.dosboxIndex = dosboxIndex
         self.emulators = emulators

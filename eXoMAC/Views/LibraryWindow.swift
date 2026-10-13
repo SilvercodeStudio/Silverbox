@@ -351,7 +351,7 @@ struct NowPlayingBar: View {
                     Button("\(session.launch.notes.count) notes") { showingNotes = true }
                         .popover(isPresented: $showingNotes) {
                             VStack(alignment: .leading, spacing: 8) {
-                                ForEach(session.launch.notes, id: \.self) { Text($0) }
+                                ForEach(Array(session.launch.notes.enumerated()), id: \.offset) { Text($0.element) }
                             }
                             .padding()
                             .frame(width: 420)
