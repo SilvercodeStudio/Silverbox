@@ -162,6 +162,40 @@ final class AppModel {
         settings.collections.append(collection)
     }
 
+    /// Folders dropped on the window from the Finder become collections when
+    /// they hold a LaunchBox library; the rest are explained in an alert.
+    /// Returns true when at least one collection was added.
+    @discardableResult
+    func addDroppedFolders(_ urls: [URL]) -> Bool {
+        var added = 0
+        var rejected: [String] = []
+        for url in urls {
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue
+            else {
+                rejected.append(url.lastPathComponent)
+                continue
+            }
+            let root = LibraryRoot(url: url)
+            if settings.collections.contains(where: { $0.root.url == root.url }) { continue }
+            if root.inspect().isUsable {
+                addCollection(url: url)
+                added += 1
+            } else {
+                rejected.append(url.lastPathComponent)
+            }
+        }
+        if !rejected.isEmpty {
+            alert = AppAlert(
+                title: rejected.count == 1 ? "\(rejected[0]) is not a library folder" : "Not library folders",
+                message:
+                    "A collection is an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. "
+                    + (rejected.count == 1 ? "" : "Skipped: \(rejected.joined(separator: ", ")).")
+            )
+        }
+        return added > 0
+    }
+
     func removeCollection(id: UUID) {
         settings.collections.removeAll { $0.id == id }
         LibraryCache(directory: AppPaths.libraryCache).remove(collectionID: id)

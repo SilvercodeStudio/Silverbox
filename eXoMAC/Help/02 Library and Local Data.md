@@ -8,7 +8,7 @@ A collection is an eXoDOS or eXoWin9x install, or any LaunchBox library folder: 
 
 Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
 
-Add collections on first launch or in Settings › Library. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
+Add collections on first launch, in Settings › Library, or by dropping the folder onto the window from the Finder. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
 
 ## The local data folder
 

@@ -9,6 +9,7 @@ struct LibraryWindow: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var dropTargeted = false
 
     var body: some View {
         @Bindable var model = model
@@ -20,6 +21,20 @@ struct LibraryWindow: View {
                     GameInspectorView()
                         .inspectorColumnWidth(min: 300, ideal: 380, max: 560)
                 }
+        }
+        // A library folder dragged in from the Finder becomes a collection.
+        .dropDestination(for: URL.self) { urls, _ in
+            model.addDroppedFolders(urls)
+        } isTargeted: {
+            dropTargeted = $0
+        }
+        .overlay {
+            if dropTargeted {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(Theme.accent, lineWidth: 3)
+                    .padding(3)
+                    .allowsHitTesting(false)
+            }
         }
         .preferredColorScheme(.dark)
         .frame(minWidth: 1040, minHeight: 640)
@@ -182,7 +197,7 @@ struct LibrarySetupView: View {
                 .font(.title2.weight(.semibold))
             Text(
                 error
-                    ?? "Pick an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. It can be read-only: games you install, saves and settings are kept in a local data folder on this Mac."
+                    ?? "Drop your eXoDOS folder here from the Finder, or pick it with the button. Any LaunchBox library folder that holds Data and Images works, and it can be read-only: games you install, saves and settings are kept in a local data folder on this Mac."
             )
             .multilineTextAlignment(.center)
             .foregroundStyle(Theme.textSecondary)

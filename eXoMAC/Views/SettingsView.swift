@@ -126,7 +126,7 @@ struct LibrarySettingsView: View {
                         .disabled(model.collections.isEmpty)
                 }
                 Text(
-                    "A collection is an eXoDOS install or any LaunchBox library folder. Rescan after you add or update packs."
+                    "A collection is an eXoDOS install or any LaunchBox library folder; you can also drop one here from the Finder. Rescan after you add or update packs."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
@@ -156,6 +156,9 @@ struct LibrarySettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+        .dropDestination(for: URL.self) { urls, _ in
+            model.addDroppedFolders(urls)
+        }
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { model.addCollection(url: url) }
         }
