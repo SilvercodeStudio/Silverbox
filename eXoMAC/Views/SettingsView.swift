@@ -83,6 +83,17 @@ struct GeneralSettingsView: View {
             Section("Library view") {
                 Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
             }
+            Section("Game controller") {
+                if model.gamepad.controllerNames.isEmpty {
+                    Text("No controller connected")
+                } else {
+                    ForEach(model.gamepad.controllerNames, id: \.self) { Text($0) }
+                }
+                Text(
+                    "Browse with the D-pad or left stick; the main button plays, the back button closes; the shoulder buttons step through a game's images and the other face buttons Quick Look an image or open the game page. See Help for the full map."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)

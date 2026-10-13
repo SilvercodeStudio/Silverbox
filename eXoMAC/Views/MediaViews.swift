@@ -41,16 +41,19 @@ struct GameVideoPlayer: View {
     }
 }
 
-/// Shows one media item (video or image) with a filmstrip beneath it.
+/// Shows one media item (video or image) with a filmstrip beneath it. The
+/// items and the current index live in the model, so the keyboard and a
+/// controller can page through them too.
 struct MediaGalleryView: View {
     let game: Game
     var height: CGFloat? = nil
     @Environment(AppModel.self) private var model
-    @State private var items: [GameMediaItem] = []
-    @State private var index = 0
     @State private var pixelPerfect = true
 
     var body: some View {
+        @Bindable var model = model
+        let items = model.galleryItems
+        let index = model.galleryIndex
         VStack(spacing: 10) {
             ZStack {
                 Color(hex: 0x050607)
@@ -84,19 +87,22 @@ struct MediaGalleryView: View {
                         .padding(8)
                 }
             }
+            .onTapGesture { model.quickLookCurrentMedia() }
 
             if items.count > 1 {
                 HStack(spacing: 8) {
                     Button {
-                        index = (index - 1 + items.count) % items.count
+                        model.showPreviousMedia()
                     } label: {
                         Image(systemName: "chevron.left")
                     }
+                    .help("Previous image (Option-Left)")
                     Button {
-                        index = (index + 1) % items.count
+                        model.showNextMedia()
                     } label: {
                         Image(systemName: "chevron.right")
                     }
+                    .help("Next image (Option-Right)")
                     Text("\(index + 1) of \(items.count)")
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
@@ -111,20 +117,12 @@ struct MediaGalleryView: View {
                     HStack(spacing: 8) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
                             FilmstripThumb(item: item, isSelected: offset == index)
-                                .onTapGesture { index = offset }
+                                .onTapGesture { model.galleryIndex = offset }
                         }
                     }
                     .padding(2)
                 }
             }
-        }
-        .task(id: game.id) {
-            index = 0
-            guard let media = model.media(for: game) else {
-                items = []
-                return
-            }
-            items = await media.gallery(for: game)
         }
     }
 }

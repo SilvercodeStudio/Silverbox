@@ -22,4 +22,4 @@ RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloa
 
 ## Menu music does not play
 
-Tracks in Ogg Vorbis format are not supported by macOS and are skipped.
+Ogg Vorbis tracks and MOD, S3M, XM and IT modules play through decoders built into Autoexec.Mac. AMF modules and VOC sound files are listed but skipped, and the music bar says so. Tracks in other formats (PSM, DSM) are not listed at all. If a track in a supported format stays silent, check the volume in the music bar and that menu music is on in Settings › General.

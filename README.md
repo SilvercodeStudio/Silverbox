@@ -33,6 +33,7 @@ make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
 make sweep                # translate every eXoDOS config in the mounted library
 make format               # reformat the Swift sources with swift-format
+make reset                # delete the app's settings and local data folder, to test a first start
 ```
 
 The core library (XML parsing, media lookup, config translation, music
@@ -67,3 +68,34 @@ drive or a network share): the app never modifies it. Installed games, save
 backups, edited configs, favorites and play history are kept in a local data
 folder, by default `~/Library/Application Support/eXoMAC`. Installing games in
 place inside `eXo/eXoDOS`, as eXoDOS does on Windows, is available in Settings.
+
+## To do
+
+- Menu music: replace the vendored libxmp-lite with the full libxmp (without
+  its depackers). That adds the two AMF variants and Epic MegaGames PSM, which
+  covers ten more eXoDOS titles (Crusader, The Civil War, Jazz Jackrabbit).
+  DSM (four titles) would need libmodplug as well; probably not worth it.
+- Launch console, computer and arcade games for real with RetroArch, Dolphin,
+  MAME and Mednafen. The planner and the emulator assignments exist; nothing
+  has been played yet.
+- ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
+  XML beside them, plus single titles configured by hand.
+- Set up eXoDOS on the Mac: unpack a fresh download (full or Lite) without the
+  Windows `Setup eXoDOS.bat`. Not started; today the app needs a finished
+  install.
+- Windows 9x games from eXoWin9x. The library is on the volume (the 1994-1996
+  set, 648 titles) but there is no launch path yet: the `9xlaunch.bat` scripts
+  and the 86Box, PCBox and DOSBox-X profiles still need translating.
+- Soundtracks. The 126 entries on the Soundtracks platform launch foobar2000
+  with a zip of FLAC and MP3 tracks from `eXo/Soundtracks/`, so Play shows the
+  Windows-program message. macOS plays both formats natively, so the fix is an
+  album player of our own: unpack the zip to the local data folder (or read it
+  in place) and queue the tracks with AVQueuePlayer, with a track list in the
+  inspector.
+- Shortcuts. Cmd-F should focus the search field (`searchFocused`), and
+  the menus should be checked against the usual Mac shortcuts (Select All,
+  Find Next, Close Window, zoom of the grid, and so on).
+- Couch mode: a full-screen, controller-first view on top of the grid and the
+  controller input that exist today.
+- Later: BitTorrent downloads of the eXoDOS packs, and metadata and media
+  scraping for games outside the eXo collections.

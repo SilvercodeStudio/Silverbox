@@ -17,9 +17,26 @@
             scheduled = true
             let configured = UserDefaults.standard.double(forKey: "screenshotDelay")
             let delay = configured > 0 ? configured : 8
+            // `-keyPresses "down down space"` presses keys first, to test navigation.
+            let presses = (UserDefaults.standard.string(forKey: "keyPresses") ?? "")
+                .split(separator: " ").compactMap { KeyPress.Key.parse(String($0)) }
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                capture(to: URL(fileURLWithPath: path))
-                NSApp.terminate(nil)
+                NSApp.activate()
+                for (offset, press) in presses.enumerated() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 * Double(offset)) {
+                        let window = NSApp.keyWindow ?? NSApp.mainWindow
+                        let responder = window?.firstResponder.map { String(describing: type(of: $0)) } ?? "none"
+                        FileHandle.standardError.write(
+                            Data(
+                                "keypress: \(press.0.characters.unicodeScalars.first?.value ?? 0) active=\(NSApp.isActive) window=\(window?.title ?? "none") responder=\(responder)\n"
+                                    .utf8))
+                        KeyPress.send(press.0, modifiers: press.1, force: true)
+                    }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 * Double(presses.count) + 1.5) {
+                    capture(to: URL(fileURLWithPath: path))
+                    NSApp.terminate(nil)
+                }
             }
         }
 

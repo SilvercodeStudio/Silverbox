@@ -115,7 +115,7 @@ public actor MediaCatalog {
     /// what macOS plays itself, then the bundled decoders (see ``MusicDecoders``),
     /// then formats that are listed but cannot be played.
     public static let musicPreference: [String] = [
-        "mp3", "m4a", "aac", "flac", "wav", "ogg", "oga", "xm", "it", "s3m", "mod", "amf", "voc",
+        "mp3", "mp2", "m4a", "aac", "flac", "wav", "ogg", "oga", "xm", "it", "s3m", "mod", "amf", "voc",
     ]
     public static let musicExtensions: Set<String> = Set(musicPreference)
 

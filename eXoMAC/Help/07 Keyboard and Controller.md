@@ -1,0 +1,41 @@
+# Keyboard and Controller
+
+The library can be browsed without the mouse. Click a game once, or press Tab until the grid has focus, then use the keys below. The list view uses the same keys.
+
+## Keyboard
+
+| Key | Action |
+|---|---|
+| Arrow keys | Move between games |
+| Home, End | First or last game |
+| Page Up, Page Down | Jump four rows |
+| Return | Play the game, or Install when it is not installed yet |
+| Space | Quick Look the image or video shown in the inspector |
+| Option-Left, Option-Right | Previous or next image |
+| Command-Y | Quick Look the current image or video |
+| Command-Shift-Y | Quick Look the manual |
+| Command-Down, Command-Up | Open the game page, back to the library |
+| Command-Return | Play |
+| Command-Shift-Return | Configure… |
+| Command-D | Add to or remove from Favorites |
+| Escape | Close the Quick Look panel or the game page, or clear the search |
+
+In the Quick Look panel, the arrow keys page through the game's images and its manual; Space or Escape closes it.
+
+## Game controller
+
+Pair a controller in System Settings › Bluetooth. PlayStation, Xbox and MFi controllers work, and Settings › General lists the controllers Autoexec.Mac sees. The controller drives Autoexec.Mac only while it is the front app; once a game is running, the emulator has the controller.
+
+| Control (PlayStation / Xbox) | Action |
+|---|---|
+| D-pad or left stick | Move between games; hold to keep moving |
+| Cross / A | Play, or press the default button of a dialog |
+| Circle / B | Back: close the panel, the page or the dialog, or clear the search |
+| Square / X | Quick Look the current image or video |
+| Triangle / Y | Open the game page, or come back from it |
+| L1, R1 / LB, RB | Previous or next image |
+| L2, R2 / LT, RT | Page up or down |
+| Options / Menu | Configure… |
+| Create / View | Add to or remove from Favorites |
+
+The controller sends the same commands as the keyboard, so everything in the keyboard table applies to it too.

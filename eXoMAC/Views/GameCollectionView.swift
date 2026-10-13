@@ -39,25 +39,99 @@ struct EmptyCollectionView: View {
 struct GameGridView: View {
     let games: [Game]
     @Environment(AppModel.self) private var model
+    @FocusState private var focused: Bool
+
+    private static let spacing: CGFloat = 18
+    private static let inset: CGFloat = 24
 
     var body: some View {
         let tile = CGFloat(model.settings.tileSize)
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: tile, maximum: tile * 1.3), spacing: 18, alignment: .bottom)],
-                    alignment: .leading, spacing: 24
-                ) {
-                    ForEach(games) { game in
-                        GameTileView(game: game, width: tile, isSelected: model.selectedGameID == game.id)
-                            .onTapGesture(count: 2) { model.play(game) }
-                            .onTapGesture { model.selectedGameID = game.id }
-                            .contextMenu { GameContextMenu(game: game) }
-                            .id(game.id)
+                Group {
+                    LazyVGrid(
+                        columns: [
+                            GridItem(
+                                .adaptive(minimum: tile, maximum: tile * 1.3), spacing: Self.spacing, alignment: .bottom
+                            )
+                        ],
+                        alignment: .leading, spacing: 24
+                    ) {
+                        ForEach(games) { game in
+                            GameTileView(game: game, width: tile, isSelected: model.selectedGameID == game.id)
+                                .onTapGesture(count: 2) { model.play(game) }
+                                .onTapGesture {
+                                    model.selectedGameID = game.id
+                                    focused = true
+                                }
+                                .contextMenu { GameContextMenu(game: game) }
+                                .id(game.id)
+                        }
                     }
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear
+                                .onChange(of: geometry.size.width, initial: true) {
+                                    model.gridColumns = Self.columns(in: geometry.size.width, tile: tile)
+                                }
+                                .onChange(of: tile) {
+                                    model.gridColumns = Self.columns(in: geometry.size.width, tile: tile)
+                                }
+                        }
+                    )
+                    .padding(Self.inset)
                 }
-                .padding(24)
             }
+            .focusable()
+            .focusEffectDisabled()
+            .focused($focused)
+            .onMoveCommand { direction in
+                switch direction {
+                case .up: model.moveSelection(.up)
+                case .down: model.moveSelection(.down)
+                case .left: model.moveSelection(.left)
+                case .right: model.moveSelection(.right)
+                @unknown default: break
+                }
+            }
+            .onKeyPress(.return) {
+                model.activateSelection()
+                return .handled
+            }
+            .onKeyPress(.space) {
+                model.quickLookCurrentMedia()
+                return .handled
+            }
+            .onKeyPress(.escape) { model.goBack() ? .handled : .ignored }
+            .onKeyPress(phases: .down) { press in
+                let modifiers = press.modifiers
+                guard modifiers.contains(.option), modifiers.isDisjoint(with: [.command, .shift, .control]) else {
+                    return .ignored
+                }
+                switch press.key {
+                case .leftArrow: model.showPreviousMedia()
+                case .rightArrow: model.showNextMedia()
+                default: return .ignored
+                }
+                return .handled
+            }
+            .onKeyPress(.home) {
+                model.selectFirstGame()
+                return .handled
+            }
+            .onKeyPress(.end) {
+                model.selectLastGame()
+                return .handled
+            }
+            .onKeyPress(.pageUp) {
+                model.moveSelectionByPage(forward: false)
+                return .handled
+            }
+            .onKeyPress(.pageDown) {
+                model.moveSelectionByPage(forward: true)
+                return .handled
+            }
+            .onAppear { focused = true }
             .onChange(of: model.scope) {
                 if let first = games.first?.id { proxy.scrollTo(first, anchor: .top) }
             }
@@ -65,6 +139,13 @@ struct GameGridView: View {
                 if let id = model.selectedGameID { proxy.scrollTo(id) }
             }
         }
+    }
+
+    /// How many tiles LazyVGrid fits per row with adaptive columns, from the
+    /// grid's own width (so scroll bars and padding are already taken off).
+    static func columns(in width: CGFloat, tile: CGFloat) -> Int {
+        let available = width
+        return max(1, Int(((available + spacing) / (tile + spacing)).rounded(.down)))
     }
 }
 
@@ -241,6 +322,27 @@ struct GameListView: View {
             }
         } primaryAction: { ids in
             if let id = ids.first, let game = model.library?.game(id: id) { model.play(game) }
+        }
+        .onKeyPress(.return) {
+            model.activateSelection()
+            return .handled
+        }
+        .onKeyPress(.space) {
+            model.quickLookCurrentMedia()
+            return .handled
+        }
+        .onKeyPress(.escape) { model.goBack() ? .handled : .ignored }
+        .onKeyPress(phases: .down) { press in
+            let modifiers = press.modifiers
+            guard modifiers.contains(.option), modifiers.isDisjoint(with: [.command, .shift, .control]) else {
+                return .ignored
+            }
+            switch press.key {
+            case .leftArrow: model.showPreviousMedia()
+            case .rightArrow: model.showNextMedia()
+            default: return .ignored
+            }
+            return .handled
         }
     }
 

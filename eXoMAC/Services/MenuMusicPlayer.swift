@@ -25,7 +25,7 @@ final class MenuMusicPlayer {
     @ObservationIgnored private var stream: DecodedMusicStream?
 
     /// Formats AVAudioPlayer handles on its own.
-    static let nativeExtensions: Set<String> = ["mp3", "m4a", "aac", "wav", "aif", "aiff", "flac", "caf"]
+    static let nativeExtensions: Set<String> = ["mp3", "mp2", "m4a", "aac", "wav", "aif", "aiff", "flac", "caf"]
     static let supportedExtensions: Set<String> = nativeExtensions.union(MusicDecoders.extensions)
 
     var trackName: String? {

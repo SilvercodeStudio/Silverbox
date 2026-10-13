@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftUI
 import UniformTypeIdentifiers
 import eXoCore
@@ -77,6 +78,7 @@ struct ContentColumn: View {
             }
         }
         .background(Theme.window)
+        .quickLookPreview($model.quickLookURL, in: model.quickLookItems)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 if model.launcher.isRunning { NowPlayingBar() }

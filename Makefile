@@ -12,7 +12,7 @@ ARGS ?=
 
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination 'platform=macOS'
 
-.PHONY: help build run app test core typecheck sweep format
+.PHONY: help build run app test core typecheck sweep format reset
 
 help:
 	@echo "make build          build the app ($(CONFIG)) with xcodebuild"
@@ -23,6 +23,7 @@ help:
 	@echo "make typecheck      type-check the app sources against the package build, without Xcode"
 	@echo "make sweep          translate every eXoDOS config in the mounted library and print a summary"
 	@echo "make format         reformat the Swift sources with swift-format (settings in .swift-format)"
+	@echo "make reset          delete the app's settings and local data folder, to test a first start (asks first)"
 	@echo "Set CONFIG=Release for a release build."
 
 build:
@@ -65,3 +66,28 @@ typecheck: core
 	    -Xcc -fmodule-map-file=$$tmp/stb.modulemap -Xcc -fmodule-map-file=$$tmp/xmp.modulemap \
 	    eXoMAC/App/*.swift eXoMAC/Views/*.swift eXoMAC/Services/*.swift eXoMAC/eXoMACApp.swift; \
 	status=$$?; rm -rf $$tmp; exit $$status
+
+# Deletes everything the app has written, so the next start is a first start:
+# the local data folder (installed games, save backups, overrides, overlays,
+# launch configs, logs, media indexes, library caches, user-library.json) and
+# the settings (both defaults domains, which also hold the window positions).
+# The libraries themselves are never touched. Set DATA= when Settings points
+# at another local data folder; YES=1 skips the question.
+#
+# The sandbox is off, so the app has no container. A leftover
+# ~/Library/Containers/com.github.preston-landers.eXoMAC from an early
+# sandboxed build is empty and harmless; macOS blocks shell tools from
+# deleting other apps' containers, so remove it in the Finder if it bothers you.
+DATA ?= $(HOME)/Library/Application Support/eXoMAC
+DOMAINS ?= com.github.preston-landers.autoexec-mac com.github.preston-landers.eXoMAC
+
+reset:
+	@if pgrep -xq "Autoexec.Mac"; then echo "Quit Autoexec.Mac first."; exit 1; fi
+	@[ -n "$(DATA)" ] || { echo "DATA is empty."; exit 1; }
+	@echo "This deletes:"; \
+	size=$$([ -e "$(DATA)" ] && du -sh "$(DATA)" | cut -f1 || echo missing); echo "  data folder  $(DATA) ($$size)"; \
+	echo "  settings     $(DOMAINS)"; \
+	if [ "$(YES)" != 1 ]; then printf "Continue? [y/N] "; read answer; [ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing deleted."; exit 1; }; fi
+	@rm -rf "$(DATA)"
+	@for domain in $(DOMAINS); do defaults delete $$domain >/dev/null 2>&1 || true; done
+	@echo "Done. The next start asks for a library again; make run ARGS='-libraryPath /Volumes/eXoDOS_ro' skips that for one run."

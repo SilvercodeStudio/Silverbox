@@ -52,13 +52,34 @@ final class AppModel {
     var scope: LibraryScope = .all { didSet { refreshVisibleGames() } }
     var searchText = "" { didSet { scheduleSearchRefresh() } }
     private(set) var visibleGames: [Game] = []
-    var selectedGameID: String? { didSet { updateMusic() } }
-    var openedGameID: String?
+    var selectedGameID: String? {
+        didSet {
+            updateMusic()
+            if selectedGameID != oldValue { refreshSelectedMedia() }
+        }
+    }
+    /// The game page on show. Opening a page selects its game, so the
+    /// inspector, media and keyboard commands follow it.
+    var openedGameID: String? {
+        didSet {
+            if let openedGameID, openedGameID != selectedGameID { selectedGameID = openedGameID }
+        }
+    }
     var pendingInstall: Game?
     var pendingUninstall: Game?
     var pendingInfoGame: Game?
     var pendingLaunch: PendingLaunch?
     var alert: AppAlert?
+
+    /// Columns in the game grid, reported by the grid view for arrow keys.
+    var gridColumns = 1
+    /// The selected game's screenshots and videos, shown by the media gallery.
+    var galleryItems: [GameMediaItem] = []
+    var galleryIndex = 0
+    var selectedManual: URL?
+    /// The file the Quick Look panel shows, if any.
+    var quickLookURL: URL?
+    @ObservationIgnored var mediaTask: Task<Void, Never>?
 
     /// A game waiting in the launch options dialog.
     struct PendingLaunch: Identifiable {
@@ -72,6 +93,7 @@ final class AppModel {
     let thumbnails = ThumbnailCache()
     let music = MenuMusicPlayer()
     let launcher = GameLauncher()
+    let gamepad = GamepadInput()
 
     private let userStateStore = UserLibraryStateStore(url: AppPaths.userLibraryState)
     private var saveTask: Task<Void, Never>?
@@ -97,6 +119,7 @@ final class AppModel {
         launcher.onSessionEnded = { [weak self] session in
             self?.sessionEnded(session)
         }
+        gamepad.model = self
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
         }

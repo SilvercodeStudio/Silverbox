@@ -51,6 +51,7 @@ make test                        # swift test: core tests (fast; real-library te
 make core                        # swift build: core only
 make sweep                       # translate every eXoDOS config in the mounted library, print a summary
 make format                      # swift-format the Swift sources (settings in .swift-format)
+make reset                       # delete the app's settings and local data folder (asks first; YES=1 skips)
 ```
 
 `make run` resolves the built app through `xcodebuild -showBuildSettings`,
@@ -116,6 +117,12 @@ Makefile).
 - Help pages are Markdown files in `eXoMAC/Help/` (ordered by their numeric
   prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
   Help window. Add or edit pages there.
+- Navigation input. The grid and list handle arrows, Return, Space and
+  Escape through SwiftUI focus (`GameGridView`, `GameListView`); media and
+  page commands are menu shortcuts in `AppCommands`. `GamepadInput` turns
+  controller buttons into the same key presses through `KeyPress.send`, so
+  new keyboard behaviour is controller behaviour too. Help page 07 lists
+  both maps; keep it in step.
 - App icon. `eXoMAC/AppIcon.icon` (amber) is the Icon Composer file Xcode
   compiles into the bundle icon; `eXoMAC/AppIcon-Green.icon` is the alternate,
   compiled only when the target's "Include all app icon assets" is on. The app
@@ -137,7 +144,9 @@ Makefile).
   quits; `-autoPlay 1` presses Play on the selected game after loading, which
   opens the launch options dialog; `-autoConfigure 1` opens the same dialog
   in its Configure (save only) mode; `-openWindow about` (or `help`, or
-  `settings` with `-settingsTab emulators`) opens that window at start. Example:
+  `settings` with `-settingsTab emulators`) opens that window at start.
+  `-keyPresses "right down space"` presses keys (names like `up`, `return`,
+  `opt-right`, `cmd-y`) before the screenshot, to test navigation. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

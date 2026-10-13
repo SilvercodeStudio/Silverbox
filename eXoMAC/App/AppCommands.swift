@@ -24,6 +24,9 @@ struct AppCommands: Commands {
                 .disabled(model.selectedGame.map { !$0.isDOSGame || model.isInstalled($0) } ?? true)
             Button("Uninstall…") { if let game = model.selectedGame { model.pendingUninstall = game } }
                 .disabled(model.selectedGame.map { !$0.isDOSGame || !model.isInstalled($0) } ?? true)
+            Button("Configure…") { if let game = model.selectedGame { model.configure(game) } }
+                .keyboardShortcut(.return, modifiers: [.command, .shift])
+                .disabled(model.selectedGame == nil)
             Divider()
             Button("Open Game Page") { model.openedGameID = model.selectedGameID }
                 .keyboardShortcut(.downArrow, modifiers: .command)
@@ -36,6 +39,19 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("d", modifiers: .command)
             .disabled(model.selectedGame == nil)
+            Divider()
+            Button("Previous Image") { model.showPreviousMedia() }
+                .keyboardShortcut(.leftArrow, modifiers: .option)
+                .disabled(model.galleryItems.count < 2)
+            Button("Next Image") { model.showNextMedia() }
+                .keyboardShortcut(.rightArrow, modifiers: .option)
+                .disabled(model.galleryItems.count < 2)
+            Button("Quick Look Media") { model.quickLookCurrentMedia() }
+                .keyboardShortcut("y", modifiers: .command)
+                .disabled(model.galleryItems.isEmpty)
+            Button("Quick Look Manual") { model.quickLookManual() }
+                .keyboardShortcut("y", modifiers: [.command, .shift])
+                .disabled(model.selectedManual == nil)
             Divider()
             Button("Show in Finder") { if let game = model.selectedGame { model.revealInFinder(game) } }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
