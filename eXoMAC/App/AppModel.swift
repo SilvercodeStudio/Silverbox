@@ -27,6 +27,10 @@ final class AppModel {
             if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
                 refreshVisibleGames()
             }
+            if settings.localStorePath != oldValue.localStorePath {
+                applyDataRoot()
+                warnedMissingStore = false
+            }
             if settings.localStorePath != oldValue.localStorePath || settings.collections != oldValue.collections {
                 scheduleReload()
             }
@@ -88,6 +92,7 @@ final class AppModel {
     var extrasCache: [String: GameExtrasEntry] = [:]
     @ObservationIgnored var extrasTasks: Set<String> = []
     @ObservationIgnored var musicPausedForBackground = false
+    @ObservationIgnored private var warnedMissingStore = false
     /// The file the Quick Look panel shows, if any.
     var quickLookURL: URL?
     /// Bumped by Search Games (Cmd-F); the search field takes focus when it changes.
@@ -133,6 +138,7 @@ final class AppModel {
     init() {
         settings = AppSettings.load()
         userState = (try? userStateStore.load()) ?? UserLibraryState()
+        applyDataRoot()
         music.volume = settings.musicVolume
         album.volume = settings.musicVolume
         applyAppIcon()
@@ -155,6 +161,21 @@ final class AppModel {
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
         }
+    }
+
+    /// Points the caches, launch configs and logs at the chosen local data
+    /// folder. While its drive is unplugged they fall back to Application
+    /// Support, so nothing is created under an empty /Volumes mount point.
+    private func applyDataRoot() {
+        let root = settings.localStorePath.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        AppPaths.customRoot = root.flatMap { Self.volumeIsMissing(for: $0) ? nil : $0 }
+    }
+
+    /// True for a path under /Volumes whose volume is not mounted.
+    static func volumeIsMissing(for url: URL) -> Bool {
+        let parts = url.standardizedFileURL.pathComponents
+        guard parts.count > 2, parts[1] == "Volumes" else { return false }
+        return !FileManager.default.fileExists(atPath: "/Volumes/" + parts[2])
     }
 
     // MARK: - Collections and loading
@@ -252,7 +273,20 @@ final class AppModel {
         rootReports = Dictionary(uniqueKeysWithValues: collections.map { ($0.id, $0.root.inspect()) })
         loadErrors = [:]
         let localStore = settings.localStore
-        try? localStore.ensureDirectories()
+        applyDataRoot()
+        do {
+            if Self.volumeIsMissing(for: localStore.directory) { throw CocoaError(.fileNoSuchFile) }
+            try localStore.ensureDirectories()
+        } catch {
+            if settings.localStorePath != nil, !warnedMissingStore {
+                warnedMissingStore = true
+                alert = AppAlert(
+                    title: "The local data folder is not available",
+                    message:
+                        "\(localStore.directory.path) cannot be used right now. Is the drive connected? Installed games, soundtracks and caches there stay out of reach until it is; Settings › Library can switch back to the default folder."
+                )
+            }
+        }
         let cache = LibraryCache(directory: AppPaths.libraryCache)
         loadState = .loading(LibraryLoadProgress(stage: "Starting", fraction: 0, gamesLoaded: 0))
         let names = Dictionary(uniqueKeysWithValues: collections.map { ($0.id, $0.name) })

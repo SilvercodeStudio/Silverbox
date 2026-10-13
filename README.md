@@ -65,9 +65,11 @@ macOS plays the other music formats itself.
 
 On first launch, choose your eXoDOS folder. It can be read-only (an external
 drive or a network share): the app never modifies it. Installed games, save
-backups, edited configs, favorites and play history are kept in a local data
-folder, by default `~/Library/Application Support/eXoMAC`. Installing games in
-place inside `eXo/eXoDOS`, as eXoDOS does on Windows, is available in Settings.
+backups, edited configs, unpacked soundtracks and caches are kept in a local
+data folder, by default `~/Library/Application Support/Autoexec.Mac`, which Settings
+can point at another drive; favorites, play history and settings stay in
+Application Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS
+does on Windows, is available in Settings.
 
 ## To do
 

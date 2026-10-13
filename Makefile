@@ -23,7 +23,7 @@ help:
 	@echo "make typecheck      type-check the app sources against the package build, without Xcode"
 	@echo "make sweep          translate every eXoDOS config in the mounted library and print a summary"
 	@echo "make format         reformat the Swift sources with swift-format (settings in .swift-format)"
-	@echo "make reset          delete the app's settings and local data folder, to test a first start (asks first)"
+	@echo "make reset          delete the app's settings and data, to test a first start (asks first; DATA= for a moved data folder)"
 	@echo "Set CONFIG=Release for a release build."
 
 build:
@@ -68,26 +68,30 @@ typecheck: core
 	status=$$?; rm -rf $$tmp; exit $$status
 
 # Deletes everything the app has written, so the next start is a first start:
-# the local data folder (installed games, save backups, overrides, overlays,
-# launch configs, logs, media indexes, library caches, user-library.json) and
-# the settings (both defaults domains, which also hold the window positions).
-# The libraries themselves are never touched. Set DATA= when Settings points
-# at another local data folder; YES=1 skips the question.
+# the Application Support folder (plus its old eXoMAC name: user-library.json, and the local data
+# folder when it is the default: installed games, save backups, overrides,
+# overlays, soundtracks, launch configs, logs, caches) and the settings (both
+# defaults domains, which also hold the window positions). The libraries
+# themselves are never touched. Set DATA= to the local data folder when
+# Settings points it at another drive; YES=1 skips the question.
 #
 # The sandbox is off, so the app has no container. A leftover
 # ~/Library/Containers/com.github.preston-landers.eXoMAC from an early
 # sandboxed build is empty and harmless; macOS blocks shell tools from
 # deleting other apps' containers, so remove it in the Finder if it bothers you.
-DATA ?= $(HOME)/Library/Application Support/eXoMAC
+APPDATA = $(HOME)/Library/Application Support/Autoexec.Mac
+LEGACYDATA = $(HOME)/Library/Application Support/eXoMAC
+DATA ?=
 DOMAINS ?= com.github.preston-landers.autoexec-mac com.github.preston-landers.eXoMAC
 
 reset:
 	@if pgrep -xq "Autoexec.Mac"; then echo "Quit Autoexec.Mac first."; exit 1; fi
-	@[ -n "$(DATA)" ] || { echo "DATA is empty."; exit 1; }
 	@echo "This deletes:"; \
-	size=$$([ -e "$(DATA)" ] && du -sh "$(DATA)" | cut -f1 || echo missing); echo "  data folder  $(DATA) ($$size)"; \
+	size=$$([ -e "$(APPDATA)" ] && du -sh "$(APPDATA)" | cut -f1 || echo missing); echo "  app data     $(APPDATA) ($$size)"; \
+	if [ -n "$(DATA)" ]; then size=$$([ -e "$(DATA)" ] && du -sh "$(DATA)" | cut -f1 || echo missing); echo "  data folder  $(DATA) ($$size)"; fi; \
 	echo "  settings     $(DOMAINS)"; \
 	if [ "$(YES)" != 1 ]; then printf "Continue? [y/N] "; read answer; [ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing deleted."; exit 1; }; fi
-	@rm -rf "$(DATA)"
+	@rm -rf "$(APPDATA)" "$(LEGACYDATA)"
+	@[ -z "$(DATA)" ] || rm -rf "$(DATA)"
 	@for domain in $(DOMAINS); do defaults delete $$domain >/dev/null 2>&1 || true; done
 	@echo "Done. The next start asks for a library again; make run ARGS='-libraryPath /Volumes/eXoDOS_ro' skips that for one run."

@@ -253,18 +253,35 @@ struct AppSettings: Codable, Equatable {
     }
 }
 
-/// Folders eXoMAC writes to under Application Support.
+/// Folders eXoMAC writes to. Bulky and disposable things (installed games,
+/// caches, launch configs, logs) live under the local data folder, which the
+/// user can move to another drive; the small, important `user-library.json`
+/// (favorites, play history) stays in Application Support with the settings.
 enum AppPaths {
-    static var applicationSupport: URL {
+    /// `~/Library/Application Support/Autoexec.Mac`. The folder was called
+    /// `eXoMAC` before the app was renamed; an old folder is moved over once.
+    static let applicationSupport: URL = {
+        let fm = FileManager.default
         let base =
-            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
-        return base.appendingPathComponent("eXoMAC", isDirectory: true)
-    }
+            fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
+        let current = base.appendingPathComponent("Autoexec.Mac", isDirectory: true)
+        let legacy = base.appendingPathComponent("eXoMAC", isDirectory: true)
+        if !fm.fileExists(atPath: current.path), fm.fileExists(atPath: legacy.path) {
+            try? fm.moveItem(at: legacy, to: current)
+        }
+        return current
+    }()
 
-    static var launchConfigs: URL { applicationSupport.appendingPathComponent("Launch", isDirectory: true) }
-    static var logs: URL { applicationSupport.appendingPathComponent("Logs", isDirectory: true) }
-    static var mediaIndexes: URL { applicationSupport.appendingPathComponent("MediaIndex", isDirectory: true) }
-    static var libraryCache: URL { applicationSupport.appendingPathComponent("LibraryCache", isDirectory: true) }
+    /// The local data folder chosen in Settings, when there is one. Set by
+    /// `AppModel` whenever the setting changes.
+    static var customRoot: URL?
+
+    static var dataRoot: URL { customRoot ?? applicationSupport }
+
+    static var launchConfigs: URL { dataRoot.appendingPathComponent("Launch", isDirectory: true) }
+    static var logs: URL { dataRoot.appendingPathComponent("Logs", isDirectory: true) }
+    static var mediaIndexes: URL { dataRoot.appendingPathComponent("MediaIndex", isDirectory: true) }
+    static var libraryCache: URL { dataRoot.appendingPathComponent("LibraryCache", isDirectory: true) }
     static var userLibraryState: URL { applicationSupport.appendingPathComponent("user-library.json") }
 }

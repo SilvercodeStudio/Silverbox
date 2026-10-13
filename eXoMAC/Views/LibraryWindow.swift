@@ -202,6 +202,7 @@ struct LoadingView: View {
 struct LibrarySetupView: View {
     let error: String?
     @Environment(AppModel.self) private var model
+    @Environment(\.openSettings) private var openSettings
     @State private var showingPicker = false
 
     var body: some View {
@@ -228,6 +229,19 @@ struct LibrarySetupView: View {
                 if !model.collections.isEmpty {
                     Button("Try Again") { model.reloadLibrary() }
                 }
+                Button("Library Settings…") {
+                    SettingsState.shared.show(tab: .library)
+                    openSettings()
+                }
+            }
+            if error == nil {
+                Text(
+                    "Installed games, soundtracks and caches go to the local data folder, \(model.localStore.directory.path). To keep them on another drive, choose that folder in Library Settings before you install anything."
+                )
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Theme.textTertiary)
+                .frame(maxWidth: 440)
             }
         }
         .padding(40)

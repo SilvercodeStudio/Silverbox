@@ -12,14 +12,17 @@ Add collections on first launch, in Settings › Library, or by dropping the fol
 
 ## The local data folder
 
-Everything Autoexec.Mac writes goes to a folder on your Mac. By default it is `~/Library/Application Support/eXoMAC`; you can choose another location in Settings › Library. It holds:
+Everything bulky that Autoexec.Mac writes goes to one folder. By default it is `~/Library/Application Support/Autoexec.Mac`; Settings › Library can point it at another folder, for example on an external drive. Choosing a drive or your home folder puts an `Autoexec.Mac` folder there; Use Default goes back to the standard location. What is already in the old folder is not moved. The folder holds:
 
 - `Games` — games you have installed (unpacked from their archives).
+- `Soundtracks` — albums unpacked from the library's soundtrack zips.
 - `Saves` — backups of saved games and changed settings, made when you uninstall a game.
 - `Overrides` — your edited copies of DOSBox configurations.
 - `Overlay` — writable folders for games that are already unpacked inside a read-only library.
 - `Launch` and `Logs` — the configurations Autoexec.Mac generates for each launch, and the emulator's output.
-- `MediaIndex` and `user-library.json` — caches, favorites and play history.
+- `MediaIndex` and `LibraryCache` — caches that Rescan Library rebuilds.
+
+Favorites, play history and the settings stay in `~/Library/Application Support/Autoexec.Mac` on this Mac, so they are there even when the drive is not. If the chosen folder is missing when the app starts, it says so; installed games and caches on it wait until the drive is back.
 
 ## Installing in place
 

@@ -10,10 +10,11 @@ Windows: it reads the eXoDOS / LaunchBox configuration files so that an
 eXoDOS installation or download is usable on the Mac. The actual emulators
 (DOSBox and related) are external to this front-end project.
 
-Names: `eXoMAC` is the internal name (project, module, folders, the local
-data folder). The bundle identifier is `com.github.preston-landers.autoexec-mac`;
-settings saved under the old `…eXoMAC` identifier are read until a collection
-is configured.
+Names: `eXoMAC` is the internal name (project, module, folders). The local
+data folder is `~/Library/Application Support/Autoexec.Mac`; an older
+`eXoMAC` folder there is moved over on first start. The bundle identifier
+is `com.github.preston-landers.autoexec-mac`; settings saved under the old
+`…eXoMAC` identifier are read until a collection is configured.
 The display name is "Autoexec.Mac"; it is set once in `AppInfo`
 (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 `INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
@@ -94,9 +95,11 @@ Makefile).
   folders and drive-letter paths. Parsed libraries are cached as JSON under
   `LibraryCache/` keyed by the data files' sizes and dates; "Rescan" clears it.
 - Two roots. Every library (collection folder) is read-only as far as the app is
-  concerned; it may live on a read-only volume. Everything the app writes goes
-  to the local data folder (`LocalStore`, default
-  `~/Library/Application Support/eXoMAC/`): `Games/eXoDOS/` (unpacked games),
+  concerned; it may live on a read-only volume. Everything bulky the app writes
+  goes to the local data folder (`LocalStore` plus `AppPaths.dataRoot`, default
+  `~/Library/Application Support/Autoexec.Mac/`, movable to another drive in
+  Settings; `user-library.json` and the settings always stay in Application
+  Support): `Games/eXoDOS/` (unpacked games),
   `Saves/` (backups of changed files made on uninstall), `Overrides/<gameID>/`
   (edited configs), `Overlay/eXoDOS/` (writable overlay mounts for games
   unpacked inside a read-only library), `Soundtracks/` (albums unpacked from
@@ -166,5 +169,5 @@ Makefile).
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.
 - `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
   games in DOSBox Staging for a few seconds and checks the emulator log.
-- Saved media indexes live in `~/Library/Application Support/eXoMAC/MediaIndex`;
+- Saved media indexes live in `MediaIndex/` under the local data folder;
   "Rescan Library" deletes them.
