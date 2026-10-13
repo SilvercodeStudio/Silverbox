@@ -59,6 +59,11 @@ struct GameGridView: View {
                     ) {
                         ForEach(games) { game in
                             GameTileView(game: game, width: tile, isSelected: model.selectedGameID == game.id)
+                                .background {
+                                    if model.selectedGameID == game.id {
+                                        SelectedTileReporter(gameID: game.id, model: model)
+                                    }
+                                }
                                 .onTapGesture(count: 2) { model.play(game) }
                                 .onTapGesture {
                                     model.selectedGameID = game.id
@@ -86,6 +91,13 @@ struct GameGridView: View {
             .focusable()
             .focusEffectDisabled()
             .focused($focused)
+            .onChange(of: focused, initial: true) { model.gridFocused = focused }
+            .onDisappear { model.gridFocused = false }
+            .onGeometryChange(for: CGRect.self) {
+                $0.frame(in: .global)
+            } action: {
+                model.gridFrame = $0
+            }
             .onMoveCommand { direction in
                 switch direction {
                 case .up: model.moveSelection(.up)
@@ -137,6 +149,9 @@ struct GameGridView: View {
                 if let first = games.first?.id { proxy.scrollTo(first, anchor: .top) }
             }
             .onChange(of: model.selectedGameID, initial: true) {
+                if let id = model.selectedGameID { proxy.scrollTo(id) }
+            }
+            .onChange(of: model.revealSelectionRequest) {
                 if let id = model.selectedGameID { proxy.scrollTo(id) }
             }
         }
@@ -196,7 +211,10 @@ struct BoxArtView: View {
     let game: Game
     let width: CGFloat
     var maxPixelSize: Int = 400
-    @Environment(AppModel.self) private var model
+    /// Optional: when the sidebar changes the scope from the keyboard,
+    /// SwiftUI updates tiles that are being removed with an environment
+    /// that has no model, and a required one would stop the app.
+    @Environment(AppModel.self) private var model: AppModel?
     @State private var image: CGImageBox?
 
     var body: some View {
@@ -218,7 +236,7 @@ struct BoxArtView: View {
     }
 
     private func load() async {
-        guard let media = model.media(for: game) else { return }
+        guard let model, let media = model.media(for: game) else { return }
         let cache = model.thumbnails
         guard let file = await media.firstImage(for: game) else {
             image = nil
@@ -273,9 +291,30 @@ struct ScanlineOverlay: View {
     }
 }
 
+/// Reports where the selected tile is, so Control-Return can open its menu.
+private struct SelectedTileReporter: View {
+    let gameID: String
+    let model: AppModel
+
+    var body: some View {
+        Color.clear
+            .onGeometryChange(for: CGRect.self) {
+                $0.frame(in: .global)
+            } action: {
+                model.selectedTileFrame = (gameID, $0)
+            }
+            .onDisappear {
+                if model.selectedTileFrame?.id == gameID { model.selectedTileFrame = nil }
+            }
+    }
+}
+
 struct GameListView: View {
     let games: [Game]
     @Environment(AppModel.self) private var model
+    @FocusState private var focused: Bool
+    @State private var frame: CGRect = .zero
+    @State private var clickMonitor: Any?
 
     var body: some View {
         Table(games, selection: selection) {
@@ -318,6 +357,22 @@ struct GameListView: View {
             }
             .width(52)
         }
+        // Take the keyboard on appearing, as the grid does, so the arrow
+        // keys move in the list and not in the sidebar.
+        .focused($focused)
+        .onAppear {
+            focused = true
+            startClickMonitor()
+        }
+        .onDisappear {
+            if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
+            clickMonitor = nil
+        }
+        .onGeometryChange(for: CGRect.self) {
+            $0.frame(in: .global)
+        } action: {
+            frame = $0
+        }
         .contextMenu(forSelectionType: String.self) { ids in
             if let id = ids.first, let game = model.library?.game(id: id) {
                 GameContextMenu(game: game)
@@ -350,6 +405,23 @@ struct GameListView: View {
 
     private var selection: Binding<String?> {
         Binding(get: { model.selectedGameID }, set: { model.selectedGameID = $0 })
+    }
+
+    /// A click on a row does not take the keyboard back from the sidebar,
+    /// not even on another row, so the arrow keys keep moving the sidebar.
+    /// Watch clicks in the window and take focus when one lands in the list.
+    private func startClickMonitor() {
+        guard clickMonitor == nil else { return }
+        clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+            MainActor.assumeIsolated {
+                guard let content = event.window?.contentView, event.window === NSApp.mainWindow else { return }
+                // SwiftUI's global space has its origin at the top left of the content view.
+                let point = content.convert(event.locationInWindow, from: nil)
+                let global = content.isFlipped ? point : CGPoint(x: point.x, y: content.bounds.height - point.y)
+                if frame.contains(global) { focused = true }
+            }
+            return event
+        }
     }
 }
 

@@ -10,6 +10,7 @@ The library can be browsed without the mouse. Click a game once, or press Tab un
 | Home, End | First or last game |
 | Page Up, Page Down | Jump four rows |
 | Return | Play the game, or Install when it is not installed yet |
+| Control-Return | Open the selected game's context menu, as a right-click does |
 | Space | Quick Look the image or video shown in the inspector |
 | Option-Left, Option-Right | Previous or next image |
 | Command-Y | Quick Look the current image or video |

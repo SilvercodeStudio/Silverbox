@@ -23,6 +23,8 @@ enum KeyPress {
         static let space = Key(code: 49, characters: " ")
         static let d = Key(code: 2, characters: "d")
         static let y = Key(code: 16, characters: "y")
+        static let one = Key(code: 18, characters: "1")
+        static let two = Key(code: 19, characters: "2")
 
         init(code: UInt16, characters: String) {
             self.code = code
@@ -52,7 +54,7 @@ enum KeyPress {
             let keys: [String: Key] = [
                 "up": .up, "down": .down, "left": .left, "right": .right, "home": .home, "end": .end,
                 "pageup": .pageUp, "pagedown": .pageDown, "return": .return, "enter": .return, "escape": .escape,
-                "esc": .escape, "space": .space, "d": .d, "y": .y,
+                "esc": .escape, "space": .space, "d": .d, "y": .y, "1": .one, "2": .two,
             ]
             return keys[name].map { ($0, modifiers) }
         }
@@ -80,6 +82,8 @@ enum KeyPress {
             {
                 continue
             }
+            // Event monitors only see queued events, so Control-Return is checked here.
+            if type == .keyDown, ContextMenuKey.handle(event) { continue }
             // Through the app, so menu key equivalents are matched as well.
             NSApp.sendEvent(event)
         }

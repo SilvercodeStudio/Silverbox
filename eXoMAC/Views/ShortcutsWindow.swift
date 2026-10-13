@@ -16,6 +16,7 @@ enum ShortcutReference {
         Entry(keys: "Home, End", action: "First or last game"),
         Entry(keys: "Page Up, Page Down", action: "Jump four rows"),
         Entry(keys: "↩", action: "Play, or Install"),
+        Entry(keys: "⌃↩", action: "Open the game's context menu"),
         Entry(keys: "⌥← ⌥→", action: "Previous or next image"),
         Entry(keys: "Space, ⌘Y", action: "Quick Look the current image or video"),
         Entry(keys: "⇧⌘Y", action: "Quick Look the manual"),

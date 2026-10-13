@@ -80,6 +80,13 @@ final class AppModel {
 
     /// Columns in the game grid, reported by the grid view for arrow keys.
     var gridColumns = 1
+    /// Where the grid and its selected tile are, in SwiftUI's global
+    /// space, and whether the grid has focus: for Control-Return.
+    @ObservationIgnored var gridFocused = false
+    @ObservationIgnored var gridFrame: CGRect?
+    @ObservationIgnored var selectedTileFrame: (id: String, frame: CGRect)?
+    /// Bumped to make the grid scroll the selected tile into view.
+    var revealSelectionRequest = 0
     /// The selected game's screenshots and videos, shown by the media gallery.
     var galleryItems: [GameMediaItem] = []
     var galleryIndex = 0
@@ -151,6 +158,7 @@ final class AppModel {
             self?.sessionEnded(session)
         }
         gamepad.model = self
+        ContextMenuKey.install(for: self)
         let center = NotificationCenter.default
         center.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) {
             [weak self] _ in
