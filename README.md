@@ -41,9 +41,9 @@ use them.
 | eXoScummVM | [ScummVM](https://www.scummvm.org) 2026.4 or later | Every game. Five games use engines that ScummVM leaves out of its release builds (In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden, Ultima I); set a [daily build](https://buildbot.scummvm.org) as the second ScummVM in Settings to play them. |
 | eXoAppleIIGS | [GSplus](https://github.com/digarok/gsplus) 1.38 or later | Most games. *Planned.* |
 | eXoAppleIIGS | [MAME](https://www.mamedev.org) (`brew install mame`) | The 74 games eXo runs in MAME. Needs an `apple2gs` ROM set that matches your MAME version; eXo's set is for MAME 0.245. *Planned.* |
-| eXoIF | DOSBox Staging or DOSBox-X | The MS-DOS versions of the games. *Planned.* |
+| eXoIF | DOSBox Staging or DOSBox-X | The MS-DOS versions of the games. |
 | eXoIF | [RetroArch](https://www.retroarch.com) cores | C64 (VICE), ZX Spectrum (Fuse), Apple II (AppleWin), Amiga (PUAE), Atari 8-bit and ST, MSX. *Planned.* |
-| eXoIF | A story-file interpreter, such as [Spatterlight](https://ccxvii.net/spatterlight/) or ScummVM's Glk engine | Infocom and other text adventures that eXo plays in WinFrotz, Gargoyle or Lectrote. *Planned.* Versions that need Windows programs or mainframe emulators are not supported. |
+| eXoIF | [Spatterlight](https://ccxvii.net/spatterlight/) | Infocom and other story files that eXo plays in WinFrotz, Lectrote, Gargoyle and similar interpreters. Versions that need Windows programs, MAME or mainframe emulators are not supported. |
 | LaunchBox libraries | RetroArch, [Dolphin](https://dolphin-emu.org), MAME or [Mednafen](https://mednafen.github.io) | Console, computer and arcade platforms. Settings › Emulators assigns one per platform, following the library's `Emulators.xml` by default. |
 
 ## Build
@@ -107,11 +107,12 @@ does on Windows, is available in Settings.
 - ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
   XML beside them, plus single titles configured by hand.
 - More eXo packs. Setup and installing work for eXoDemoScene, eXoScummVM,
-  eXoAppleIIGS and eXoIF; eXoDemoScene and eXoScummVM also launch. Still to
-  do: GSplus configs for eXoAppleIIGS, and eXoIF in stages (DOSBox versions,
-  RetroArch cores, a story-file interpreter). Later: MAME for the
-  eXoAppleIIGS games eXo runs in it, the eXoScummVM hint files (UHS), and
-  eXoWin3x.
+  eXoAppleIIGS and eXoIF; eXoDemoScene and eXoScummVM launch, and eXoIF
+  launches its story-file and MS-DOS versions (about 520 of 2,331 games).
+  Still to do: GSplus configs for eXoAppleIIGS, and RetroArch cores for the
+  eXoIF versions for 8-bit computers (C64, ZX Spectrum, Apple II and others).
+  Later: MAME for the eXoAppleIIGS games eXo runs in it, the eXoScummVM hint
+  files (UHS), and eXoWin3x.
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
 - Later: BitTorrent downloads of the eXoDOS packs, and metadata and media

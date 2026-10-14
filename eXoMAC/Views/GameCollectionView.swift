@@ -433,7 +433,8 @@ struct GameContextMenu: View {
     var body: some View {
         let installed = model.isInstalled(game)
         let variants =
-            (game.isDOSGame || game.launchKind == .scummVM) && installed ? model.launchVariants(for: game) : []
+            (game.isDOSGame || game.launchKind == .scummVM || game.launchKind == .interactiveFiction) && installed
+            ? model.launchVariants(for: game) : []
         if game.isEXoGame {
             if installed {
                 Button("Play") { model.play(game) }

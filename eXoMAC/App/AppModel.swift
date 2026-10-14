@@ -520,6 +520,10 @@ final class AppModel {
 
     func emulatorKind(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x || game.launchKind == .scummVM { return defaultEmulatorKind(for: game) }
+        if game.launchKind == .interactiveFiction {
+            let variants = launchVariants(for: game)
+            return ifEmulatorKind(for: game, variant: preferredVariant(for: game, in: variants))
+        }
         if let override = userState.state(for: game.launchBoxID).emulatorOverride { return override }
         return defaultEmulatorKind(for: game)
     }
@@ -566,7 +570,18 @@ final class AppModel {
         {
             return variant
         }
-        return variants.first { !$0.needsWindowsHelper } ?? variants.first
+        // The best version that runs here, in the collection's order among equals.
+        let playable = variants.enumerated().filter { $0.element.isPlayable }
+        return playable.min { ($0.element.preference, $0.offset) < ($1.element.preference, $1.offset) }?.element
+            ?? variants.first
+    }
+
+    /// The emulator an eXoIF version runs in: DOSBox for MS-DOS versions,
+    /// Spatterlight for story files.
+    func ifEmulatorKind(for game: Game, variant: LaunchVariant?) -> EmulatorKind {
+        guard let snapshot = snapshot(for: game) else { return .spatterlight }
+        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs)
+            .ifRoute(for: game, variant: variant)?.emulator ?? .spatterlight
     }
 
     /// Plays the game: opens non-game items, offers installation, shows the
@@ -574,7 +589,7 @@ final class AppModel {
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
         switch game.launchKind {
-        case .dosBox, .windows9x, .scummVM: break
+        case .dosBox, .windows9x, .scummVM, .interactiveFiction: break
         case .emulator:
             launchEmulated(game)
             return
@@ -627,6 +642,8 @@ final class AppModel {
         choices: LaunchChoices = LaunchChoices()
     ) {
         guard let snapshot = snapshot(for: game) else { return }
+        // An eXoIF version decides its own emulator.
+        let kind = game.launchKind == .interactiveFiction ? ifEmulatorKind(for: game, variant: variant) : kind
         let installation =
             kind.isScummVM ? scummVMInstallation(for: game, variant: variant) : settings.emulatorInstallation(kind)
         guard let emulator = installation, emulator.exists else {

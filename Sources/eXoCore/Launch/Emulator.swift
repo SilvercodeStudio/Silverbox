@@ -15,6 +15,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
     /// A second ScummVM, such as a daily build, for games whose engine the
     /// release build leaves out.
     case scummVMDaily
+    case spatterlight
 
     public var id: String { rawValue }
 
@@ -37,6 +38,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .box86: return "86Box"
         case .scummVM: return "ScummVM"
         case .scummVMDaily: return "ScummVM daily build"
+        case .spatterlight: return "Spatterlight"
         }
     }
 
@@ -51,6 +53,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .mednafen: return "mednafen"
         case .box86: return "86Box"
         case .scummVM, .scummVMDaily: return "scummvm"
+        case .spatterlight: return "Spatterlight"
         }
     }
 
@@ -68,6 +71,9 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .scummVM: return "Runs eXoScummVM games: LucasArts, Sierra and many other adventures."
         case .scummVMDaily:
             return "Runs the eXoScummVM games whose engine the release build of ScummVM leaves out."
+        case .spatterlight:
+            return
+                "Plays eXoIF text adventures: Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls and more."
         }
     }
 
@@ -82,6 +88,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .box86: return "https://86box.net"
         case .scummVM: return "https://www.scummvm.org"
         case .scummVMDaily: return "https://buildbot.scummvm.org"
+        case .spatterlight: return "https://ccxvii.net/spatterlight/"
         }
     }
 }
@@ -214,6 +221,11 @@ nonisolated public enum EmulatorLocator {
         case .scummVMDaily:
             // A daily build is a second ScummVM.app; it is chosen in Settings.
             break
+        case .spatterlight:
+            urls += [
+                URL(fileURLWithPath: "/Applications/Spatterlight.app/Contents/MacOS/Spatterlight"),
+                home.appendingPathComponent("Applications/Spatterlight.app/Contents/MacOS/Spatterlight"),
+            ]
         }
         return urls
     }
@@ -235,7 +247,7 @@ nonisolated public enum EmulatorCapabilities {
         switch installation.kind {
         case .dosboxX:
             return true
-        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight:
             return false
         case .dosboxStaging:
             let fm = FileManager.default

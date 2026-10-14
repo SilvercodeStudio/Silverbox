@@ -24,6 +24,10 @@ eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for ever
 
 Five games need engines that ScummVM's release builds leave out until they are finished: In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden and Ultima I. Choose a daily build from https://buildbot.scummvm.org as "ScummVM daily build" in Settings › Emulators; it is used only for games the release build cannot run.
 
+## Spatterlight and DOSBox for eXoIF games
+
+eXo's launcher for interactive fiction picks an emulator by the name of each version's folder (`eXo/util/launch_if.bat` holds the table) and the file to run in it: the only file in the folder, else its `dosbox.conf`, else the name in `launch.file`. Autoexec.Mac reads the same table. Versions eXo plays in WinFrotz, Lectrote, Gargoyle, Glulxe, Hugor, QTads, Level9, Magnetic or Adrift open in **Spatterlight** instead; when two of them hold the same story file, the list shows it once. MS-DOS versions run in **DOSBox Staging**, or in **DOSBox-X** when eXo's config is a `dosbox-x.conf`. Versions for other computers, mainframes and Windows programs are not supported yet.
+
 ## How a game is configured
 
 Autoexec.Mac reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.

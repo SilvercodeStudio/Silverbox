@@ -126,8 +126,7 @@ Makefile).
   the DOSBox packs (eXoDOS, eXoDemoScene), each with its own build index
   (`dosbox.txt`, `demoscn.txt`); `isEXoGame` is for installing. Folders that
   differ per pack go through `gamesDirectory(for:)`, `overlayDirectory(for:)`
-  and `dosboxIndex(for:)`. eXoAppleIIGS and eXoIF games install but do not
-  launch yet. Each pack's `Setup <pack>.bat` entry is hidden
+  and `dosboxIndex(for:)`. eXoAppleIIGS games install but do not launch yet. Each pack's `Setup <pack>.bat` entry is hidden
   (`isEXoSetupScript`). The sidebar's "eXo Packs" section (`LibraryScope.pack`)
   appears when more than one pack is loaded.
 - eXoWin9x. `launchKind == .windows9x`. `LaunchPlanner.planWindows9x`
@@ -168,6 +167,16 @@ Makefile).
   defines, such as `kq6-cd`), saves in `Saves/ScummVM`. `.scummVMDaily` is an
   optional second ScummVM for engines the release build lacks
   (`AppModel+ScummVM` checks `--list-engines`).
+- eXoIF. `launchKind == .interactiveFiction`. `IFLaunch.swift` follows eXo's
+  `launch_if.bat`: versions are the folders in the installed game (a folder
+  with `menu.txt` and no `ignoremenu.exo` gives sub-versions); the file to
+  run is the only file, else `dosbox.conf`/`dosbox-x.conf`, else
+  `launch.file`; `IFSystemTable` reads the folder-name-to-emulator table from
+  `launch_if.bat` itself. `IFRoute`: MS-DOS versions go through
+  `planDOSBox`, interpreter versions (WinFrotz, Lectrote, Gargoyle and the
+  like) open in Spatterlight with `open -W -a` (it ignores files passed as
+  arguments), everything else is `unsupported` (`LaunchVariant.unsupportedReason`).
+  The default version is the best `preference`: Spatterlight, then DOS.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the

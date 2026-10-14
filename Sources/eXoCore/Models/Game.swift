@@ -258,6 +258,7 @@ nonisolated extension Game {
         if isDOSGame { return .dosBox }
         if eXoPack == .win9x { return .windows9x }
         if eXoPack == .scummVM { return .scummVM }
+        if eXoPack == .interactiveFiction { return .interactiveFiction }
         let path = applicationPath.trimmingCharacters(in: .whitespaces)
         if path.isEmpty { return .windowsProgram }
         if path.range(of: "://") != nil { return .link }
@@ -323,4 +324,6 @@ nonisolated public enum GameLaunchKind: Sendable, Hashable {
     case video
     /// An eXoScummVM game, run in ScummVM with eXo's settings for it.
     case scummVM
+    /// An eXoIF game: each version runs in DOSBox, Spatterlight or not at all.
+    case interactiveFiction
 }

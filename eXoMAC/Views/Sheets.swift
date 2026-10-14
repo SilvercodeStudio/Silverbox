@@ -152,7 +152,7 @@ struct GameInfoSheet: View {
                                 Text("First available").tag(String?.none)
                                 ForEach(variants) { variant in
                                     Text(
-                                        variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : "")
+                                        variant.titleWithNote
                                     ).tag(String?.some(variant.id))
                                 }
                             }
@@ -360,6 +360,11 @@ struct LaunchOptionsSheet: View {
     }
 
     private var isScummVM: Bool { pending.game.launchKind == .scummVM }
+    private var isIF: Bool { pending.game.launchKind == .interactiveFiction }
+    /// The emulator that will run: an eXoIF version decides its own.
+    private var effectiveEmulator: EmulatorKind {
+        isIF ? model.ifEmulatorKind(for: pending.game, variant: selectedVariant) : emulator
+    }
     private var selectedVariant: LaunchVariant? { pending.variants.first { $0.id == variantID } }
 
     var body: some View {
@@ -392,8 +397,7 @@ struct LaunchOptionsSheet: View {
                     Section("Version") {
                         Picker("Play", selection: $variantID) {
                             ForEach(pending.variants) { variant in
-                                Text(variant.title + (variant.needsWindowsHelper ? " (needs a Windows helper)" : ""))
-                                    .tag(String?.some(variant.id))
+                                Text(variant.titleWithNote).tag(String?.some(variant.id))
                             }
                         }
                         .pickerStyle(.radioGroup)
@@ -407,13 +411,22 @@ struct LaunchOptionsSheet: View {
                     }
                 }
                 if isScummVM, let variant = selectedVariant { scummVMChoices(variant) }
-                Section("Display") {
-                    Toggle("Full screen", isOn: $options.fullscreen)
-                    if emulator != .box86 { displayOptions }
+                // Spatterlight keeps its own window and display settings.
+                if !(isIF && effectiveEmulator == .spatterlight) {
+                    Section("Display") {
+                        Toggle("Full screen", isOn: $options.fullscreen)
+                        if emulator != .box86 { displayOptions }
+                    }
                 }
                 Section("Emulator") {
                     if game.launchKind == .windows9x {
                         LabeledContent("Emulator") { Text("Windows 98 in \(emulator.displayName)") }
+                    } else if isIF {
+                        LabeledContent("Emulator") {
+                            Text(
+                                selectedVariant?.isPlayable == false ? "None on the Mac" : effectiveEmulator.displayName
+                            )
+                        }
                     } else if isScummVM {
                         LabeledContent("Emulator") {
                             Text(
@@ -470,8 +483,7 @@ struct LaunchOptionsSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(
-                    !pending.configureOnly && pending.variants.first { $0.id == variantID }?.needsWindowsHelper == true)
+                .disabled(!pending.configureOnly && selectedVariant?.isPlayable == false)
             }
             .padding(16)
         }
@@ -527,7 +539,7 @@ struct LaunchOptionsSheet: View {
         }
         if isScummVM {
             EmptyView()
-        } else if emulator == .dosboxStaging {
+        } else if effectiveEmulator == .dosboxStaging {
             Picker("CRT shader", selection: $options.shader) {
                 ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
             }
@@ -543,6 +555,8 @@ struct LaunchOptionsSheet: View {
         let runs: String?
         if pending.game.launchKind == .windows9x {
             runs = "Windows 98 starts first, then the game."
+        } else if isIF {
+            runs = "Text adventures open in Spatterlight; MS-DOS versions run in DOSBox."
         } else if isScummVM {
             runs = model.scummVMVersion(for: pending.game, variants: pending.variants, variant: selectedVariant).map {
                 "\(pack) runs this game in ScummVM \($0)."
@@ -554,5 +568,14 @@ struct LaunchOptionsSheet: View {
             return "These choices are saved for this game and used each time it starts." + (runs.map { " " + $0 } ?? "")
         }
         return runs ?? "Launch options"
+    }
+}
+
+extension LaunchVariant {
+    /// The title, and why the version cannot be played when it cannot.
+    var titleWithNote: String {
+        if needsWindowsHelper { return title + " (needs a Windows helper)" }
+        if unsupportedReason != nil { return title + " (not supported on the Mac)" }
+        return title
     }
 }

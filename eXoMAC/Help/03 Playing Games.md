@@ -37,6 +37,12 @@ Window size works as in eXo: Small, Medium and Large scale the picture two, four
 
 The games use eXo's ScummVM settings, kept in the local data folder (`ScummVM/scummvm.ini`) apart from your own ScummVM settings. Saved games go to `Saves/ScummVM`, shared by every collection, as in eXo. A few games need ScummVM engines that its release builds leave out; to play them, choose a daily build of ScummVM in Settings › Emulators.
 
+## Interactive fiction
+
+eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for other computers are marked "not supported on the Mac" for now. Unless you pick one, Play starts a Spatterlight version, else a DOS version.
+
+Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight ends the game for Autoexec.Mac.
+
 ## Uninstalling
 
 Choose Uninstall from the game's context menu. Autoexec.Mac offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.

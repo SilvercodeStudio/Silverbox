@@ -120,7 +120,7 @@ nonisolated public struct RomLaunchPlanner: Sendable {
             arguments += extra + gameArguments
         case .mednafen:
             arguments = ["-video.fs", options.fullscreen ? "1" : "0"] + extra + gameArguments + [file.path]
-        case .dosboxStaging, .dosboxX, .box86, .scummVM, .scummVMDaily:
+        case .dosboxStaging, .dosboxX, .box86, .scummVM, .scummVMDaily, .spatterlight:
             throw RomLaunchError.notAnEmulatedGame
         }
 
@@ -138,7 +138,7 @@ nonisolated public struct RomLaunchPlanner: Sendable {
         switch kind {
         case .retroArch, .mame, .mednafen: return ["rar"]
         case .dolphin: return ["rar", "zip", "7z"]
-        case .dosboxStaging, .dosboxX, .box86, .scummVM, .scummVMDaily: return []
+        case .dosboxStaging, .dosboxX, .box86, .scummVM, .scummVMDaily, .spatterlight: return []
         }
     }
 }

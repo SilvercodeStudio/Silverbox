@@ -11,16 +11,28 @@ nonisolated public struct LaunchVariant: Identifiable, Hashable, Sendable {
     public var needsWindowsHelper: Bool
 
     /// The config's file name for DOSBox games; the folder path inside the
-    /// game for ScummVM games.
+    /// game for ScummVM and eXoIF games.
     public var id: String
+    /// Why the version cannot start on the Mac, when it cannot.
+    public var unsupportedReason: String?
+    /// Lower is better: the default is the best supported version.
+    public var preference: Int
 
-    /// For ScummVM games, `configURL` is the variant's folder.
-    public init(title: String, configURL: URL, needsWindowsHelper: Bool = false, id: String? = nil) {
+    /// For ScummVM and eXoIF games, `configURL` is the version's folder.
+    public init(
+        title: String, configURL: URL, needsWindowsHelper: Bool = false, id: String? = nil,
+        unsupportedReason: String? = nil, preference: Int = 0
+    ) {
         self.title = title
         self.configURL = configURL
         self.needsWindowsHelper = needsWindowsHelper
         self.id = id ?? configURL.lastPathComponent
+        self.unsupportedReason = unsupportedReason
+        self.preference = preference
     }
+
+    /// True when the version can start on the Mac.
+    public var isPlayable: Bool { !needsWindowsHelper && unsupportedReason == nil }
 }
 
 nonisolated public enum LaunchVariantDetector {

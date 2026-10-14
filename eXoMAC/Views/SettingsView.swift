@@ -331,6 +331,13 @@ struct EmulatorSettingsView: View {
                 .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .scummVMDaily, picking: $picking)
             }
+            Section("eXoIF games") {
+                Text(
+                    "Each eXoIF game comes in versions for several systems. Text-adventure story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; MS-DOS versions run in DOSBox. Other systems are not supported yet."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+                EmulatorPathRow(kind: .spatterlight, picking: $picking)
+            }
             Section("Consoles, computers and arcade") {
                 Text(
                     "Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here."
