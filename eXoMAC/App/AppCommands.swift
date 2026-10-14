@@ -36,10 +36,10 @@ struct AppCommands: Commands {
                 .keyboardShortcut(.return, modifiers: .command)
                 .disabled(model.selectedGame == nil)
             Button("Install…") { if let game = model.selectedGame { model.pendingInstall = game } }
-                .disabled(model.selectedGame.map { !$0.isDOSGame || model.isInstalled($0) } ?? true)
+                .disabled(model.selectedGame.map { !$0.isEXoGame || model.isInstalled($0) } ?? true)
             Button("Uninstall…") { if let game = model.selectedGame { model.pendingUninstall = game } }
                 .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(model.selectedGame.map { !$0.isDOSGame || !model.isInstalled($0) } ?? true)
+                .disabled(model.selectedGame.map { !$0.isEXoGame || !model.isInstalled($0) } ?? true)
             Button("Configure…") { if let game = model.selectedGame { model.configure(game) } }
                 .keyboardShortcut(.return, modifiers: [.command, .shift])
                 .disabled(model.selectedGame == nil)

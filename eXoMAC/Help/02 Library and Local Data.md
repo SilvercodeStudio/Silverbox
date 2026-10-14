@@ -18,7 +18,7 @@ Everything bulky that Autoexec.Mac writes goes to one folder. By default it is `
 - `Soundtracks` — albums unpacked from the library's soundtrack zips.
 - `Saves` — backups of saved games and changed settings, made when you uninstall a game.
 - `Overrides` — your edited copies of DOSBox configurations.
-- `Overlay` — writable folders for games that are already unpacked inside a read-only library.
+- `Overlay` — writable folders and disk copies for games that are already unpacked inside a read-only library, and the Windows 98 disks that eXoWin9x games write to.
 - `Launch` and `Logs` — the configurations Autoexec.Mac generates for each launch, and the emulator's output.
 - `MediaIndex` and `LibraryCache` — caches that Rescan Library rebuilds.
 
@@ -26,7 +26,7 @@ Favorites, play history and the settings stay in `~/Library/Application Support/
 
 ## Installing in place
 
-If your eXoDOS folder is writable and you prefer the Windows layout, set Settings › Library › "Install games to" to the eXoDOS folder. Games then unpack into `eXo/eXoDOS`, where LaunchBox on Windows would also find them.
+If your eXoDOS folder is writable and you prefer the Windows layout, set Settings › Library › "Install games to" to the eXoDOS folder. Games then unpack into `eXo/eXoDOS` (eXoWin9x games into `eXo/eXoWin9x/<year>`), where LaunchBox on Windows would also find them.
 
 ## Rescanning
 

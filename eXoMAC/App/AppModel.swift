@@ -499,12 +499,15 @@ final class AppModel {
     // MARK: - Launching
 
     func emulatorKind(for game: Game) -> EmulatorKind {
+        if game.eXoPack == .win9x { return defaultEmulatorKind(for: game) }
         if let override = userState.state(for: game.launchBoxID).emulatorOverride { return override }
         return defaultEmulatorKind(for: game)
     }
 
     /// The emulator the settings policy picks, ignoring per-game overrides.
+    /// eXoWin9x games boot Windows 98 in DOSBox-X, or in 86Box where eXo does.
     func defaultEmulatorKind(for game: Game) -> EmulatorKind {
+        if game.eXoPack == .win9x { return needs86Box(game) ? .box86 : .dosboxX }
         switch settings.emulatorPolicy {
         case .alwaysStaging: return .dosboxStaging
         case .alwaysDOSBoxX: return .dosboxX
@@ -513,6 +516,12 @@ final class AppModel {
             return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).recommendedEmulator(
                 for: game)
         }
+    }
+
+    /// True for the eXoWin9x games that eXo runs in 86Box instead of DOSBox-X.
+    func needs86Box(_ game: Game) -> Bool {
+        guard game.launchKind == .windows9x, let snapshot = snapshot(for: game) else { return false }
+        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).needs86Box(game)
     }
 
     func launchVariants(for game: Game) -> [LaunchVariant] {
@@ -544,7 +553,7 @@ final class AppModel {
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
         switch game.launchKind {
-        case .dosBox: break
+        case .dosBox, .windows9x: break
         case .emulator:
             launchEmulated(game)
             return
@@ -583,7 +592,7 @@ final class AppModel {
     /// Opens the launch options dialog to save choices for a game without
     /// starting it, like eXoDOS's Configure menu. Works before installation.
     func configure(_ game: Game) {
-        guard game.isDOSGame, snapshot(for: game)?.root.hasEXoDOS == true else {
+        guard game.isEXoGame, snapshot(for: game)?.root.hasEXoDOS == true else {
             pendingInfoGame = game
             return
         }
@@ -787,15 +796,15 @@ final class AppModel {
     /// Re-reads the installed game folders of one collection without reparsing the XML.
     func refreshInstalledFolders(for game: Game) async {
         guard let library, let snapshot = library.snapshot(for: game) else { return }
-        let gamesDirectory = snapshot.root.gamesDirectory
-        let localGames = snapshot.localStore?.gamesDirectory
-        let (names, local) = await Task.detached {
+        let eXoDirectory = snapshot.root.eXoDirectory
+        let localGames = snapshot.localStore?.gamesRoot
+        let (paths, local) = await Task.detached {
             (
-                LibraryLoader.installedFolderNames(in: gamesDirectory),
-                localGames.map { LibraryLoader.installedFolderNames(in: $0) } ?? []
+                LibraryLoader.installedGamePaths(in: eXoDirectory),
+                localGames.map { LibraryLoader.installedGamePaths(in: $0) } ?? []
             )
         }.value
-        let updated = snapshot.replacingInstalledFolders(library: names, local: local)
+        let updated = snapshot.replacingInstalledGames(library: paths, local: local)
         self.library = library.replacing(updated)
         media[updated.collection.id] = MediaCatalog(
             snapshot: updated, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))

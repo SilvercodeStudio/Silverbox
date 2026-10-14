@@ -15,7 +15,7 @@ struct LibraryLoaderTests {
         #expect(snapshot.alternateNames[FixtureLibrary.ultimaID]?.count == 2)
         #expect(snapshot.additionalApplications[FixtureLibrary.ultimaID]?.first?.name == "eXoDOS Updater")
         #expect(snapshot.dosboxIndex.count == 7)
-        #expect(snapshot.installedFolderNames == ["ultima5"])
+        #expect(snapshot.installedGamePaths == ["eXoDOS/ultima5"])
     }
 
     @Test func buildsSidebarTree() throws {
@@ -98,7 +98,7 @@ struct LibraryQueryTests {
         let snapshot = LibrarySnapshot(
             root: LibraryRoot(url: URL(fileURLWithPath: "/lib")), games: [], platforms: [], categories: [],
             platformFolders: [], playlists: [], parents: [], alternateNames: names, additionalApplications: [],
-            dosboxIndex: DOSBoxIndex(), installedFolderNames: [])
+            dosboxIndex: DOSBoxIndex(), installedGamePaths: [])
         #expect(snapshot.alternateNames["g"]?.map(\.region) == ["Origin release", "Japan"])
     }
 

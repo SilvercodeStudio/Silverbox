@@ -6,6 +6,7 @@ The games, media and emulators are not part of Autoexec.Mac. You need:
 
 - An eXoDOS collection (the full set, or the Lite set with games you have downloaded).
 - DOSBox Staging, and optionally DOSBox-X.
+- For eXoWin9x games: DOSBox-X, and 86Box for the games that need it.
 
 This is version 0.1. Expect rough edges, and please report what you find.
 
@@ -13,4 +14,4 @@ This is version 0.1. Expect rough edges, and please report what you find.
 
 eXoDOS and eXoWin9x are projects of the eXo team. Learn more and support them at https://www.retro-exo.com.
 
-Emulation is provided by DOSBox Staging (https://www.dosbox-staging.org) and DOSBox-X (https://dosbox-x.com). Game metadata and artwork come from the collections' LaunchBox data.
+Emulation is provided by DOSBox Staging (https://www.dosbox-staging.org), DOSBox-X (https://dosbox-x.com) and 86Box (https://86box.net). Game metadata and artwork come from the collections' LaunchBox data.

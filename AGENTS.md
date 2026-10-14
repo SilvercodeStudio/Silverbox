@@ -99,19 +99,37 @@ Makefile).
   goes to the local data folder (`LocalStore` plus `AppPaths.dataRoot`, default
   `~/Library/Application Support/Autoexec.Mac/`, movable to another drive in
   Settings; `user-library.json` and the settings always stay in Application
-  Support): `Games/eXoDOS/` (unpacked games),
+  Support): `Games/` (unpacked games; mirrors `eXo/`, so `Games/eXoDOS/<folder>`
+  and `Games/eXoWin9x/<year>/<folder>`),
   `Saves/` (backups of changed files made on uninstall), `Overrides/<gameID>/`
-  (edited configs), `Overlay/eXoDOS/` (writable overlay mounts for games
-  unpacked inside a read-only library), `Soundtracks/` (albums unpacked from
-  the library's zips), `Launch/`, `Logs/`, `MediaIndex/`, `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
+  (edited configs), `Overlay/` (also mirrors `eXo/`: `eXoDOS/` overlay mounts
+  for games unpacked inside a read-only library, copies of eXoWin9x game disks,
+  and the Windows 98 differencing disks under `emulators/`), `Soundtracks/`
+  (albums unpacked from the library's zips), `Launch/`, `Logs/`, `MediaIndex/`,
+  `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
 - Emulators. `EmulatorKind` covers DOSBox Staging and DOSBox-X for eXoDOS
-  games plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
+  games, 86Box (`.box86`) for some eXoWin9x games, plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
   arcade platforms (`Game.launchKind` tells them apart). Each platform's
   emulator comes from `EmulatorAssignmentResolver`: the user's choice in
   Settings, else the library's `Emulators.xml` mapped to the Mac emulators
   that are installed (`RetroArchSetup` finds cores through `retroarch.cfg`,
   with aliases for renamed cores). `RomLaunchPlanner` builds the command
   line. Never call another front-end such as OpenEmu.
+- eXo packs. `EXoPack` names the projects whose games install from zips:
+  eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`) and eXoWin9x
+  (`!win9x/<year>/<folder>`, unpacked to `eXoWin9x/<year>/<folder>`).
+  `Game.installPath` is the unpacked folder relative to `eXo/`; installed-game
+  sets in `LibrarySnapshot` use it. `isDOSGame` stays for DOSBox-specific
+  code; `isEXoGame` is for installing.
+- eXoWin9x. `launchKind == .windows9x`. `LaunchPlanner.planWindows9x`
+  (`Windows9xLaunch.swift`) reads `Play.conf`: DOSBox-X boots Windows 98 from
+  a differencing disk (`vhdmake`) over `eXo/emulators/dosbox/x98/parent/*.vhd`,
+  with the game's VHD as D: and its CDs as E:. The differencing disk goes to
+  `Overlay/emulators/dosbox/x98`; a game disk on a read-only library is copied
+  to `Overlay/` once. Games with `Network.ps1` get its Solo settings. Games
+  with only `Play.cfg` run in 86Box (`plan86Box`): the paths in it are
+  relative to `eXo/emulators/86Box98`, and `VHDDifferencingDisk` writes the
+  fresh child disk that eXo makes with `makevhd.exe`.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
@@ -168,6 +186,8 @@ Makefile).
   ```
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.
 - `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
-  games in DOSBox Staging for a few seconds and checks the emulator log.
+  games in DOSBox Staging for a few seconds and checks the emulator log, then
+  boots Windows 98 for an eXoWin9x game in DOSBox-X and one in 86Box
+  (`EXOMAC_86BOX=<executable>` when 86Box is not in /Applications).
 - Saved media indexes live in `MediaIndex/` under the local data folder;
   "Rescan Library" deletes them.

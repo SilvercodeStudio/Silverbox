@@ -159,6 +159,32 @@ struct GameInfoSheet: View {
                         }
                     }
                 }
+                if game.launchKind == .windows9x {
+                    Section("Launch") {
+                        LabeledContent("Launcher") { PathText(game.applicationPath) }
+                        if let root = game.rootFolder {
+                            let kind = model.emulatorKind(for: game)
+                            LabeledContent("\(kind.displayName) config") {
+                                PathText(root + (kind == .box86 ? "\\Play.cfg" : "\\Play.conf"))
+                            }
+                        }
+                        LabeledContent("Emulator") {
+                            Text("Windows 98 in \(model.emulatorKind(for: game).displayName)")
+                        }
+                        if let location = model.library?.installedLocation(for: game) {
+                            LabeledContent(location.isLocal ? "Installed in local data" : "Installed in library") {
+                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(
+                                    1
+                                ).truncationMode(.middle)
+                            }
+                        }
+                        if !(model.userState.state(for: game.launchBoxID).launchOverrides?.isEmpty ?? true) {
+                            LabeledContent("Remembered launch options") {
+                                Button("Forget") { model.forgetLaunchChoices(for: game) }
+                            }
+                        }
+                    }
+                }
                 if game.launchKind == .emulator {
                     let resolved = model.resolvedEmulator(for: game)
                     Section("Launch") {
@@ -190,7 +216,7 @@ struct GameInfoSheet: View {
                     Toggle("Completed", isOn: flag(\.completed, fallback: game.completed))
                     Toggle("Hidden from library", isOn: flag(\.hidden, fallback: game.hidden))
                     Toggle("Broken", isOn: flag(\.broken, fallback: game.broken))
-                    if game.isDOSGame, model.isInstalled(game) {
+                    if game.isEXoGame, model.isInstalled(game) {
                         Button("Uninstall…", role: .destructive) {
                             dismiss()
                             model.pendingUninstall = game
@@ -371,31 +397,23 @@ struct LaunchOptionsSheet: View {
                 }
                 Section("Display") {
                     Toggle("Full screen", isOn: $options.fullscreen)
-                    Picker("Window size", selection: $options.windowSize) {
-                        ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
-                    }
-                    .disabled(options.fullscreen)
-                    Picker("Aspect ratio correction", selection: $options.aspect) {
-                        ForEach(LaunchOptions.AspectMode.allCases) { Text($0.displayName).tag($0) }
-                    }
-                    if emulator == .dosboxStaging {
-                        Picker("CRT shader", selection: $options.shader) {
-                            ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
-                        }
-                    } else {
-                        Picker("Graphics filter", selection: $options.scaler) {
-                            ForEach(LaunchOptions.Scaler.allCases) { Text($0.displayName).tag($0) }
-                        }
-                    }
+                    if emulator != .box86 { displayOptions }
                 }
                 Section("Emulator") {
-                    Picker("Emulator", selection: $emulator) {
-                        ForEach(EmulatorKind.dosBox) { kind in
-                            Text(kind.displayName + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : ""))
+                    if game.launchKind == .windows9x {
+                        LabeledContent("Emulator") { Text("Windows 98 in \(emulator.displayName)") }
+                    } else {
+                        Picker("Emulator", selection: $emulator) {
+                            ForEach(EmulatorKind.dosBox) { kind in
+                                Text(
+                                    kind.displayName
+                                        + (kind == model.defaultEmulatorKind(for: game) ? " (default)" : "")
+                                )
                                 .tag(kind)
+                            }
                         }
+                        .pickerStyle(.radioGroup)
                     }
-                    .pickerStyle(.radioGroup)
                 }
                 Section {
                     if !pending.configureOnly {
@@ -451,8 +469,30 @@ struct LaunchOptionsSheet: View {
         }
     }
 
+    /// Window, aspect and filter choices; 86Box has only full screen.
+    @ViewBuilder private var displayOptions: some View {
+        Picker("Window size", selection: $options.windowSize) {
+            ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
+        }
+        .disabled(options.fullscreen)
+        Picker("Aspect ratio correction", selection: $options.aspect) {
+            ForEach(LaunchOptions.AspectMode.allCases) { Text($0.displayName).tag($0) }
+        }
+        if emulator == .dosboxStaging {
+            Picker("CRT shader", selection: $options.shader) {
+                ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
+            }
+        } else {
+            Picker("Graphics filter", selection: $options.scaler) {
+                ForEach(LaunchOptions.Scaler.allCases) { Text($0.displayName).tag($0) }
+            }
+        }
+    }
+
     private func subtitle(build: EXoDOSBuild?) -> String {
-        let runs = build.map { "eXoDOS runs this game with \($0.displayName)." }
+        let runs =
+            pending.game.launchKind == .windows9x
+            ? "Windows 98 starts first, then the game." : build.map { "eXoDOS runs this game with \($0.displayName)." }
         if pending.configureOnly {
             return "These choices are saved for this game and used each time it starts." + (runs.map { " " + $0 } ?? "")
         }

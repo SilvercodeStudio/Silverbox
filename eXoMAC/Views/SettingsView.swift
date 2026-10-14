@@ -311,6 +311,13 @@ struct EmulatorSettingsView: View {
                     }
                 }
             }
+            Section("eXoWin9x games") {
+                Text(
+                    "eXoWin9x games start Windows 98 in DOSBox-X. About thirty need a full PC with a 3dfx Voodoo card; eXo runs those in 86Box."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+                EmulatorPathRow(kind: .box86, picking: $picking)
+            }
             Section("Consoles, computers and arcade") {
                 Text(
                     "Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here."

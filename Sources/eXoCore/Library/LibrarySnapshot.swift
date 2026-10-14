@@ -17,13 +17,13 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public let dosboxIndex: DOSBoxIndex
     public let emulators: [LaunchBoxEmulator]
     public let emulatorPlatforms: [LaunchBoxEmulatorPlatform]
-    /// Names of folders directly inside `eXo/eXoDOS/`: a game whose
-    /// ``Game/gameFolderName`` is listed here is installed in the library.
-    public let installedFolderNames: Set<String>
+    /// Game folders unpacked in the library, relative to `eXo/`: a game
+    /// whose ``Game/installPath`` is listed here is installed there.
+    public let installedGamePaths: Set<String>
     /// The writable companion folder, when configured.
     public let localStore: LocalStore?
-    /// Names of game folders unpacked in the local store.
-    public let locallyInstalledFolderNames: Set<String>
+    /// Game folders unpacked in the local store, relative to its games root.
+    public let locallyInstalledGamePaths: Set<String>
     public let loadedAt: Date
 
     private let indexByID: [String: Int]
@@ -35,8 +35,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
         alternateNames: [AlternateName], additionalApplications: [AdditionalApplication],
         dosboxIndex: DOSBoxIndex, emulators: [LaunchBoxEmulator] = [],
         emulatorPlatforms: [LaunchBoxEmulatorPlatform] = [],
-        installedFolderNames: Set<String>, localStore: LocalStore? = nil,
-        locallyInstalledFolderNames: Set<String> = [], loadedAt: Date = Date()
+        installedGamePaths: Set<String>, localStore: LocalStore? = nil,
+        locallyInstalledGamePaths: Set<String> = [], loadedAt: Date = Date()
     ) {
         let resolvedCollection =
             collection
@@ -65,9 +65,9 @@ nonisolated public struct LibrarySnapshot: Sendable {
         self.dosboxIndex = dosboxIndex
         self.emulators = emulators
         self.emulatorPlatforms = emulatorPlatforms
-        self.installedFolderNames = installedFolderNames
+        self.installedGamePaths = installedGamePaths
         self.localStore = localStore
-        self.locallyInstalledFolderNames = locallyInstalledFolderNames
+        self.locallyInstalledGamePaths = locallyInstalledGamePaths
         self.loadedAt = loadedAt
         var index: [String: Int] = [:]
         index.reserveCapacity(games.count)
@@ -94,24 +94,24 @@ nonisolated public struct LibrarySnapshot: Sendable {
 
     /// True when the game's folder exists in the local store or the library.
     public func isInstalled(_ game: Game) -> Bool {
-        guard game.isDOSGame else { return true }
+        guard game.isEXoGame else { return true }
         return installedLocation(for: game) != nil
     }
 
     /// The installed game folder, local store first.
     public func installedLocation(for game: Game) -> GameLocation? {
-        guard game.isDOSGame, let folder = game.gameFolderName else { return nil }
-        if let localStore, locallyInstalledFolderNames.contains(folder) {
-            return .local(localStore.gamesDirectory.appendingPathComponent(folder, isDirectory: true))
+        guard let path = game.installPath else { return nil }
+        if let localStore, locallyInstalledGamePaths.contains(path) {
+            return .local(localStore.gamesRoot.appendingPathComponent(path, isDirectory: true))
         }
-        if installedFolderNames.contains(folder) {
-            return .library(root.gamesDirectory.appendingPathComponent(folder, isDirectory: true))
+        if installedGamePaths.contains(path) {
+            return .library(root.eXoDirectory.appendingPathComponent(path, isDirectory: true))
         }
         return nil
     }
 
-    /// A copy with fresh installed-folder sets, after installing or removing a game.
-    public func replacingInstalledFolders(library: Set<String>, local: Set<String>) -> LibrarySnapshot {
+    /// A copy with fresh installed-game sets, after installing or removing a game.
+    public func replacingInstalledGames(library: Set<String>, local: Set<String>) -> LibrarySnapshot {
         LibrarySnapshot(
             root: root, collection: collection, games: games, platforms: platforms, categories: categories,
             platformFolders: platformFolders,
@@ -119,8 +119,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
             alternateNames: alternateNames.values.flatMap { $0 },
             additionalApplications: additionalApplications.values.flatMap { $0 },
             dosboxIndex: dosboxIndex, emulators: emulators, emulatorPlatforms: emulatorPlatforms,
-            installedFolderNames: library, localStore: localStore,
-            locallyInstalledFolderNames: local, loadedAt: loadedAt)
+            installedGamePaths: library, localStore: localStore,
+            locallyInstalledGamePaths: local, loadedAt: loadedAt)
     }
 
     /// The media folder LaunchBox configured for `mediaType` on `platform`,

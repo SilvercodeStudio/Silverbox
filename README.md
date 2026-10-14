@@ -23,6 +23,8 @@ The games, media and emulators are not part of this project.
     is planned for the near future.
 - [DOSBox Staging](https://www.dosbox-staging.org) in `/Applications`, and
   optionally [DOSBox-X](https://dosbox-x.com). Both can be located in Settings.
+- For eXoWin9x: DOSBox-X, and [86Box](https://86box.net) for the thirty or so
+  games that eXo runs in it.
 - For console, computer and arcade platforms from a LaunchBox library:
   [RetroArch](https://www.retroarch.com) with the cores you need,
   [Dolphin](https://dolphin-emu.org) for GameCube and Wii,

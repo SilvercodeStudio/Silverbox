@@ -92,6 +92,18 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
                 check("eXoDOS DOSBox build index", dosboxIndexFile),
                 check("MT-32 ROMs and SoundFont", mt32Directory),
             ]
+            let win9x = eXoDirectory.appendingPathComponent(EXoPack.win9x.directoryName, isDirectory: true)
+            if fm.fileExists(atPath: win9x.path) {
+                items += [
+                    check("eXoWin9x game archives and folders", win9x),
+                    check(
+                        "Windows 98 disk images for DOSBox-X",
+                        emulatorsDirectory.appendingPathComponent("dosbox/x98/parent", isDirectory: true)),
+                    check(
+                        "86Box ROMs and Windows 98 disks",
+                        emulatorsDirectory.appendingPathComponent("86Box98", isDirectory: true)),
+                ]
+            }
         }
         return LibraryRootReport(root: self, items: items)
     }

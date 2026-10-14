@@ -86,6 +86,33 @@ struct RealLibraryTests {
             }
         }
     }
+
+    /// Every eXoWin9x entry is a Windows 9x game, and each game unpacked in
+    /// the library plans a Windows 98 boot whose disks and CDs all exist.
+    @Test func plansUnpackedWindows9xGames() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        let snapshot = try LibraryLoader(root: RealLibrary.root, localStore: localStore).load()
+        let games = snapshot.games.filter { $0.platform == "Windows 9x" && $0.applicationPath.contains("!win9x") }
+        guard !games.isEmpty else { return }
+        #expect(games.allSatisfy { $0.launchKind == .windows9x })
+
+        let emulator = try FixtureLibrary.fakeEmulator(.dosboxX, in: scratch)
+        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
+        var planned = 0
+        for game in games where snapshot.isInstalled(game) {
+            do {
+                let plan = try planner.plan(game: game, variant: nil, emulator: emulator, options: LaunchOptions())
+                let missing = plan.notes.filter { $0.hasPrefix("Could not find") }
+                #expect(missing.isEmpty, "\(game.title): \(missing)")
+                #expect(DOSBoxConfigDocument.parse(plan.configText).autoexecLines.contains { $0.hasPrefix("vhdmake") })
+                planned += 1
+            } catch LaunchPlanError.needs86Box {
+                continue
+            }
+        }
+        print("Planned \(planned) unpacked eXoWin9x games")
+    }
 }
 
 nonisolated enum RealLibrary {

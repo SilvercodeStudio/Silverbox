@@ -9,9 +9,18 @@ eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOS
 
 Settings › Emulators lets you choose where each emulator is installed, and whether to follow the eXoDOS build or always use one emulator. Each game can be overridden in its launch options or in Edit Game Info.
 
+## Windows 98 for eXoWin9x games
+
+eXoWin9x games boot Windows 98 from disk images in the collection's `eXo/emulators` folder:
+
+- **DOSBox-X** runs most of them, from each game's `Play.conf`.
+- **86Box** runs about thirty games that need a Pentium-class PC with a 3dfx Voodoo card, from each game's `Play.cfg`. It uses the ROM and CMOS files in `eXo/emulators/86Box98`.
+
+You cannot choose another emulator for these games. Get 86Box from https://86box.net and set its location in Settings › Emulators if it is not in the Applications folder.
+
 ## How a game is configured
 
-Autoexec.Mac reads the game's `dosbox.conf` from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
+Autoexec.Mac reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
 
 ## Music and MIDI
 

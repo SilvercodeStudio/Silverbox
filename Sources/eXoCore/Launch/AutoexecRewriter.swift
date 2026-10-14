@@ -185,8 +185,12 @@ nonisolated public struct AutoexecRewriter: Sendable {
             notes.append("Kept absolute Windows path \(text); it will not exist on this Mac.")
             return ResolvedPath(quoted: "\"\(posix)\"", url: nil)
         }
-        let resolved = mapped(WindowsPath.resolve(text, against: baseDirectory))
-        if FileManager.default.fileExists(atPath: resolved.path) {
+        let unmapped = WindowsPath.resolve(text, against: baseDirectory)
+        let resolved = mapped(unmapped)
+        // A mapping for this exact path names a file made at launch, such
+        // as a differencing disk, so it need not exist yet.
+        let isPlannedFile = mappings.contains { $0.from == unmapped }
+        if isPlannedFile || FileManager.default.fileExists(atPath: resolved.path) {
             return ResolvedPath(quoted: "\"\(resolved.path)\"", url: resolved)
         }
         for fallback in fallbackDirectories {

@@ -151,8 +151,8 @@ nonisolated public struct LibraryLoader: Sendable {
 
     /// Builds the snapshot, reading the installed-folder sets fresh.
     func snapshot(from payload: LibraryCache.Payload) -> LibrarySnapshot {
-        let installed = root.hasEXoDOS ? Self.installedFolderNames(in: root.gamesDirectory) : []
-        let local = localStore.map { Self.installedFolderNames(in: $0.gamesDirectory) } ?? []
+        let installed = root.hasEXoDOS ? Self.installedGamePaths(in: root.eXoDirectory) : []
+        let local = localStore.map { Self.installedGamePaths(in: $0.gamesRoot) } ?? []
         return LibrarySnapshot(
             root: root,
             collection: collection,
@@ -167,9 +167,9 @@ nonisolated public struct LibraryLoader: Sendable {
             dosboxIndex: payload.dosboxIndex,
             emulators: payload.emulators,
             emulatorPlatforms: payload.emulatorPlatforms,
-            installedFolderNames: installed,
+            installedGamePaths: installed,
             localStore: localStore,
-            locallyInstalledFolderNames: local
+            locallyInstalledGamePaths: local
         )
     }
 
@@ -199,22 +199,35 @@ nonisolated public struct LibraryLoader: Sendable {
         return playlists
     }
 
-    /// Lists the sub-folders of `eXo/eXoDOS/` (installed games), skipping `!dos`.
-    public static func installedFolderNames(in gamesDirectory: URL) -> Set<String> {
-        let fm = FileManager.default
-        guard
-            let entries = try? fm.contentsOfDirectory(
-                at: gamesDirectory, includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles])
-        else { return [] }
-        var names: Set<String> = []
-        for entry in entries {
-            let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
-            guard isDirectory else { continue }
-            let name = entry.lastPathComponent
-            if name == "!dos" || name.hasPrefix("!") { continue }
-            names.insert(name)
+    /// Lists the unpacked games under an `eXo/` folder (or the local store's
+    /// mirror of it) as paths relative to it, such as `eXoDOS/ultima5` and
+    /// `eXoWin9x/1996/A-10 Cuba (1996)`.
+    public static func installedGamePaths(in eXoDirectory: URL) -> Set<String> {
+        var paths: Set<String> = []
+        for pack in EXoPack.allCases {
+            var level = [pack.directoryName]
+            for _ in 0..<pack.installDepth {
+                level = level.flatMap { parent in
+                    subfolderNames(of: eXoDirectory.appendingPathComponent(parent, isDirectory: true))
+                        .map { parent + "/" + $0 }
+                }
+            }
+            paths.formUnion(level)
         }
-        return names
+        return paths
+    }
+
+    /// Folder names inside `directory`, skipping `!dos`, `!win9x`, `!save`
+    /// and other `!` folders.
+    private static func subfolderNames(of directory: URL) -> [String] {
+        guard
+            let entries = try? FileManager.default.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])
+        else { return [] }
+        return entries.compactMap { entry in
+            let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+            let name = entry.lastPathComponent
+            return isDirectory && !name.hasPrefix("!") ? name : nil
+        }
     }
 }

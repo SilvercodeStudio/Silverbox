@@ -141,7 +141,7 @@ struct PlayButtonRow: View {
         let albumLoaded = game.launchKind == .soundtrack && model.album.game?.id == game.id
         let albumPlaying = albumLoaded && model.album.isPlaying
         HStack(spacing: 8) {
-            if game.isDOSGame, !installed {
+            if game.isEXoGame, !installed {
                 Button {
                     model.pendingInstall = game
                 } label: {
@@ -266,6 +266,10 @@ struct MetadataGrid: View {
             if game.isDOSGame {
                 row("eXoDOS runs with", build?.displayName ?? "DOSBox")
                 row("Mac emulator", model.emulatorKind(for: game).displayName)
+            } else if game.launchKind == .windows9x {
+                let kind = model.emulatorKind(for: game)
+                row("eXoWin9x runs with", "Windows 98 in \(kind.displayName)")
+                row("Mac emulator", kind.displayName)
             } else if game.launchKind == .emulator {
                 let resolved = model.resolvedEmulator(for: game)
                 if let title = resolved.launchBoxEmulatorTitle {
@@ -312,6 +316,9 @@ struct FilesSection: View {
                 row("Launch", game.applicationPath)
                 row("Install", game.configurationPath)
                 if game.isDOSGame, let root = game.rootFolder { row("Config", root + "\\dosbox.conf") }
+                if game.launchKind == .windows9x, let root = game.rootFolder {
+                    row("Config", root + (model.needs86Box(game) ? "\\Play.cfg" : "\\Play.conf"))
+                }
                 row("Manual", game.manualPath)
                 row("Music", game.musicPath)
             }

@@ -243,6 +243,7 @@ nonisolated extension Game {
     /// viewer, or not at all.
     public var launchKind: GameLaunchKind {
         if isDOSGame { return .dosBox }
+        if eXoPack == .win9x { return .windows9x }
         let path = applicationPath.trimmingCharacters(in: .whitespaces)
         if path.isEmpty { return .windowsProgram }
         if path.range(of: "://") != nil { return .link }
@@ -291,6 +292,9 @@ nonisolated extension Game {
 nonisolated public enum GameLaunchKind: Sendable, Hashable {
     /// An eXoDOS game, run through the translated DOSBox config.
     case dosBox
+    /// An eXoWin9x game: DOSBox-X boots eXo's Windows 98 image with the
+    /// game's disk attached.
+    case windows9x
     /// A ROM, disc image or folder for a platform emulator.
     case emulator
     /// A manual, magazine, soundtrack or video opened in its own app.

@@ -98,7 +98,7 @@ struct LibraryCacheTests {
         #expect(cached.games.map(\.title) == parsed.games.map(\.title))
         #expect(cached.playlists.count == parsed.playlists.count)
         #expect(cached.tree.map(\.title) == parsed.tree.map(\.title))
-        #expect(cached.installedFolderNames == ["ultima5"])
+        #expect(cached.installedGamePaths == ["eXoDOS/ultima5"])
         #expect(cache.load(collectionID: collection.id, fingerprint: fingerprint + "x") == nil)
         cache.remove(collectionID: collection.id)
         #expect(cache.load(collectionID: collection.id, fingerprint: fingerprint) == nil)

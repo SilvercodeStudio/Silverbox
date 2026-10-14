@@ -183,7 +183,7 @@ struct GameTileView: View {
                         if model.isFavorite(game) {
                             Image(systemName: "heart.fill").foregroundStyle(Theme.accent)
                         }
-                        if game.isDOSGame, model.isInstalled(game) {
+                        if game.isEXoGame, model.isInstalled(game) {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(.white)
                         }
                     }
@@ -191,7 +191,7 @@ struct GameTileView: View {
                     .padding(5)
                     .background(.black.opacity(0.55), in: Capsule())
                     .padding(6)
-                    .opacity(model.isFavorite(game) || (game.isDOSGame && model.isInstalled(game)) ? 1 : 0)
+                    .opacity(model.isFavorite(game) || (game.isEXoGame && model.isInstalled(game)) ? 1 : 0)
                 }
                 .shadow(color: .black.opacity(0.45), radius: 8, y: 4)
             Text(game.title)
@@ -341,7 +341,7 @@ struct GameListView: View {
                 Text(game.genres.joined(separator: ", ")).foregroundStyle(Theme.textSecondary)
             }
             TableColumn("Installed") { game in
-                if game.isDOSGame {
+                if game.isEXoGame {
                     Image(systemName: model.isInstalled(game) ? "checkmark.circle.fill" : "circle.dotted")
                         .foregroundStyle(model.isInstalled(game) ? Theme.accent : Theme.textTertiary)
                 }
@@ -433,7 +433,7 @@ struct GameContextMenu: View {
     var body: some View {
         let installed = model.isInstalled(game)
         let variants = game.isDOSGame && installed ? model.launchVariants(for: game) : []
-        if game.isDOSGame {
+        if game.isEXoGame {
             if installed {
                 Button("Play") { model.play(game) }
                 if variants.count > 1 {
@@ -485,7 +485,7 @@ struct GameContextMenu: View {
         Button("Edit Game Info…") { model.pendingInfoGame = game }
         Divider()
         Button("Show in Finder") { model.revealInFinder(game) }
-        if installed, game.isDOSGame {
+        if installed, game.isEXoGame {
             Button("Uninstall…") { model.pendingUninstall = game }
         }
     }

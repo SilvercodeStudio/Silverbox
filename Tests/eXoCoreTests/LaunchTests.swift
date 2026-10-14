@@ -402,7 +402,7 @@ struct LaunchPlannerTests {
         let snapshot = LibrarySnapshot(
             root: root, games: [game], platforms: [], categories: [], platformFolders: [],
             playlists: [], parents: [], alternateNames: [], additionalApplications: [],
-            dosboxIndex: DOSBoxIndex(), installedFolderNames: [])
+            dosboxIndex: DOSBoxIndex(), installedGamePaths: [])
         let installer = GameInstaller(snapshot: snapshot)
         let plan = try #require(installer.plan(for: game))
         #expect(plan.archiveExists)
@@ -438,9 +438,9 @@ struct LaunchPlannerTests {
                 root: root, games: [game], platforms: [], categories: [], platformFolders: [],
                 playlists: [], parents: [], alternateNames: [], additionalApplications: [],
                 dosboxIndex: DOSBoxIndex(),
-                installedFolderNames: LibraryLoader.installedFolderNames(in: root.gamesDirectory),
+                installedGamePaths: LibraryLoader.installedGamePaths(in: root.eXoDirectory),
                 localStore: localStore,
-                locallyInstalledFolderNames: LibraryLoader.installedFolderNames(in: localStore.gamesDirectory))
+                locallyInstalledGamePaths: LibraryLoader.installedGamePaths(in: localStore.gamesRoot))
         }
         let installer = GameInstaller(snapshot: snapshot(), installLocation: .localStore)
         let plan = try #require(installer.plan(for: game))

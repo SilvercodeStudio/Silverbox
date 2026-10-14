@@ -19,6 +19,16 @@ Before a game starts, Autoexec.Mac shows its launch options. On Windows, eXoDOS 
 
 Turn on "Remember these choices for this game" to keep them for next time. **Configure…** in a game's context menu or the inspector opens the same dialog to save choices without starting the game, also before the game is installed. "Use Defaults" removes the saved choices. To skip the dialog, turn off "Show launch options before each game" in Settings › General.
 
+## Windows 9x games
+
+eXoWin9x games run in Windows 98. eXo keeps Windows 98 on one shared disk image and each game on a disk of its own. Play installs the game the first time, as for eXoDOS games. Then DOSBox-X starts Windows 98 with the game's disk and CD attached, and Windows starts the game when its desktop is ready. To stop, close the emulator window.
+
+Windows starts clean every time. Before each start, Autoexec.Mac makes a new, empty disk on top of the shared image, and Windows writes its changes there. Saved games go to the game's own disk and stay. If the game is already unpacked in a read-only collection, Autoexec.Mac copies the game's disk to the `Overlay` folder in the local data folder the first time, so that Windows can write to it.
+
+About thirty games, such as Quake and Die Hard Trilogy, need a faster PC with a 3dfx Voodoo card. eXo runs these in 86Box. To play them, get 86Box from https://86box.net and put 86Box.app in the Applications folder. For these games, the launch options have only Full screen.
+
+Network play is not available. Games that offer Solo, Host or Join on Windows start in Solo mode.
+
 ## Uninstalling
 
 Choose Uninstall from the game's context menu. Autoexec.Mac offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.

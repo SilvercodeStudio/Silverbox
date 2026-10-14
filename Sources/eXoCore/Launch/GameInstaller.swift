@@ -2,6 +2,7 @@ import Foundation
 
 /// What installing a game means in eXoDOS: unzip `eXo/eXoDOS/<name>.zip`
 /// into `eXo/eXoDOS/`, then apply `eXo/Update/!dos/<name>.zip` if present.
+/// eXoWin9x games unzip `eXo/eXoWin9x/<year>/<name>.zip` into that year folder.
 nonisolated public struct InstallPlan: Sendable, Hashable {
     public var game: Game
     public var archiveURL: URL
@@ -39,10 +40,10 @@ nonisolated public enum InstallError: Error, Sendable, Equatable {
 nonisolated extension InstallError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .notADOSGame: return "This item is not a DOS game."
+        case .notADOSGame: return "This item is not an eXo game that installs from an archive."
         case .archiveMissing(let url):
             return
-                "The game archive is not present: \(url.lastPathComponent). This copy of eXoDOS may be the Lite edition; downloading is not supported yet."
+                "The game archive is not present: \(url.lastPathComponent). This copy may be a Lite edition; downloading is not supported yet."
         case .extractionFailed(let status, let output): return "Unzip failed (exit code \(status)). \(output)"
         case .folderMissingAfterExtract(let url):
             return "The archive did not create the expected folder \(url.lastPathComponent)."
@@ -122,11 +123,17 @@ nonisolated public struct GameInstaller: Sendable {
     }
 
     public func plan(for game: Game) -> InstallPlan? {
-        guard game.isDOSGame, let folderName = game.gameFolderName else { return nil }
+        guard let pack = game.eXoPack, let components = game.installPathComponents,
+            let folderName = components.last
+        else { return nil }
         let root = snapshot.root
         let localStore = snapshot.localStore
-        let archive = root.gamesDirectory.appendingPathComponent("\(game.launcherBaseName).zip")
-        let update = root.updateDirectory.appendingPathComponent("!dos", isDirectory: true)
+        // The zip sits beside the folder it unpacks to: `eXoDOS/<name>.zip`,
+        // `eXoWin9x/<year>/<name>.zip`.
+        let parent = components.dropLast().joined(separator: "/")
+        let archive = root.eXoDirectory.appendingPathComponent(parent, isDirectory: true)
+            .appendingPathComponent("\(game.launcherBaseName).zip")
+        let update = root.updateDirectory.appendingPathComponent(pack.configFolderName, isDirectory: true)
             .appendingPathComponent("\(game.launcherBaseName).zip")
 
         let destination: URL
@@ -135,14 +142,15 @@ nonisolated public struct GameInstaller: Sendable {
             destination = existing.url.deletingLastPathComponent()
             location = existing.isLocal ? .localStore : .inPlace
         } else if installLocation == .localStore, let localStore {
-            destination = localStore.gamesDirectory
+            destination = localStore.gamesRoot.appendingPathComponent(parent, isDirectory: true)
             location = .localStore
         } else {
-            destination = root.gamesDirectory
+            destination = root.eXoDirectory.appendingPathComponent(parent, isDirectory: true)
             location = .inPlace
         }
 
-        let librarySave = root.gamesDirectory.appendingPathComponent("!save", isDirectory: true)
+        let librarySave = root.eXoDirectory.appendingPathComponent(pack.directoryName, isDirectory: true)
+            .appendingPathComponent("!save", isDirectory: true)
             .appendingPathComponent("\(game.launcherBaseName).zip")
         let backupTarget = localStore?.saveArchiveURL(for: game) ?? librarySave
         let existingSave = [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }

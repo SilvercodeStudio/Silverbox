@@ -1,8 +1,8 @@
 import Foundation
 
 /// An emulator program Autoexec.Mac can start. DOSBox Staging and DOSBox-X run
-/// eXoDOS games; the others run console, computer and arcade platforms from a
-/// LaunchBox library.
+/// eXoDOS games, DOSBox-X and 86Box run eXoWin9x games, and the others run
+/// console, computer and arcade platforms from a LaunchBox library.
 nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, Hashable, Identifiable {
     case dosboxStaging
     case dosboxX
@@ -10,6 +10,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
     case dolphin
     case mame
     case mednafen
+    case box86 = "86Box"
 
     public var id: String { rawValue }
 
@@ -28,6 +29,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .dolphin: return "Dolphin"
         case .mame: return "MAME"
         case .mednafen: return "Mednafen"
+        case .box86: return "86Box"
         }
     }
 
@@ -40,6 +42,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .dolphin: return "Dolphin"
         case .mame: return "mame"
         case .mednafen: return "mednafen"
+        case .box86: return "86Box"
         }
     }
 
@@ -52,6 +55,8 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .dolphin: return "Runs Nintendo GameCube and Wii games."
         case .mame: return "Runs arcade ROM sets."
         case .mednafen: return "Runs several consoles from the command line, including Sega Saturn."
+        case .box86:
+            return "Runs the eXoWin9x games that need a full PC, such as a Pentium with a 3dfx Voodoo card."
         }
     }
 
@@ -63,6 +68,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .dolphin: return "https://dolphin-emu.org"
         case .mame: return "https://www.mamedev.org"
         case .mednafen: return "https://mednafen.github.io"
+        case .box86: return "https://86box.net"
         }
     }
 }
@@ -178,6 +184,13 @@ nonisolated public enum EmulatorLocator {
                 URL(fileURLWithPath: "/opt/homebrew/bin/mednafen"),
                 URL(fileURLWithPath: "/usr/local/bin/mednafen"),
             ]
+        case .box86:
+            // The macOS download is a zip that holds only 86Box.app.
+            urls += [
+                URL(fileURLWithPath: "/Applications/86Box.app/Contents/MacOS/86Box"),
+                home.appendingPathComponent("Applications/86Box.app/Contents/MacOS/86Box"),
+                home.appendingPathComponent("Downloads/86Box.app/Contents/MacOS/86Box"),
+            ]
         }
         return urls
     }
@@ -199,7 +212,7 @@ nonisolated public enum EmulatorCapabilities {
         switch installation.kind {
         case .dosboxX:
             return true
-        case .retroArch, .dolphin, .mame, .mednafen:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86:
             return false
         case .dosboxStaging:
             let fm = FileManager.default

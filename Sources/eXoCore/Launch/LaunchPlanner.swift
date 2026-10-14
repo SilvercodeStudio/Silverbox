@@ -13,11 +13,15 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
     public var notes: [String]
     /// Folders to create before launch (writable overlays).
     public var directoriesToCreate: [URL]
+    /// Files copied before the first launch (game disks from a read-only library).
+    public var fileCopies: [FileCopy]
+    /// Differencing disks made fresh before each launch.
+    public var differencingDisks: [DifferencingDisk]
 
     public init(
         game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, arguments: [String],
         workingDirectory: URL, configURL: URL, configText: String, sourceConfigURL: URL, notes: [String],
-        directoriesToCreate: [URL] = []
+        directoriesToCreate: [URL] = [], fileCopies: [FileCopy] = [], differencingDisks: [DifferencingDisk] = []
     ) {
         self.game = game
         self.variant = variant
@@ -29,15 +33,25 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
         self.sourceConfigURL = sourceConfigURL
         self.notes = notes
         self.directoriesToCreate = directoriesToCreate
+        self.fileCopies = fileCopies
+        self.differencingDisks = differencingDisks
     }
 
-    /// Writes the generated config where the arguments point and creates
-    /// any overlay folders the config mounts.
+    /// Writes the generated config where the arguments point, creates any
+    /// overlay folders the config mounts, makes missing file copies and
+    /// fresh differencing disks.
     public func writeConfig() throws {
-        try FileManager.default.createDirectory(
-            at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let fm = FileManager.default
+        try fm.createDirectory(at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         for directory in directoriesToCreate {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        for copy in fileCopies where !fm.fileExists(atPath: copy.destination.path) {
+            try fm.createDirectory(at: copy.destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try fm.copyItem(at: copy.source, to: copy.destination)
+        }
+        for disk in differencingDisks {
+            try VHDDifferencingDisk.create(at: disk.child, parent: disk.parent)
         }
         try configText.write(to: configURL, atomically: true, encoding: .utf8)
     }
@@ -59,6 +73,8 @@ nonisolated public enum LaunchPlanError: Error, Sendable, Equatable {
     case missingConfig(URL)
     case emulatorMissing(EmulatorKind)
     case notADOSBoxEmulator(EmulatorKind)
+    case needsDOSBoxX
+    case needs86Box
 }
 
 nonisolated extension LaunchPlanError: LocalizedError {
@@ -67,11 +83,15 @@ nonisolated extension LaunchPlanError: LocalizedError {
         case .notADOSGame: return "This item is not a DOS game and cannot be launched in DOSBox."
         case .missingGameFolder: return "The game record has no root folder."
         case .notInstalled(let folder):
-            return "The game is not installed: folder \(folder) is missing under eXo/eXoDOS."
+            return "The game is not installed: folder \(folder) is missing under eXo."
         case .missingConfig(let url): return "The DOSBox config is missing: \(url.path)"
         case .emulatorMissing(let kind): return "\(kind.displayName) was not found. Set its location in Settings."
         case .notADOSBoxEmulator(let kind):
             return "\(kind.displayName) cannot run DOS games; choose DOSBox Staging or DOSBox-X."
+        case .needsDOSBoxX:
+            return "eXoWin9x games run Windows 98 in DOSBox-X. Choose DOSBox-X for this game."
+        case .needs86Box:
+            return "This eXoWin9x game runs in 86Box. Set the 86Box location in Settings › Emulators."
         }
     }
 }
@@ -115,7 +135,7 @@ nonisolated public struct LaunchPlanner: Sendable {
     }
 
     public func variants(for game: Game) -> [LaunchVariant] {
-        guard let folder = configFolder(for: game) else { return [] }
+        guard game.isDOSGame, let folder = configFolder(for: game) else { return [] }
         return LaunchVariantDetector.variants(inGameConfigFolder: folder)
     }
 
@@ -124,12 +144,14 @@ nonisolated public struct LaunchPlanner: Sendable {
     }
 
     public func recommendedEmulator(for game: Game) -> EmulatorKind {
-        eXoDOSBuild(for: game)?.recommendedEmulator ?? .dosboxStaging
+        if game.eXoPack == .win9x { return .dosboxX }
+        return eXoDOSBuild(for: game)?.recommendedEmulator ?? .dosboxStaging
     }
 
     public func plan(game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions) throws
         -> LaunchPlan
     {
+        if game.eXoPack == .win9x { return try planWindows9x(game: game, emulator: emulator, options: options) }
         guard game.isDOSGame else { throw LaunchPlanError.notADOSGame }
         guard let folderName = game.gameFolderName, let configFolder = configFolder(for: game) else {
             throw LaunchPlanError.missingGameFolder
@@ -198,7 +220,7 @@ nonisolated public struct LaunchPlanner: Sendable {
             ]
         case .dosboxX:
             arguments = ["-defaultdir", workingDirectory.path, "-conf", configURL.path, "-fastlaunch"]
-        case .retroArch, .dolphin, .mame, .mednafen:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86:
             throw LaunchPlanError.notADOSBoxEmulator(emulator.kind)
         }
 

@@ -60,4 +60,64 @@ struct LaunchSmokeTests {
             }
         }
     }
+
+    /// Boots Windows 98 for one eXoWin9x game in DOSBox-X and one in 86Box,
+    /// and checks that Windows writes to the fresh differencing disk. The
+    /// 86Box game is installed into a scratch local store first. Set
+    /// `EXOMAC_86BOX` to an 86Box executable when it is not in /Applications.
+    @Test func bootsWindows9xGames() async throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        try localStore.ensureDirectories()
+        var snapshot = try LibraryLoader(root: RealLibrary.root, localStore: localStore).load()
+
+        let box86 =
+            ProcessInfo.processInfo.environment["EXOMAC_86BOX"].map {
+                EmulatorInstallation(kind: .box86, executableURL: URL(fileURLWithPath: $0))
+            } ?? EmulatorLocator.discover(.box86)
+        var runs: [(title: String, emulator: EmulatorInstallation)] = []
+        if let dosboxX = EmulatorLocator.discover(.dosboxX) { runs.append(("Marathon 2: Durandal", dosboxX)) }
+        if let box86 {
+            let locus = try #require(snapshot.games.first { $0.title == "Locus" && $0.platform == "Windows 9x" })
+            let installer = GameInstaller(snapshot: snapshot, installLocation: .localStore)
+            try await installer.install(try #require(installer.plan(for: locus)))
+            snapshot = try LibraryLoader(root: RealLibrary.root, localStore: localStore).load()
+            runs.append(("Locus", box86))
+        }
+        #expect(!runs.isEmpty, "neither DOSBox-X nor 86Box was found")
+
+        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
+        for run in runs {
+            let game = try #require(snapshot.games.first { $0.title == run.title && $0.platform == "Windows 9x" })
+            let plan = try planner.plan(game: game, variant: nil, emulator: run.emulator, options: LaunchOptions())
+            try plan.writeConfig()
+            print("=== \(run.title)\n\(plan.commandLine)\n--- notes: \(plan.notes)")
+
+            let log = scratch.appendingPathComponent("\(LaunchPlanner.safeFileName(run.title)).log")
+            FileManager.default.createFile(atPath: log.path, contents: nil)
+            let output = try FileHandle(forWritingTo: log)
+            let process = Process()
+            process.executableURL = plan.emulator.executableURL
+            process.arguments = plan.arguments
+            process.currentDirectoryURL = plan.workingDirectory
+            process.standardOutput = output
+            process.standardError = output
+            try process.run()
+            try await Task.sleep(for: .seconds(40))
+            let alive = process.isRunning
+            if alive { process.terminate() }
+            process.waitUntilExit()
+            try output.close()
+            #expect(alive, "\(run.emulator.kind.displayName) quit within 40 seconds")
+
+            // The differencing disk starts empty; Windows writes to it as it boots.
+            let child =
+                run.emulator.kind == .box86
+                ? planner.local86BoxDirectory.appendingPathComponent("W98-C.vhd")
+                : planner.windowsDiskDirectory.appendingPathComponent("W98-C.vhd")
+            let size = (try FileManager.default.attributesOfItem(atPath: child.path)[.size] as? Int) ?? 0
+            print("--- \(child.lastPathComponent) is \(size / 1_048_576) MB after 40 seconds")
+            #expect(size > 4 * 1_048_576, "Windows did not write to the differencing disk")
+        }
+    }
 }

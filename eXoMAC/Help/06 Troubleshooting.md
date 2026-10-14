@@ -14,7 +14,7 @@ Artwork is found by file name, the same way LaunchBox does it. The first scan of
 
 ## The emulator is not found
 
-Set the location of DOSBox Staging or DOSBox-X in Settings › Emulators. Either the application bundle or the executable inside it can be chosen. The same tab holds RetroArch, Dolphin, MAME and Mednafen for other platforms.
+Set the location of DOSBox Staging, DOSBox-X or 86Box in Settings › Emulators. Either the application bundle or the executable inside it can be chosen. The same tab holds RetroArch, Dolphin, MAME and Mednafen for other platforms.
 
 ## A console game says its core is not installed
 
