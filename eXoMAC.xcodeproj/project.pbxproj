@@ -190,7 +190,7 @@
 			mainGroup = 04788C4C307BEF960061AE3E;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "../eXoMAC" */,
+				040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04788C56307BEF960061AE3E /* Products */;
@@ -624,9 +624,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "../eXoMAC" */ = {
+		040E9EFB307C63D700F9423C /* XCLocalSwiftPackageReference "." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../eXoMAC;
+			relativePath = .;
 		};
 /* End XCLocalSwiftPackageReference section */
 
