@@ -37,7 +37,7 @@ struct LaunchSmokeTests {
             try process.run()
             try await Task.sleep(for: .seconds(7))
             let alive = process.isRunning
-            if alive { process.terminate() }
+            if alive { await process.stop() }
             process.waitUntilExit()
             let output = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
             print("--- emulator output (exit \(process.terminationStatus)):\n\(output)")
@@ -105,7 +105,7 @@ struct LaunchSmokeTests {
             try process.run()
             try await Task.sleep(for: .seconds(40))
             let alive = process.isRunning
-            if alive { process.terminate() }
+            if alive { await process.stop() }
             process.waitUntilExit()
             try output.close()
             #expect(alive, "\(run.emulator.kind.displayName) quit within 40 seconds")
@@ -119,5 +119,17 @@ struct LaunchSmokeTests {
             print("--- \(child.lastPathComponent) is \(size / 1_048_576) MB after 40 seconds")
             #expect(size > 4 * 1_048_576, "Windows did not write to the differencing disk")
         }
+    }
+}
+
+extension Process {
+    /// Asks the emulator to quit, then kills it if it is still running after
+    /// a few seconds: DOSBox-X answers the request with a confirmation dialog.
+    func stop() async {
+        terminate()
+        for _ in 0..<30 where isRunning {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        if isRunning { kill(processIdentifier, SIGKILL) }
     }
 }

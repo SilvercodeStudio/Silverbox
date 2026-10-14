@@ -14,13 +14,19 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
     /// ``Game/installPath`` is the same here as in the library.
     public var gamesRoot: URL { directory.appendingPathComponent("Games", isDirectory: true) }
     /// Unpacked eXoDOS games. Mirrors `eXo/eXoDOS/` so mount paths look the same.
-    public var gamesDirectory: URL { gamesRoot.appendingPathComponent(EXoPack.dos.directoryName, isDirectory: true) }
+    public var gamesDirectory: URL { gamesDirectory(for: .dos) }
+    /// Unpacked games of one pack, mirroring `eXo/<pack>/`.
+    public func gamesDirectory(for pack: EXoPack) -> URL {
+        gamesRoot.appendingPathComponent(pack.directoryName, isDirectory: true)
+    }
     /// Writable copies of library files, mirroring `eXo/`: eXoDOS overlay
     /// folders, Windows 98 differencing disks and game disks.
     public var overlayRoot: URL { directory.appendingPathComponent("Overlay", isDirectory: true) }
     /// Writable overlays for eXoDOS games that are unpacked on a read-only library.
-    public var overlayDirectory: URL {
-        overlayRoot.appendingPathComponent(EXoPack.dos.directoryName, isDirectory: true)
+    public var overlayDirectory: URL { overlayDirectory(for: .dos) }
+    /// Writable overlays for one pack's games unpacked on a read-only library.
+    public func overlayDirectory(for pack: EXoPack) -> URL {
+        overlayRoot.appendingPathComponent(pack.directoryName, isDirectory: true)
     }
     /// Save backups made when a game is uninstalled, like eXoDOS's `!save`.
     public var savesDirectory: URL { directory.appendingPathComponent("Saves", isDirectory: true) }

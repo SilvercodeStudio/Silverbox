@@ -1,6 +1,7 @@
 import Foundation
 
-/// Which DOSBox build eXoDOS bundles for a game, read from `eXo/util/dosbox.txt`:
+/// Which DOSBox build eXo bundles for a game, read from `eXo/util/dosbox.txt`
+/// (eXoDemoScene: `demoscn.txt`):
 ///
 /// ```
 /// Ultima V - Warriors of Destiny (1988):ece4230\dosbox.exe
@@ -69,7 +70,9 @@ nonisolated public struct EXoDOSBuild: Hashable, Sendable, Codable {
             family = .staging
         } else if lowered.hasPrefix("daum") {
             family = .daum
-        } else if lowered == "x" || lowered == "x2" || lowered.hasPrefix("dosbox-x") {
+        } else if lowered == "x" || lowered == "x2" || lowered.hasPrefix("x_") || lowered.hasPrefix("x-")
+            || lowered.hasPrefix("dosbox-x")
+        {
             family = .x
         } else {
             family = .custom
@@ -85,7 +88,7 @@ nonisolated public struct EXoDOSBuild: Hashable, Sendable, Codable {
                 in: .whitespaces)
         case .staging: return "DOSBox Staging \(folder.dropFirst(7))".trimmingCharacters(in: .whitespaces)
         case .daum: return "DOSBox SVN Daum"
-        case .x: return "DOSBox-X"
+        case .x: return folder.count > 2 ? "DOSBox-X (\(folder))" : "DOSBox-X"
         case .custom: return "Custom build (\(folder))"
         }
     }

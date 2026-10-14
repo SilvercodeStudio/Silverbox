@@ -171,11 +171,11 @@ final class AppModel {
         let center = NotificationCenter.default
         center.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) {
             [weak self] _ in
-            Task { @MainActor in self?.applicationActiveChanged(false) }
+            MainActor.assumeIsolated { self?.applicationActiveChanged(false) }
         }
         center.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) {
             [weak self] _ in
-            Task { @MainActor in self?.applicationActiveChanged(true) }
+            MainActor.assumeIsolated { self?.applicationActiveChanged(true) }
         }
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
@@ -465,6 +465,7 @@ final class AppModel {
         case .favorites: return "Favorites"
         case .installed: return "Installed"
         case .recentlyPlayed: return "Recently Played"
+        case .pack(let pack): return pack.displayName
         case .node(let collectionID, let ref):
             return library?.node(collectionID: collectionID, ref: ref)?.title ?? "Library"
         }
@@ -547,7 +548,7 @@ final class AppModel {
     }
 
     func eXoDOSBuild(for game: Game) -> EXoDOSBuild? {
-        snapshot(for: game)?.dosboxIndex.build(forLauncherBaseName: game.launcherBaseName)
+        snapshot(for: game)?.dosboxBuild(for: game)
     }
 
     /// The global launch options with this game's remembered choices applied.

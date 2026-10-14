@@ -11,9 +11,12 @@ struct SetupSheet: View {
     @State private var unpackGameData = false
     /// Media add-ons to leave out, by archive name.
     @State private var skippedAddOns: Set<String> = []
+    @State private var setUpInPlace = true
 
     private var download: EXoDownload { pending.download }
     private var running: Bool { model.setupProgress != nil }
+    private var target: URL { pending.target(inPlace: setUpInPlace) }
+    private var isInPlace: Bool { pending.isDownload(target) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -55,7 +58,7 @@ struct SetupSheet: View {
                     Section("Media add-ons") {
                         ForEach(download.addOns) { addOn in
                             Toggle(isOn: addOnBinding(addOn)) {
-                                Text(addOn.platforms.joined(separator: ", "))
+                                Text(addOn.title)
                                 Text(Self.bytes(addOn.size))
                             }
                         }
@@ -82,13 +85,23 @@ struct SetupSheet: View {
                     }
                 }
                 Section("Space") {
-                    LabeledContent("Setup writes to") {
-                        Text(pending.isInPlace ? "The download folder" : pending.target.path)
-                            .multilineTextAlignment(.trailing)
+                    if pending.offersChoice {
+                        Picker("Set up in", selection: $setUpInPlace) {
+                            Text("The download folder").tag(true)
+                            Text("The local data folder, and leave the download unchanged").tag(false)
+                        }
+                        .pickerStyle(.radioGroup)
+                    } else {
+                        LabeledContent("Setup writes to") {
+                            Text(isInPlace ? "The download folder" : target.path)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
-                    if !pending.isInPlace {
+                    if !isInPlace {
                         Text(
-                            "The download cannot be written, so setup writes to the local data folder. The game archives stay in the download."
+                            pending.canSetUpInPlace || pending.offersChoice
+                                ? "Setup writes to \(target.path). The game archives stay in the download."
+                                : "The download cannot be written, so setup writes to the local data folder. The game archives stay in the download."
                         )
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
@@ -126,7 +139,7 @@ struct SetupSheet: View {
                 }
                 Button("Set Up") {
                     model.startSetup(
-                        pending,
+                        pending, target: target,
                         options: EXoSetupOptions(
                             includeAdultGames: includeAdultGames, unpackGameData: unpackGameData,
                             skippedAddOns: Array(skippedAddOns)))
@@ -158,7 +171,7 @@ struct SetupSheet: View {
 
     /// Free space on the volume setup writes to.
     private var freeBytes: Int64? {
-        var url = pending.target
+        var url = target
         while !FileManager.default.fileExists(atPath: url.path), url.pathComponents.count > 1 {
             url = url.deletingLastPathComponent()
         }

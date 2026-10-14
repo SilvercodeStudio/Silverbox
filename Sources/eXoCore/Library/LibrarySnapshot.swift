@@ -14,7 +14,8 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public let tree: [LibraryNode]
     public let alternateNames: [String: [AlternateName]]
     public let additionalApplications: [String: [AdditionalApplication]]
-    public let dosboxIndex: DOSBoxIndex
+    /// Each DOSBox pack's index of the builds its games use.
+    public let dosboxIndexes: [EXoPack: DOSBoxIndex]
     public let emulators: [LaunchBoxEmulator]
     public let emulatorPlatforms: [LaunchBoxEmulatorPlatform]
     /// Game folders unpacked in the library, relative to `eXo/`: a game
@@ -27,13 +28,17 @@ nonisolated public struct LibrarySnapshot: Sendable {
     public let loadedAt: Date
 
     private let indexByID: [String: Int]
+    /// The installed sets keyed by lowercased path, to the path on disk:
+    /// some eXo zips unpack to a folder whose case differs from the XML.
+    private let libraryPathByKey: [String: String]
+    private let localPathByKey: [String: String]
 
     public init(
         root: LibraryRoot, collection: LibraryCollection? = nil, games: [Game], platforms: [Platform],
         categories: [PlatformCategory],
         platformFolders: [PlatformFolder], playlists: [Playlist], parents: [ParentLink],
         alternateNames: [AlternateName], additionalApplications: [AdditionalApplication],
-        dosboxIndex: DOSBoxIndex, emulators: [LaunchBoxEmulator] = [],
+        dosboxIndexes: [EXoPack: DOSBoxIndex] = [:], emulators: [LaunchBoxEmulator] = [],
         emulatorPlatforms: [LaunchBoxEmulatorPlatform] = [],
         installedGamePaths: Set<String>, localStore: LocalStore? = nil,
         locallyInstalledGamePaths: Set<String> = [], loadedAt: Date = Date()
@@ -62,12 +67,14 @@ nonisolated public struct LibrarySnapshot: Sendable {
         var seen = Set<AlternateName>()
         self.alternateNames = Dictionary(grouping: alternateNames.filter { seen.insert($0).inserted }, by: \.gameID)
         self.additionalApplications = Dictionary(grouping: additionalApplications, by: \.gameID)
-        self.dosboxIndex = dosboxIndex
+        self.dosboxIndexes = dosboxIndexes
         self.emulators = emulators
         self.emulatorPlatforms = emulatorPlatforms
         self.installedGamePaths = installedGamePaths
         self.localStore = localStore
         self.locallyInstalledGamePaths = locallyInstalledGamePaths
+        self.libraryPathByKey = Self.keyed(installedGamePaths)
+        self.localPathByKey = Self.keyed(locallyInstalledGamePaths)
         self.loadedAt = loadedAt
         var index: [String: Int] = [:]
         index.reserveCapacity(games.count)
@@ -75,6 +82,21 @@ nonisolated public struct LibrarySnapshot: Sendable {
             index[game.launchBoxID] = offset
         }
         self.indexByID = index
+    }
+
+    private static func keyed(_ paths: Set<String>) -> [String: String] {
+        Dictionary(paths.map { ($0.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// The eXoDOS index of DOSBox builds.
+    public var dosboxIndex: DOSBoxIndex { dosboxIndex(for: .dos) }
+
+    public func dosboxIndex(for pack: EXoPack) -> DOSBoxIndex { dosboxIndexes[pack] ?? DOSBoxIndex() }
+
+    /// The DOSBox build eXo runs the game with, from its pack's index.
+    public func dosboxBuild(for game: Game) -> EXoDOSBuild? {
+        guard let pack = game.eXoPack else { return nil }
+        return dosboxIndex(for: pack).build(forLauncherBaseName: game.launcherBaseName)
     }
 
     /// Looks a game up by its LaunchBox GUID, or by its collection-scoped id.
@@ -100,11 +122,11 @@ nonisolated public struct LibrarySnapshot: Sendable {
 
     /// The installed game folder, local store first.
     public func installedLocation(for game: Game) -> GameLocation? {
-        guard let path = game.installPath else { return nil }
-        if let localStore, locallyInstalledGamePaths.contains(path) {
+        guard let key = game.installPath?.lowercased() else { return nil }
+        if let localStore, let path = localPathByKey[key] {
             return .local(localStore.gamesRoot.appendingPathComponent(path, isDirectory: true))
         }
-        if installedGamePaths.contains(path) {
+        if let path = libraryPathByKey[key] {
             return .library(root.eXoDirectory.appendingPathComponent(path, isDirectory: true))
         }
         return nil
@@ -118,7 +140,7 @@ nonisolated public struct LibrarySnapshot: Sendable {
             playlists: playlists, parents: parents,
             alternateNames: alternateNames.values.flatMap { $0 },
             additionalApplications: additionalApplications.values.flatMap { $0 },
-            dosboxIndex: dosboxIndex, emulators: emulators, emulatorPlatforms: emulatorPlatforms,
+            dosboxIndexes: dosboxIndexes, emulators: emulators, emulatorPlatforms: emulatorPlatforms,
             installedGamePaths: library, localStore: localStore,
             locallyInstalledGamePaths: local, loadedAt: loadedAt)
     }

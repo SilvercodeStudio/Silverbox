@@ -7,6 +7,8 @@ nonisolated public enum LibraryScope: Hashable, Sendable {
     case favorites
     case installed
     case recentlyPlayed
+    /// The games of one eXo pack, across collections.
+    case pack(EXoPack)
 }
 
 nonisolated public enum GameSortOrder: String, CaseIterable, Sendable, Codable {
@@ -49,6 +51,8 @@ nonisolated public struct LibraryQuery: Sendable {
                     (overlay.state(for: $0.launchBoxID).lastPlayed ?? .distantPast)
                         > (overlay.state(for: $1.launchBoxID).lastPlayed ?? .distantPast)
                 }
+        case .pack(let pack):
+            return library.games.filter { $0.eXoPack == pack }
         case .node(let collectionID, let ref):
             guard let snapshot = library.snapshot(id: collectionID) else { return [] }
             switch ref {

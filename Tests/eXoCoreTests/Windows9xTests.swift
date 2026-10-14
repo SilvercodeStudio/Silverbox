@@ -116,7 +116,6 @@ nonisolated enum Win9xFixture {
         LibrarySnapshot(
             root: root, games: [game(), game(boxTitle)], platforms: [], categories: [],
             platformFolders: [], playlists: [], parents: [], alternateNames: [], additionalApplications: [],
-            dosboxIndex: DOSBoxIndex(),
             installedGamePaths: LibraryLoader.installedGamePaths(in: root.eXoDirectory), localStore: localStore,
             locallyInstalledGamePaths: localStore.map { LibraryLoader.installedGamePaths(in: $0.gamesRoot) } ?? [])
     }

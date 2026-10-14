@@ -6,30 +6,57 @@ import Foundation
 /// eXoDOS keeps a game's configs in `eXo/eXoDOS/!dos/<folder>` and unpacks it
 /// to `eXo/eXoDOS/<folder>`. eXoWin9x adds a year: configs in
 /// `eXo/eXoWin9x/!win9x/<year>/<folder>`, the game in
-/// `eXo/eXoWin9x/<year>/<folder>`, its zip beside that folder.
+/// `eXo/eXoWin9x/<year>/<folder>`, its zip beside that folder. The other
+/// packs have the eXoDOS shape under their own folder names.
 nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashable {
     case dos = "eXoDOS"
     case win9x = "eXoWin9x"
+    case demoScene = "eXoDemoScene"
+    case scummVM = "eXoScummVM"
+    case appleIIGS = "eXoAppleIIGS"
+    case interactiveFiction = "eXoIF"
 
     /// The folder under `eXo/` that holds the archives and unpacked games.
-    public var directoryName: String { rawValue }
+    public var directoryName: String {
+        switch self {
+        case .demoScene: return "eXoDemoScn"
+        default: return rawValue
+        }
+    }
 
     /// The folder under ``directoryName`` that holds the per-game configs.
     public var configFolderName: String {
         switch self {
         case .dos: return "!dos"
         case .win9x: return "!win9x"
+        case .demoScene: return "!demoscn"
+        case .scummVM: return "!ScummVM"
+        case .appleIIGS: return "!appleiigs"
+        case .interactiveFiction: return "!IF"
         }
     }
 
     /// How many folder levels below ``directoryName`` an unpacked game sits:
-    /// `<folder>` for eXoDOS, `<year>/<folder>` for eXoWin9x.
+    /// `<folder>` for most packs, `<year>/<folder>` for eXoWin9x.
     public var installDepth: Int {
         switch self {
-        case .dos: return 1
         case .win9x: return 2
+        default: return 1
         }
     }
+
+    /// The pack's index of DOSBox builds in `eXo/util`, for packs whose
+    /// games run in DOSBox with a per-game `dosbox.conf`.
+    public var dosboxIndexName: String? {
+        switch self {
+        case .dos: return "dosbox.txt"
+        case .demoScene: return "demoscn.txt"
+        default: return nil
+        }
+    }
+
+    /// True when the games run in DOSBox through a translated `dosbox.conf`.
+    public var runsInDOSBox: Bool { dosboxIndexName != nil }
 
     public var displayName: String { rawValue }
 }
@@ -38,9 +65,10 @@ nonisolated extension Game {
     /// The eXo project the game belongs to, when it is one that installs
     /// from an archive.
     public var eXoPack: EXoPack? {
-        if isDOSGame { return .dos }
-        guard applicationPath.lowercased().hasSuffix(".bat"), configSubpath(for: .win9x) != nil else { return nil }
-        return .win9x
+        if isEXoDOSLauncher { return .dos }
+        guard applicationPath.lowercased().hasSuffix(".bat"), let rootFolder else { return nil }
+        let parts = WindowsPath.components(of: rootFolder)
+        return EXoPack.allCases.first { $0 != .dos && Self.configSubpath(of: parts, for: $0) != nil }
     }
 
     /// True for games that install from an eXo archive and can be uninstalled.
@@ -52,8 +80,8 @@ nonisolated extension Game {
         switch eXoPack {
         case .dos:
             return gameFolderName.map { [EXoPack.dos.directoryName, $0] }
-        case .win9x:
-            return configSubpath(for: .win9x).map { [EXoPack.win9x.directoryName] + $0 }
+        case let pack?:
+            return configSubpath(for: pack).map { [pack.directoryName] + $0 }
         case nil:
             return nil
         }
@@ -68,8 +96,10 @@ nonisolated extension Game {
     /// The components of `RootFolder` after `<pack>\<config folder>`, when
     /// they match the pack's install depth.
     private func configSubpath(for pack: EXoPack) -> [String]? {
-        guard let rootFolder else { return nil }
-        let parts = WindowsPath.components(of: rootFolder)
+        rootFolder.flatMap { Self.configSubpath(of: WindowsPath.components(of: $0), for: pack) }
+    }
+
+    private static func configSubpath(of parts: [String], for pack: EXoPack) -> [String]? {
         guard
             let start = parts.indices.dropLast().first(where: {
                 parts[$0].caseInsensitiveCompare(pack.directoryName) == .orderedSame

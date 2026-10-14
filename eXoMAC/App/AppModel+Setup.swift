@@ -5,14 +5,29 @@ import eXoCore
 /// An eXo download waiting for the setup sheet.
 struct PendingSetup: Identifiable {
     let download: EXoDownload
-    /// Where setup writes: the download, or a folder in the local data
-    /// folder when the download cannot be written.
-    let target: URL
+    /// The folder in the local data folder that setup can write to, which
+    /// leaves the download unchanged.
+    let localTarget: URL
+    /// Where an earlier setup wrote; a new setup goes to the same place.
+    let previousTarget: URL?
     /// The packs a previous setup there covered; empty for a first setup.
     let setUpPacks: [String]
     var id: URL { download.root }
 
-    var isInPlace: Bool { target.standardizedFileURL == download.root.standardizedFileURL }
+    /// Setup can write into the download itself.
+    var canSetUpInPlace: Bool {
+        previousTarget.map { isDownload($0) } ?? download.isWritable
+    }
+
+    /// Setup can write to either place, so the sheet offers the choice.
+    var offersChoice: Bool { previousTarget == nil && download.isWritable }
+
+    func target(inPlace: Bool) -> URL {
+        if let previousTarget { return previousTarget }
+        return inPlace && download.isWritable ? download.root : localTarget
+    }
+
+    func isDownload(_ url: URL) -> Bool { url.standardizedFileURL == download.root.standardizedFileURL }
 }
 
 /// Setting up eXo downloads on the Mac, without eXo's Windows setup.
@@ -34,32 +49,34 @@ extension AppModel {
             addCollection(url: url)
             return
         }
-        let target = setupTarget(for: download)
-        let record = EXoSetupRecord.read(in: target)
+        let localTarget = localSetupTarget(for: download)
+        // An earlier Mac setup wrote its record in the download or in the local data folder.
+        let previous = [download.root, localTarget].lazy
+            .compactMap { target in EXoSetupRecord.read(in: target).map { (target: target, record: $0) } }.first
         let packs = Set(download.packs.map(\.name))
-        if let record, packs.isSubset(of: Set(record.packs)) {
-            addSetUpCollection(download: download, target: target)
+        if let previous, packs.isSubset(of: Set(previous.record.packs)) {
+            addSetUpCollection(download: download, target: previous.target)
             return
         }
-        if record == nil, download.isSetUp {
+        if previous == nil, download.isSetUp {
             // Set up by eXo's own setup on Windows.
             addCollection(url: url)
             return
         }
-        pendingSetup = PendingSetup(download: download, target: target, setUpPacks: record?.packs ?? [])
+        pendingSetup = PendingSetup(
+            download: download, localTarget: localTarget, previousTarget: previous?.target,
+            setUpPacks: previous?.record.packs ?? [])
     }
 
-    /// The download itself when it can be written, else a folder named
-    /// after it in the local data folder.
-    func setupTarget(for download: EXoDownload) -> URL {
-        if download.isWritable { return download.root }
-        return localStore.directory.appendingPathComponent("Collections", isDirectory: true)
+    /// A folder named after the download in the local data folder.
+    func localSetupTarget(for download: EXoDownload) -> URL {
+        localStore.directory.appendingPathComponent("Collections", isDirectory: true)
             .appendingPathComponent(download.root.lastPathComponent, isDirectory: true)
     }
 
-    func startSetup(_ pending: PendingSetup, options: EXoSetupOptions) {
+    func startSetup(_ pending: PendingSetup, target: URL, options: EXoSetupOptions) {
         guard setupTask == nil else { return }
-        let setup = EXoSetup(download: pending.download, target: pending.target, options: options)
+        let setup = EXoSetup(download: pending.download, target: target, options: options)
         setupProgress = EXoSetupProgress(stage: "Starting", detail: nil, fraction: 0)
         let throttle = ProgressThrottle()
         setupTask = Task { [weak self] in
@@ -72,7 +89,7 @@ extension AppModel {
                 self.setupTask = nil
                 self.setupProgress = nil
                 self.pendingSetup = nil
-                self.addSetUpCollection(download: pending.download, target: pending.target)
+                self.addSetUpCollection(download: pending.download, target: target)
             } catch {
                 guard let self else { return }
                 self.setupTask = nil
@@ -106,7 +123,7 @@ extension AppModel {
 }
 
 /// Passes on progress at most every half percent, or when the stage changes.
-private final class ProgressThrottle: @unchecked Sendable {
+nonisolated private final class ProgressThrottle: @unchecked Sendable {
     private let lock = NSLock()
     private var last: EXoSetupProgress?
 

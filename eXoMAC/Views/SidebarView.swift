@@ -12,6 +12,15 @@ struct SidebarView: View {
                 Label("Installed", systemImage: "internaldrive").tag(LibraryScope.installed)
                 Label("Recently Played", systemImage: "clock").tag(LibraryScope.recentlyPlayed)
             }
+            // With more than one eXo pack loaded, each can be shown on its
+            // own, even when several share a collection.
+            if let packs = model.library?.packs, packs.count > 1 {
+                Section("eXo Packs") {
+                    ForEach(packs, id: \.self) { pack in
+                        Label(pack.displayName, systemImage: pack.systemImage).tag(LibraryScope.pack(pack))
+                    }
+                }
+            }
             ForEach(model.library?.snapshots ?? [], id: \.collection.id) { snapshot in
                 Section(snapshot.collection.name) {
                     OutlineGroup(snapshot.tree, children: \.outlineChildren) { node in
@@ -36,5 +45,18 @@ struct SidebarView: View {
                 model.openedGameID = nil
             }
         )
+    }
+}
+
+extension EXoPack {
+    var systemImage: String {
+        switch self {
+        case .dos: return "pc"
+        case .win9x: return "macwindow"
+        case .demoScene: return "sparkles.tv"
+        case .scummVM: return "cursorarrow.click.2"
+        case .appleIIGS: return "desktopcomputer"
+        case .interactiveFiction: return "text.book.closed"
+        }
     }
 }

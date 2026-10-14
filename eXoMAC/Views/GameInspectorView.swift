@@ -253,6 +253,7 @@ struct MetadataGrid: View {
         Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
             row("Developer", game.developer)
             row("Publisher", game.publisher)
+            row("eXo pack", game.eXoPack?.displayName)
             row("Genre", game.genres.isEmpty ? nil : game.genres.joined(separator: ", "))
             row("Play mode", game.playMode)
             row("Players", game.maxPlayers.map(String.init))
@@ -264,7 +265,7 @@ struct MetadataGrid: View {
                 row("Community", String(format: "%.1f ★ (%d votes)", rating, game.communityStarRatingVotes))
             }
             if game.isDOSGame {
-                row("eXoDOS runs with", build?.displayName ?? "DOSBox")
+                row("\(game.eXoPack?.displayName ?? "eXo") runs with", build?.displayName ?? "DOSBox")
                 row("Mac emulator", model.emulatorKind(for: game).displayName)
             } else if game.launchKind == .windows9x {
                 let kind = model.emulatorKind(for: game)
@@ -280,6 +281,8 @@ struct MetadataGrid: View {
                 row("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
             } else if game.launchKind == .video {
                 row("Launcher", "Video, opened by \(model.videoPlayer?.name ?? "the default video player")")
+            } else if game.launchKind == .windowsProgram, let pack = game.eXoPack {
+                row("Launcher", "\(pack.displayName) games cannot start on the Mac yet")
             } else if game.launchKind == .windowsProgram {
                 row("Launcher", "Windows program, not supported on the Mac")
             }

@@ -4,7 +4,7 @@ import Foundation
 /// megabytes of XML. A cache entry is used only while the data files it was
 /// built from are unchanged.
 nonisolated public struct LibraryCache: Sendable {
-    public static let version = 1
+    public static let version = 2
 
     public let directory: URL
 
@@ -23,7 +23,7 @@ nonisolated public struct LibraryCache: Sendable {
         public var parents: [ParentLink]
         public var alternateNames: [AlternateName]
         public var additionalApplications: [AdditionalApplication]
-        public var dosboxIndex: DOSBoxIndex
+        public var dosboxIndexes: [EXoPack: DOSBoxIndex]
         public var emulators: [LaunchBoxEmulator]
         public var emulatorPlatforms: [LaunchBoxEmulatorPlatform]
     }
@@ -31,7 +31,9 @@ nonisolated public struct LibraryCache: Sendable {
     /// Sizes and modification dates of every data file the loader reads.
     public static func fingerprint(for root: LibraryRoot) -> String {
         let fm = FileManager.default
-        var files: [URL] = [root.platformsFile, root.parentsFile, root.emulatorsFile, root.dosboxIndexFile]
+        var files: [URL] =
+            [root.platformsFile, root.parentsFile, root.emulatorsFile]
+            + EXoPack.allCases.compactMap { root.dosboxIndexFile(for: $0) }
         for directory in [root.platformsDirectory, root.playlistsDirectory] {
             if let names = try? fm.contentsOfDirectory(atPath: directory.path) {
                 files += names.sorted().filter { $0.lowercased().hasSuffix(".xml") }.map {

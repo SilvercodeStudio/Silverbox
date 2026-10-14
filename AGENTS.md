@@ -116,11 +116,20 @@ Makefile).
   with aliases for renamed cores). `RomLaunchPlanner` builds the command
   line. Never call another front-end such as OpenEmu.
 - eXo packs. `EXoPack` names the projects whose games install from zips:
-  eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`) and eXoWin9x
-  (`!win9x/<year>/<folder>`, unpacked to `eXoWin9x/<year>/<folder>`).
-  `Game.installPath` is the unpacked folder relative to `eXo/`; installed-game
-  sets in `LibrarySnapshot` use it. `isDOSGame` stays for DOSBox-specific
-  code; `isEXoGame` is for installing.
+  eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`), eXoWin9x
+  (`!win9x/<year>/<folder>`, unpacked to `eXoWin9x/<year>/<folder>`),
+  eXoDemoScene (`eXoDemoScn/!demoscn`), eXoScummVM (`!ScummVM`),
+  eXoAppleIIGS (`!appleiigs`) and eXoIF (`!IF`); the pack comes from the
+  game's `RootFolder`. `Game.installPath` is the unpacked folder relative to
+  `eXo/`; installed-game sets in `LibrarySnapshot` use it, matched without
+  regard to case (some zips unpack to another case). `isDOSGame` is true for
+  the DOSBox packs (eXoDOS, eXoDemoScene), each with its own build index
+  (`dosbox.txt`, `demoscn.txt`); `isEXoGame` is for installing. Folders that
+  differ per pack go through `gamesDirectory(for:)`, `overlayDirectory(for:)`
+  and `dosboxIndex(for:)`. eXoScummVM, eXoAppleIIGS and eXoIF games install
+  but do not launch yet. Each pack's `Setup <pack>.bat` entry is hidden
+  (`isEXoSetupScript`). The sidebar's "eXo Packs" section (`LibraryScope.pack`)
+  appears when more than one pack is loaded.
 - eXoWin9x. `launchKind == .windows9x`. `LaunchPlanner.planWindows9x`
   (`Windows9xLaunch.swift`) reads `Play.conf`: DOSBox-X boots Windows 98 from
   a differencing disk (`vhdmake`) over `eXo/emulators/dosbox/x98/parent/*.vhd`,
@@ -137,8 +146,8 @@ Makefile).
   into `eXo`, `OPT*.zip` into `eXo/util`), merges the XML fragments by
   reading the `xml/merge_*.bat` scripts, registers add-on platforms as
   `eXoLBpm.exe` would, and writes `Data/Autoexec.Mac Setup.json`. It sets up
-  in place when the download is writable, else into `Collections/<name>` in
-  the local data folder with `LibraryCollection.downloadPath` pointing back
+  in place or, by choice or when the download is read-only, into
+  `Collections/<name>` in the local data folder with `LibraryCollection.downloadPath` pointing back
   (`LibraryRoot.downloadFile` finds game zips and extras there). A game's
   GameData zip is unpacked at install when setup left it packed.
   `ZipArchive` extracts with `unzip`, or `bsdtar` when names are in the DOS
@@ -204,6 +213,11 @@ Makefile).
   the media add-ons, about 20 GB) and compares the result with the Windows setup,
   then installs and plans Super Tetris from it. `EXOMAC_SETUP_REUSE=1` skips
   the unpacking when the folder already holds a setup.
+  `EXOMAC_SETUP_DOWNLOAD=<download> EXOMAC_SETUP_TARGET=<folder> swift test
+  --filter setsUpAndPlansTheDownload` does the same for any pack's download:
+  it sets it up, counts games per pack and launch kind, translates every
+  DOSBox config, and installs and plans the three smallest games per pack
+  (with `EXOMAC_LAUNCH_SMOKE=1`, it also starts the DOSBox ones briefly).
 - `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
   games in DOSBox Staging for a few seconds and checks the emulator log, then
   boots Windows 98 for an eXoWin9x game in DOSBox-X and one in 86Box

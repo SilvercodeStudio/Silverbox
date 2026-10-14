@@ -44,15 +44,35 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     /// `eXo/`: the working directory eXoDOS's launchers run DOSBox from.
     public var eXoDirectory: URL { url.appendingPathComponent("eXo", isDirectory: true) }
     /// `eXo/eXoDOS/`: game archives (`<name>.zip`) and installed game folders.
-    public var gamesDirectory: URL { eXoDirectory.appendingPathComponent("eXoDOS", isDirectory: true) }
+    public var gamesDirectory: URL { gamesDirectory(for: .dos) }
     /// `eXo/eXoDOS/!dos/`: per-game launcher, config and extras folders.
-    public var gameConfigsDirectory: URL { gamesDirectory.appendingPathComponent("!dos", isDirectory: true) }
+    public var gameConfigsDirectory: URL { gameConfigsDirectory(for: .dos) }
+
+    /// `eXo/<pack>/`: a pack's game archives and installed game folders.
+    public func gamesDirectory(for pack: EXoPack) -> URL {
+        eXoDirectory.appendingPathComponent(pack.directoryName, isDirectory: true)
+    }
+
+    /// `eXo/<pack>/!<pack>/`: a pack's per-game launcher and config folders.
+    public func gameConfigsDirectory(for pack: EXoPack) -> URL {
+        gamesDirectory(for: pack).appendingPathComponent(pack.configFolderName, isDirectory: true)
+    }
     public var emulatorsDirectory: URL { eXoDirectory.appendingPathComponent("emulators", isDirectory: true) }
     public var utilDirectory: URL { eXoDirectory.appendingPathComponent("util", isDirectory: true) }
     public var mt32Directory: URL { eXoDirectory.appendingPathComponent("mt32", isDirectory: true) }
     public var updateDirectory: URL { eXoDirectory.appendingPathComponent("Update", isDirectory: true) }
     /// `eXo/util/dosbox.txt`: maps each game to the DOSBox build eXoDOS uses.
     public var dosboxIndexFile: URL { utilDirectory.appendingPathComponent("dosbox.txt") }
+
+    /// The pack's index of DOSBox builds, such as `eXo/util/demoscn.txt`.
+    public func dosboxIndexFile(for pack: EXoPack) -> URL? {
+        pack.dosboxIndexName.map { utilDirectory.appendingPathComponent($0) }
+    }
+
+    /// The packs whose game folders are present under `eXo/`.
+    public var packs: [EXoPack] {
+        EXoPack.allCases.filter { FileManager.default.fileExists(atPath: gameConfigsDirectory(for: $0).path) }
+    }
 
     /// Resolves a LaunchBox path such as `Manuals\MS-DOS\Foo.pdf` to a file
     /// URL. Substitutions are tried first, so `X:\Emulation\...` or a relocated
@@ -103,17 +123,16 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
             check("Manuals", manualsDirectory),
             check("Menu music", musicDirectory),
         ]
-        if hasEXoDOS {
+        for pack in packs {
             items += [
-                check("eXoDOS game archives and folders", gamesDirectory),
-                check("eXoDOS game launch configs", gameConfigsDirectory),
-                check("eXoDOS DOSBox build index", dosboxIndexFile),
-                check("MT-32 ROMs and SoundFont", mt32Directory),
+                check("\(pack.displayName) game archives and folders", gamesDirectory(for: pack)),
+                check("\(pack.displayName) game launch configs", gameConfigsDirectory(for: pack)),
             ]
-            let win9x = eXoDirectory.appendingPathComponent(EXoPack.win9x.directoryName, isDirectory: true)
-            if fm.fileExists(atPath: win9x.path) {
+            if let index = dosboxIndexFile(for: pack) {
+                items.append(check("\(pack.displayName) DOSBox build index", index))
+            }
+            if pack == .win9x {
                 items += [
-                    check("eXoWin9x game archives and folders", win9x),
                     check(
                         "Windows 98 disk images for DOSBox-X",
                         emulatorsDirectory.appendingPathComponent("dosbox/x98/parent", isDirectory: true)),
@@ -122,6 +141,9 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
                         emulatorsDirectory.appendingPathComponent("86Box98", isDirectory: true)),
                 ]
             }
+        }
+        if packs.contains(where: \.runsInDOSBox) {
+            items.append(check("MT-32 ROMs and SoundFont", mt32Directory))
         }
         return LibraryRootReport(root: self, items: items)
     }

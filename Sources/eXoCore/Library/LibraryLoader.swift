@@ -96,7 +96,8 @@ nonisolated public struct LibraryLoader: Sendable {
             try LaunchBoxXMLParser.parse(url: entry.url) { record in
                 switch record.element {
                 case "Game":
-                    if var game = Game(record: record) {
+                    // Each pack lists its Windows setup script as a game.
+                    if var game = Game(record: record), !game.isEXoSetupScript {
                         if game.platform.isEmpty { game.platform = entry.platform.name }
                         games.append(game)
                         countInFile += 1
@@ -130,7 +131,12 @@ nonisolated public struct LibraryLoader: Sendable {
                 }
             }
         }
-        let dosboxIndex = (try? DOSBoxIndex(contentsOf: root.dosboxIndexFile)) ?? DOSBoxIndex()
+        var dosboxIndexes: [EXoPack: DOSBoxIndex] = [:]
+        for pack in EXoPack.allCases {
+            if let file = root.dosboxIndexFile(for: pack), let index = try? DOSBoxIndex(contentsOf: file) {
+                dosboxIndexes[pack] = index
+            }
+        }
 
         let payload = LibraryCache.Payload(
             version: LibraryCache.version, fingerprint: fingerprint ?? "",
@@ -141,7 +147,7 @@ nonisolated public struct LibraryLoader: Sendable {
             },
             platforms: platforms, categories: categories, platformFolders: folders, playlists: playlists,
             parents: parents,
-            alternateNames: alternates, additionalApplications: extraApps, dosboxIndex: dosboxIndex,
+            alternateNames: alternates, additionalApplications: extraApps, dosboxIndexes: dosboxIndexes,
             emulators: emulators, emulatorPlatforms: emulatorPlatforms)
         if let cache, fingerprint != nil {
             progress?(LibraryLoadProgress(stage: "Saving library cache", fraction: 0.98, gamesLoaded: games.count))
@@ -166,7 +172,7 @@ nonisolated public struct LibraryLoader: Sendable {
             parents: payload.parents,
             alternateNames: payload.alternateNames,
             additionalApplications: payload.additionalApplications,
-            dosboxIndex: payload.dosboxIndex,
+            dosboxIndexes: payload.dosboxIndexes,
             emulators: payload.emulators,
             emulatorPlatforms: payload.emulatorPlatforms,
             installedGamePaths: installed,
@@ -220,11 +226,12 @@ nonisolated public struct LibraryLoader: Sendable {
     }
 
     /// Folder names inside `directory`, skipping `!dos`, `!win9x`, `!save`
-    /// and other `!` folders.
+    /// and other `!` folders. Hidden folders count: eXoScummVM has a game
+    /// named `.i.f`.
     private static func subfolderNames(of directory: URL) -> [String] {
         guard
             let entries = try? FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])
+                at: directory, includingPropertiesForKeys: [.isDirectoryKey])
         else { return [] }
         return entries.compactMap { entry in
             let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false

@@ -20,16 +20,31 @@ The games, media and emulators are not part of this project.
 - One or more eXo downloads, such as eXoDOS v6 (the full set, or Lite with
   games downloaded) and eXoWin9x. Autoexec.Mac runs their setup itself, so a
   Windows PC is not needed; a folder set up on Windows works too.
-- [DOSBox Staging](https://www.dosbox-staging.org) in `/Applications`, and
-  optionally [DOSBox-X](https://dosbox-x.com). Both can be located in Settings.
-- For eXoWin9x: DOSBox-X, and [86Box](https://86box.net) for the thirty or so
-  games that eXo runs in it.
-- For console, computer and arcade platforms from a LaunchBox library:
-  [RetroArch](https://www.retroarch.com) with the cores you need,
-  [Dolphin](https://dolphin-emu.org) for GameCube and Wii,
-  [MAME](https://www.mamedev.org) for arcade sets, or
-  [Mednafen](https://mednafen.github.io). Settings › Emulators assigns one
-  per platform, following the library's `Emulators.xml` by default.
+- The emulators for the packs you play; see [Emulators](#emulators). Most are
+  optional: a game whose emulator is missing still shows, with its box art,
+  manual and extras.
+
+## Emulators
+
+Autoexec.Mac starts games in Mac emulators that you install yourself. Put them
+in `/Applications` (or `~/Applications`), or choose them in Settings ›
+Emulators. eXo ships Windows builds of the same emulators; the app does not
+use them.
+
+| Collection | Emulator | What for |
+|---|---|---|
+| eXoDOS | [DOSBox Staging](https://www.dosbox-staging.org) | Most games. |
+| eXoDOS | [DOSBox-X](https://dosbox-x.com) | Games that eXo runs in DOSBox-X or SVN Daum, and the Windows 3.x titles. Optional; Staging runs them less faithfully. |
+| eXoWin9x | DOSBox-X | Windows 98 for almost every game. |
+| eXoWin9x | [86Box](https://86box.net) | The thirty or so games that eXo runs in 86Box. |
+| eXoDemoScene | DOSBox-X | About 95% of the demos; DOSBox Staging for the rest. The three MartyPC demos (8088 MPH, Area 5150, CGADEMO) are not supported. |
+| eXoScummVM | [ScummVM](https://www.scummvm.org) 2026.4 or later | Every game. *Launching is planned; the games can be set up and installed today.* Five games use engines that ScummVM leaves out of its release builds (In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden, Ultima I); a [daily build](https://buildbot.scummvm.org) has them. |
+| eXoAppleIIGS | [GSplus](https://github.com/digarok/gsplus) 1.38 or later | Most games. *Planned.* |
+| eXoAppleIIGS | [MAME](https://www.mamedev.org) (`brew install mame`) | The 74 games eXo runs in MAME. Needs an `apple2gs` ROM set that matches your MAME version; eXo's set is for MAME 0.245. *Planned.* |
+| eXoIF | DOSBox Staging or DOSBox-X | The MS-DOS versions of the games. *Planned.* |
+| eXoIF | [RetroArch](https://www.retroarch.com) cores | C64 (VICE), ZX Spectrum (Fuse), Apple II (AppleWin), Amiga (PUAE), Atari 8-bit and ST, MSX. *Planned.* |
+| eXoIF | A story-file interpreter, such as [Spatterlight](https://ccxvii.net/spatterlight/) or ScummVM's Glk engine | Infocom and other text adventures that eXo plays in WinFrotz, Gargoyle or Lectrote. *Planned.* Versions that need Windows programs or mainframe emulators are not supported. |
+| LaunchBox libraries | RetroArch, [Dolphin](https://dolphin-emu.org), MAME or [Mednafen](https://mednafen.github.io) | Console, computer and arcade platforms. Settings › Emulators assigns one per platform, following the library's `Emulators.xml` by default. |
 
 ## Build
 
@@ -91,12 +106,12 @@ does on Windows, is available in Settings.
   has been played yet.
 - ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
   XML beside them, plus single titles configured by hand.
-- Set up eXoDOS on the Mac: unpack a fresh download (full or Lite) without the
-  Windows `Setup eXoDOS.bat`. Not started; today the app needs a finished
-  install.
-- Windows 9x games from eXoWin9x. The library is on the volume (the 1994-1996
-  set, 648 titles) but there is no launch path yet: the `9xlaunch.bat` scripts
-  and the 86Box, PCBox and DOSBox-X profiles still need translating.
+- More eXo packs. Setup and installing work for eXoDemoScene, eXoScummVM,
+  eXoAppleIIGS and eXoIF; eXoDemoScene also launches. Still to do: a ScummVM
+  launch planner (variants, sound choices, eXo's ScummVM settings), GSplus
+  configs for eXoAppleIIGS, and eXoIF in stages (DOSBox versions, RetroArch
+  cores, a story-file interpreter). Later: MAME for the eXoAppleIIGS games eXo
+  runs in it, and eXoWin3x.
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
 - Later: BitTorrent downloads of the eXoDOS packs, and metadata and media

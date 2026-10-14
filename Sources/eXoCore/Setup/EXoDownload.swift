@@ -25,11 +25,22 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
     /// A media add-on zip and the platforms it brings.
     nonisolated public struct AddOn: Hashable, Sendable, Identifiable {
         public var archive: URL
-        /// Platform names from the zip's `Data/Platforms/*.xml` files.
+        /// Platform names from the zip's `Data/Platforms/*.xml` files. Empty
+        /// when the pack's metadata already lists the platform, as for
+        /// eXoDemoScene's videos.
         public var platforms: [String]
         /// The sidebar category eXo files these platforms under.
         public var category: String
         public var size: Int64
+        /// True for `Mag*.zip`, which eXo's older setup unpacks into `eXo/`.
+        public var unpacksIntoEXo: Bool {
+            archive.lastPathComponent.lowercased().hasPrefix("mag")
+        }
+        /// The platforms, or the kind of media when the zip names none.
+        public var title: String {
+            platforms.isEmpty
+                ? EXoDownload.addOnKind(for: archive.lastPathComponent) : platforms.joined(separator: ", ")
+        }
         public var id: URL { archive }
     }
 
@@ -104,7 +115,7 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
                 else { return nil }
                 return String(parts[2].dropLast(4))
             }
-            guard !platforms.isEmpty, let category = addOnCategory(for: archive.lastPathComponent) else { continue }
+            guard let category = addOnCategory(for: archive.lastPathComponent) else { continue }
             addOns.append(
                 AddOn(archive: archive, platforms: platforms, category: category, size: size(of: [archive])))
         }
@@ -132,13 +143,23 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
 
     /// eXo's setup registers add-on platforms under these categories.
     static func addOnCategory(for archiveName: String) -> String? {
-        let name = archiveName.lowercased()
-        if name.hasSuffix("books.zip") || name.hasSuffix("catalogs.zip") || name.hasSuffix("magazines.zip") {
-            return "Literature"
+        switch addOnKind(for: archiveName) {
+        case "Books", "Catalogs", "Magazines": return "Literature"
+        case "Soundtracks": return "Audio"
+        case "Videos": return "Video"
+        default: return nil
         }
-        if name.hasSuffix("soundtracks.zip") { return "Audio" }
-        if name.hasSuffix("videos.zip") { return "Video" }
-        return nil
+    }
+
+    /// The kind of media an add-on zip holds, from its name: `DOSBooks.zip`,
+    /// `IFMagazines.zip`, `Mag!AppleIIGS.zip`, `DSNVideos.zip`.
+    static func addOnKind(for archiveName: String) -> String {
+        let name = archiveName.lowercased()
+        for kind in ["Books", "Catalogs", "Magazines", "Soundtracks", "Videos"]
+        where name.hasSuffix(kind.lowercased() + ".zip") {
+            return kind
+        }
+        return name.hasPrefix("mag") ? "Magazines" : ""
     }
 
     static func size(of urls: [URL]) -> Int64 {

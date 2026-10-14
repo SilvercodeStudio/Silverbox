@@ -98,7 +98,7 @@ struct LibraryQueryTests {
         let snapshot = LibrarySnapshot(
             root: LibraryRoot(url: URL(fileURLWithPath: "/lib")), games: [], platforms: [], categories: [],
             platformFolders: [], playlists: [], parents: [], alternateNames: names, additionalApplications: [],
-            dosboxIndex: DOSBoxIndex(), installedGamePaths: [])
+            installedGamePaths: [])
         #expect(snapshot.alternateNames["g"]?.map(\.region) == ["Origin release", "Japan"])
     }
 

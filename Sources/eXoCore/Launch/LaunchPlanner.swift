@@ -109,10 +109,13 @@ nonisolated public struct LaunchPlanner: Sendable {
 
     public var localStore: LocalStore? { snapshot.localStore }
 
-    /// True when the library's game folder cannot be written, so games
+    /// True when the library's eXoDOS folder cannot be written, so games
     /// unpacked there need an overlay for their saves.
-    public var libraryIsReadOnly: Bool {
-        !FileManager.default.isWritableFile(atPath: snapshot.root.gamesDirectory.path)
+    public var libraryIsReadOnly: Bool { libraryIsReadOnly(for: .dos) }
+
+    /// True when the pack's folder in the library cannot be written.
+    public func libraryIsReadOnly(for pack: EXoPack) -> Bool {
+        !FileManager.default.isWritableFile(atPath: snapshot.root.gamesDirectory(for: pack).path)
     }
 
     /// The `!dos/<game>` folder that holds the launcher, configs and extras.
@@ -140,7 +143,7 @@ nonisolated public struct LaunchPlanner: Sendable {
     }
 
     public func eXoDOSBuild(for game: Game) -> EXoDOSBuild? {
-        snapshot.dosboxIndex.build(forLauncherBaseName: game.launcherBaseName)
+        snapshot.dosboxBuild(for: game)
     }
 
     public func recommendedEmulator(for game: Game) -> EmulatorKind {
@@ -152,7 +155,7 @@ nonisolated public struct LaunchPlanner: Sendable {
         -> LaunchPlan
     {
         if game.eXoPack == .win9x { return try planWindows9x(game: game, emulator: emulator, options: options) }
-        guard game.isDOSGame else { throw LaunchPlanError.notADOSGame }
+        guard game.isDOSGame, let pack = game.eXoPack else { throw LaunchPlanError.notADOSGame }
         guard let folderName = game.gameFolderName, let configFolder = configFolder(for: game) else {
             throw LaunchPlanError.missingGameFolder
         }
@@ -172,7 +175,7 @@ nonisolated public struct LaunchPlanner: Sendable {
         let sourceText = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
         let source = DOSBoxConfigDocument.parse(sourceText)
 
-        // Games unpacked in the local store: point `eXoDOS` paths there.
+        // Games unpacked in the local store: point `eXo/<pack>` paths there.
         // Games unpacked on a read-only library: overlay a local folder so
         // saves and settings can be written.
         var mappings: [PathMapping] = []
@@ -180,11 +183,14 @@ nonisolated public struct LaunchPlanner: Sendable {
         switch location {
         case .local:
             if let localStore {
-                mappings.append(PathMapping(from: snapshot.root.gamesDirectory, to: localStore.gamesDirectory))
+                mappings.append(
+                    PathMapping(
+                        from: snapshot.root.gamesDirectory(for: pack), to: localStore.gamesDirectory(for: pack)))
             }
         case .library:
-            if let localStore, libraryIsReadOnly {
-                overlay = OverlayMount(base: snapshot.root.gamesDirectory, directory: localStore.overlayDirectory)
+            if let localStore, libraryIsReadOnly(for: pack) {
+                overlay = OverlayMount(
+                    base: snapshot.root.gamesDirectory(for: pack), directory: localStore.overlayDirectory(for: pack))
             }
         }
         let fallbacks: [URL] = [location.url, configFolder]
@@ -195,13 +201,13 @@ nonisolated public struct LaunchPlanner: Sendable {
         var translation = translator.translate(source)
         if overlay != nil {
             translation.notes.append(
-                "The library is read-only; saves are written to \(localStore?.overlayDirectory.path ?? "the local overlay folder")."
+                "The library is read-only; saves are written to \(localStore?.overlayDirectory(for: pack).path ?? "the local overlay folder")."
             )
         }
 
         if let build = eXoDOSBuild(for: game), build.recommendedEmulator != emulator.kind {
             translation.notes.insert(
-                "eXoDOS runs this game with \(build.displayName); \(build.recommendedEmulator.displayName) is the closer match on the Mac.",
+                "\(pack.displayName) runs this game with \(build.displayName); \(build.recommendedEmulator.displayName) is the closer match on the Mac.",
                 at: 0)
         }
 

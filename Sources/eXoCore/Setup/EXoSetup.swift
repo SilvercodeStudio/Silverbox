@@ -110,7 +110,8 @@ nonisolated public struct EXoSetup: Sendable {
                 Step(title: "Box art and game lists", archive: archive, destination: target, excluded: ["*.dll"]))
         }
         for addOn in addOns {
-            steps.append(Step(title: "Media add-on", archive: addOn.archive, destination: target))
+            let destination = addOn.unpacksIntoEXo ? eXo : target
+            steps.append(Step(title: "Media add-on", archive: addOn.archive, destination: destination))
         }
         if options.unpackGameData {
             for archive in download.gameDataArchives {
@@ -227,6 +228,9 @@ nonisolated public struct EXoSetup: Sendable {
         if let folder = Self.subfolder(of: xml, named: listFolder) {
             try copyFiles(in: folder, withExtension: "xml", to: platforms)
         }
+        // Loose platform files beside the merge scripts, such as eXoAppleIIGS's
+        // "Apple IIGS Magazines.xml"; the merged lists are written below.
+        try copyFiles(in: xml, withExtension: "xml", to: platforms, except: ["platforms.xml", "parents.xml"])
         if let folder = Self.subfolder(of: xml, named: "Playlists") {
             try copyFiles(in: folder, withExtension: nil, to: playlists)
         }
@@ -336,9 +340,12 @@ nonisolated public struct EXoSetup: Sendable {
             .map { folder.appendingPathComponent($0, isDirectory: true) }
     }
 
-    private func copyFiles(in folder: URL, withExtension fileExtension: String?, to destination: URL) throws {
+    private func copyFiles(
+        in folder: URL, withExtension fileExtension: String?, to destination: URL, except excluded: Set<String> = []
+    ) throws {
         let fm = FileManager.default
-        for name in ((try? fm.contentsOfDirectory(atPath: folder.path)) ?? []) {
+        for name in ((try? fm.contentsOfDirectory(atPath: folder.path)) ?? [])
+        where !excluded.contains(name.lowercased()) {
             let source = folder.appendingPathComponent(name)
             var isDirectory: ObjCBool = false
             guard fm.fileExists(atPath: source.path, isDirectory: &isDirectory), !isDirectory.boolValue else {

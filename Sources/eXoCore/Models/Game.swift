@@ -229,14 +229,27 @@ nonisolated extension Game {
         }
     }
 
+    /// True for games that run in DOSBox through a translated `dosbox.conf`:
+    /// eXoDOS games and eXoDemoScene demos.
+    public var isDOSGame: Bool { eXoPack?.runsInDOSBox ?? false }
+
     /// True when the launcher is an eXoDOS batch file in a `!dos` config
     /// folder. Other batch files, such as a plain DOS folder import, are not
     /// eXoDOS games and cannot be installed or translated the eXoDOS way.
-    public var isDOSGame: Bool {
+    var isEXoDOSLauncher: Bool {
         guard applicationPath.lowercased().hasSuffix(".bat") else { return false }
         let folder = (rootFolder ?? applicationPath).lowercased()
         return folder.contains("\\!dos\\") || folder.contains("/!dos/") || folder.hasSuffix("\\!dos")
             || folder.contains("exo\\exodos\\")
+    }
+
+    /// True for the entry each eXo pack adds for its Windows setup script,
+    /// `Setup <pack>.bat` at the top of the library. The Mac setup replaces it.
+    public var isEXoSetupScript: Bool {
+        let parts = WindowsPath.components(of: applicationPath)
+        guard parts.count == 1 else { return false }
+        let name = parts[0].lowercased()
+        return name.hasPrefix("setup exo") && name.hasSuffix(".bat")
     }
 
     /// How the item starts: in DOSBox, in another emulator, in a document

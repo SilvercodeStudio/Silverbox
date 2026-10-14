@@ -6,7 +6,7 @@ Autoexec.Mac reads from one or more collections and writes only to a local data 
 
 A collection is an eXoDOS or eXoWin9x install, or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for eXoDOS also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. Autoexec.Mac only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
 
-Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
+Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection. When you have more than one eXo pack (for example eXoDOS and eXoScummVM), the eXo Packs section shows the games of each pack on its own, even when several packs share one collection; the game's details also name its pack.
 
 Add collections on first launch, in Settings › Library, or by dropping the folder onto the window from the Finder. A folder set up on Windows, or one you set up here, can be added as it is. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
 
@@ -22,7 +22,7 @@ Setup asks:
 - **Manuals, music and extras** (eXoDOS) — each game's extras come in a zip of their own, 120 GB in all. Unpack them all now, or unpack each game's when you install it.
 - **Media add-ons** — books, catalogs, magazines, soundtracks and videos are large. Leave out any you do not want.
 
-Setup writes into the download folder, as on Windows. If the folder cannot be written, for example on a read-only network share, setup writes to `Collections` in the local data folder instead, and the game archives are still read from the download. Setup needs about as much free space as the archives it unpacks; the sheet shows the space needed and the space free. Display choices from eXo's setup are left out: the launch options take their place.
+Setup can write into the download folder, as on Windows, or into `Collections` in the local data folder, which leaves the download as it came; the game archives are then still read from the download. If the download cannot be written, for example on a read-only network share, setup always writes to the local data folder. Adding the download again later finds the earlier setup in either place. Setup needs about as much free space as the archives it unpacks; the sheet shows the space needed and the space free. Display choices from eXo's setup are left out: the launch options take their place.
 
 ## The local data folder
 

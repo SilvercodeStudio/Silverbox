@@ -5,6 +5,8 @@ import Foundation
 nonisolated public struct Library: Sendable {
     public let snapshots: [LibrarySnapshot]
     public let games: [Game]
+    /// The eXo packs that have games here, in ``EXoPack`` order.
+    public let packs: [EXoPack]
     private let locations: [String: (snapshot: Int, game: Int)]
     private let snapshotIndexByID: [UUID: Int]
 
@@ -22,6 +24,8 @@ nonisolated public struct Library: Sendable {
             }
         }
         self.games = games
+        let present = Set(games.lazy.compactMap(\.eXoPack))
+        self.packs = EXoPack.allCases.filter(present.contains)
         self.locations = locations
         self.snapshotIndexByID = byID
     }
