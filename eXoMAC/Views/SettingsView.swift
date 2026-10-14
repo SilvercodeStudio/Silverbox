@@ -182,7 +182,7 @@ struct LibrarySettingsView: View {
             model.addDroppedFolders(urls)
         }
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { model.addCollection(url: url) }
+            if case .success(let url) = result { model.addFolder(url) }
         }
         .fileImporter(isPresented: $showingLocalPicker, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result {

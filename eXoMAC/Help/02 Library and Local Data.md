@@ -8,7 +8,21 @@ A collection is an eXoDOS or eXoWin9x install, or any LaunchBox library folder: 
 
 Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
 
-Add collections on first launch, in Settings › Library, or by dropping the folder onto the window from the Finder. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
+Add collections on first launch, in Settings › Library, or by dropping the folder onto the window from the Finder. A folder set up on Windows, or one you set up here, can be added as it is. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
+
+## Setting up an eXo download
+
+An eXo download, as the torrent delivers it, holds a `Content` folder of archives and a setup script for Windows. Add the download folder, and Autoexec.Mac offers to set it up. Setup does what eXo's script does on Windows: it unpacks the game lists, box art, launch settings, media add-ons and emulator files, and builds the `Data` folder. The game archives stay packed until you install a game.
+
+To merge packs, as eXo does, copy them into one folder first, keeping their folder layout. Setup finds every pack in the folder and sets them up together. If you add a pack to a folder that is already set up, add the folder again and setup runs once more for all packs.
+
+Setup asks:
+
+- **Include adult games** — eXo marks some games as adult because of nudity. Left out, they stay on disk but are not listed.
+- **Manuals, music and extras** (eXoDOS) — each game's extras come in a zip of their own, 120 GB in all. Unpack them all now, or unpack each game's when you install it.
+- **Media add-ons** — books, catalogs, magazines, soundtracks and videos are large. Leave out any you do not want.
+
+Setup writes into the download folder, as on Windows. If the folder cannot be written, for example on a read-only network share, setup writes to `Collections` in the local data folder instead, and the game archives are still read from the download. Setup needs about as much free space as the archives it unpacks; the sheet shows the space needed and the space free. Display choices from eXo's setup are left out: the launch options take their place.
 
 ## The local data folder
 
@@ -18,6 +32,7 @@ Everything bulky that Autoexec.Mac writes goes to one folder. By default it is `
 - `Soundtracks` — albums unpacked from the library's soundtrack zips.
 - `Saves` — backups of saved games and changed settings, made when you uninstall a game.
 - `Overrides` — your edited copies of DOSBox configurations.
+- `Collections` — downloads set up here because their own folder is read-only.
 - `Overlay` — writable folders and disk copies for games that are already unpacked inside a read-only library, and the Windows 98 disks that eXoWin9x games write to.
 - `Launch` and `Logs` — the configurations Autoexec.Mac generates for each launch, and the emulator's output.
 - `MediaIndex` and `LibraryCache` — caches that Rescan Library rebuilds.

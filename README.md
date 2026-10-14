@@ -17,10 +17,9 @@ The games, media and emulators are not part of this project.
 
 - macOS 15 or later, on Apple silicon or Intel. 
   - Building the app from source needs Xcode 27 or higher.
-- An eXoDOS v6 installation (the full set, or Lite with games downloaded).
-  - Currently, you must have run the setup.bat on a Windows machine 
-    before Autoexec.Mac will be able to use it; however, automatic installation
-    is planned for the near future.
+- One or more eXo downloads, such as eXoDOS v6 (the full set, or Lite with
+  games downloaded) and eXoWin9x. Autoexec.Mac runs their setup itself, so a
+  Windows PC is not needed; a folder set up on Windows works too.
 - [DOSBox Staging](https://www.dosbox-staging.org) in `/Applications`, and
   optionally [DOSBox-X](https://dosbox-x.com). Both can be located in Settings.
 - For eXoWin9x: DOSBox-X, and [86Box](https://86box.net) for the thirty or so

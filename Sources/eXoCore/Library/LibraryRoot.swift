@@ -6,10 +6,28 @@ nonisolated public struct LibraryRoot: Hashable, Sendable, Codable {
     public let url: URL
     /// Windows prefixes in the library's paths that live elsewhere on this Mac.
     public let substitutions: [PathSubstitution]
+    /// The eXo download this library was set up from, when the setup wrote
+    /// to another folder because the download is read-only. Game archives
+    /// and per-game extras stay there.
+    public let downloadURL: URL?
 
-    public init(url: URL, substitutions: [PathSubstitution] = []) {
+    public init(url: URL, substitutions: [PathSubstitution] = [], downloadURL: URL? = nil) {
         self.url = url.standardizedFileURL
         self.substitutions = substitutions
+        self.downloadURL = downloadURL?.standardizedFileURL
+    }
+
+    /// The folders that may hold the download's files: the library, then
+    /// the download it was set up from.
+    public var downloadRoots: [URL] {
+        [url] + (downloadURL.map { [$0] } ?? [])
+    }
+
+    /// The first existing file at `relativePath` under ``downloadRoots``, or
+    /// the path under the library when none exists.
+    public func downloadFile(_ relativePath: String) -> URL {
+        let candidates = downloadRoots.map { $0.appendingPathComponent(relativePath) }
+        return candidates.first { FileManager.default.fileExists(atPath: $0.path) } ?? candidates[0]
     }
 
     public var dataDirectory: URL { url.appendingPathComponent("Data", isDirectory: true) }

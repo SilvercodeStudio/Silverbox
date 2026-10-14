@@ -64,6 +64,9 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingVideoChoice) { choice in
             VideoChoiceSheet(choice: choice)
         }
+        .sheet(item: $model.pendingSetup) { pending in
+            SetupSheet(pending: pending)
+        }
         .confirmationDialog(
             "Remove the unpacked album?",
             isPresented: Binding(
@@ -250,7 +253,7 @@ struct LibrarySetupView: View {
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { model.addCollection(url: url) }
+            if case .success(let url) = result { model.addFolder(url) }
         }
     }
 }

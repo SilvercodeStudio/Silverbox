@@ -52,10 +52,12 @@ nonisolated public struct LibraryCollection: Identifiable, Hashable, Sendable, C
     public var rootPath: String
     public var substitutions: [PathSubstitution]
     public var isEnabled: Bool
+    /// The read-only eXo download that was set up into ``rootPath``, if any.
+    public var downloadPath: String?
 
     public init(
         id: UUID = UUID(), name: String, kind: CollectionKind = .launchBox, rootPath: String,
-        substitutions: [PathSubstitution] = [], isEnabled: Bool = true
+        substitutions: [PathSubstitution] = [], isEnabled: Bool = true, downloadPath: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -63,6 +65,7 @@ nonisolated public struct LibraryCollection: Identifiable, Hashable, Sendable, C
         self.rootPath = rootPath
         self.substitutions = substitutions
         self.isEnabled = isEnabled
+        self.downloadPath = downloadPath
     }
 
     public init(from decoder: any Decoder) throws {
@@ -73,11 +76,16 @@ nonisolated public struct LibraryCollection: Identifiable, Hashable, Sendable, C
         rootPath = try c.decode(String.self, forKey: .rootPath)
         substitutions = try c.decodeIfPresent([PathSubstitution].self, forKey: .substitutions) ?? []
         isEnabled = try c.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+        downloadPath = try c.decodeIfPresent(String.self, forKey: .downloadPath)
     }
 
     public var rootURL: URL { URL(fileURLWithPath: rootPath, isDirectory: true) }
 
-    public var root: LibraryRoot { LibraryRoot(url: rootURL, substitutions: substitutions) }
+    public var root: LibraryRoot {
+        LibraryRoot(
+            url: rootURL, substitutions: substitutions,
+            downloadURL: downloadPath.map { URL(fileURLWithPath: $0, isDirectory: true) })
+    }
 
     /// A sensible name for a folder: "eXoDOS" or "eXoWin9x" when the folder
     /// is named after them, else the folder name. A general LaunchBox install

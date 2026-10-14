@@ -130,6 +130,19 @@ Makefile).
   with only `Play.cfg` run in 86Box (`plan86Box`): the paths in it are
   relative to `eXo/emulators/86Box98`, and `VHDDifferencingDisk` writes the
   fresh child disk that eXo makes with `makevhd.exe`.
+- Setup. A Mac user can add an untouched eXo download: `EXoDownload`
+  finds the packs (`Content/!<pack>metadata.zip`), metadata, media add-ons,
+  `Content/GameData` and `eXo/util/util*.zip`; `EXoSetup` does what eXo's
+  `Setup <pack>.bat` does without Windows: unpacks them (nested `EXT*.zip`
+  into `eXo`, `OPT*.zip` into `eXo/util`), merges the XML fragments by
+  reading the `xml/merge_*.bat` scripts, registers add-on platforms as
+  `eXoLBpm.exe` would, and writes `Data/Autoexec.Mac Setup.json`. It sets up
+  in place when the download is writable, else into `Collections/<name>` in
+  the local data folder with `LibraryCollection.downloadPath` pointing back
+  (`LibraryRoot.downloadFile` finds game zips and extras there). A game's
+  GameData zip is unpacked at install when setup left it packed.
+  `ZipArchive` extracts with `unzip`, or `bsdtar` when names are in the DOS
+  code page (CP437) without the UTF-8 flag, which eXo's zips have.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
@@ -185,6 +198,12 @@ Makefile).
       -searchText ultima -selectTitle "Ultima V: Warriors of Destiny" -screenshotPath /tmp/shot.png
   ```
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.
+- `-setupPath <folder>` opens the setup sheet for an eXo download at start.
+  `EXOMAC_SETUP_TARGET=<folder> swift test --filter matchesTheWindowsSetup`
+  sets up the mounted library's original archives into that folder (without
+  the media add-ons, about 20 GB) and compares the result with the Windows setup,
+  then installs and plans Super Tetris from it. `EXOMAC_SETUP_REUSE=1` skips
+  the unpacking when the folder already holds a setup.
 - `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
   games in DOSBox Staging for a few seconds and checks the emulator log, then
   boots Windows 98 for an eXoWin9x game in DOSBox-X and one in 86Box

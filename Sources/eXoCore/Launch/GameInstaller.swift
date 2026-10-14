@@ -9,6 +9,11 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
     public var destinationDirectory: URL
     public var installedFolderURL: URL
     public var updateArchiveURL: URL?
+    /// The game's manual, music, videos and extras
+    /// (`Content/GameData/<pack>/<name>.zip`), when the setup left them packed.
+    public var extrasArchiveURL: URL?
+    /// Where the extras unpack: the library folder.
+    public var extrasDestination: URL?
     /// An existing save backup that can be restored after unpacking.
     public var saveArchiveURL: URL?
     /// Where a save backup is written on uninstall.
@@ -57,30 +62,21 @@ nonisolated public protocol ArchiveExtractor: Sendable {
     func extract(archive: URL, into directory: URL) async throws
 }
 
-/// Extracts with the system `unzip` command.
+/// Extracts with the system tools, through ``ZipArchive``.
 nonisolated public struct UnzipCommandExtractor: ArchiveExtractor {
-    public var executableURL: URL
-
-    public init(executableURL: URL = URL(fileURLWithPath: "/usr/bin/unzip")) {
-        self.executableURL = executableURL
-    }
+    public init() {}
 
     public func extract(archive: URL, into directory: URL) async throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let result = try await CommandRunner.run(
-            executable: executableURL,
-            arguments: ["-o", "-q", archive.path, "-d", directory.path],
-            workingDirectory: directory)
-        // unzip returns 1 for warnings (for example, mismatched timestamps) and still extracts.
-        guard result.status == 0 || result.status == 1 else {
-            throw InstallError.extractionFailed(status: result.status, output: result.output)
-        }
+        try await ZipArchive.extract(archive, into: directory)
     }
 }
 
 nonisolated public struct CommandResult: Sendable, Hashable {
     public var status: Int32
+    /// Standard output and error as UTF-8; empty when they are not valid UTF-8.
     public var output: String
+    /// The same output as bytes.
+    public var data: Data
 }
 
 /// Runs a command to completion and collects its output.
@@ -99,17 +95,45 @@ nonisolated public enum CommandRunner {
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = pipe
+            // Read while the command runs: a command that prints more than
+            // the pipe holds would otherwise block and never exit.
+            let collected = CollectedOutput()
+            pipe.fileHandleForReading.readabilityHandler = { handle in
+                collected.append(handle.availableData)
+            }
             process.terminationHandler = { finished in
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                pipe.fileHandleForReading.readabilityHandler = nil
+                collected.append(pipe.fileHandleForReading.readDataToEndOfFile())
+                let data = collected.data
                 let output = String(data: data, encoding: .utf8) ?? ""
-                continuation.resume(returning: CommandResult(status: finished.terminationStatus, output: output))
+                continuation.resume(
+                    returning: CommandResult(status: finished.terminationStatus, output: output, data: data))
             }
             do {
                 try process.run()
             } catch {
+                pipe.fileHandleForReading.readabilityHandler = nil
                 continuation.resume(throwing: error)
             }
         }
+    }
+}
+
+/// Output gathered from a pipe's background reads.
+nonisolated private final class CollectedOutput: @unchecked Sendable {
+    private let lock = NSLock()
+    private var buffer = Data()
+
+    func append(_ chunk: Data) {
+        lock.lock()
+        buffer.append(chunk)
+        lock.unlock()
+    }
+
+    var data: Data {
+        lock.lock()
+        defer { lock.unlock() }
+        return buffer
     }
 }
 
@@ -131,8 +155,7 @@ nonisolated public struct GameInstaller: Sendable {
         // The zip sits beside the folder it unpacks to: `eXoDOS/<name>.zip`,
         // `eXoWin9x/<year>/<name>.zip`.
         let parent = components.dropLast().joined(separator: "/")
-        let archive = root.eXoDirectory.appendingPathComponent(parent, isDirectory: true)
-            .appendingPathComponent("\(game.launcherBaseName).zip")
+        let archive = root.downloadFile("eXo/\(parent)/\(game.launcherBaseName).zip")
         let update = root.updateDirectory.appendingPathComponent(pack.configFolderName, isDirectory: true)
             .appendingPathComponent("\(game.launcherBaseName).zip")
 
@@ -156,12 +179,21 @@ nonisolated public struct GameInstaller: Sendable {
         let existingSave = [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
             .first { FileManager.default.fileExists(atPath: $0.path) }
 
+        // A Mac setup can leave each game's extras packed until it is installed.
+        var extras: URL?
+        if let record = EXoSetupRecord.read(in: root.url), !record.options.unpackGameData {
+            let url = root.downloadFile("Content/GameData/\(pack.directoryName)/\(game.launcherBaseName).zip")
+            if FileManager.default.fileExists(atPath: url.path) { extras = url }
+        }
+
         return InstallPlan(
             game: game,
             archiveURL: archive,
             destinationDirectory: destination,
             installedFolderURL: destination.appendingPathComponent(folderName, isDirectory: true),
             updateArchiveURL: FileManager.default.fileExists(atPath: update.path) ? update : nil,
+            extrasArchiveURL: extras,
+            extrasDestination: extras == nil ? nil : root.url,
             saveArchiveURL: existingSave,
             saveBackupURL: backupTarget,
             location: location
@@ -176,6 +208,9 @@ nonisolated public struct GameInstaller: Sendable {
         try await extractor.extract(archive: plan.archiveURL, into: plan.destinationDirectory)
         if let update = plan.updateArchiveURL {
             try await extractor.extract(archive: update, into: plan.destinationDirectory)
+        }
+        if let extras = plan.extrasArchiveURL, let destination = plan.extrasDestination {
+            try await extractor.extract(archive: extras, into: destination)
         }
         if restoreSaves, let save = plan.saveArchiveURL {
             try await extractor.extract(archive: save, into: plan.destinationDirectory)

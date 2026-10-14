@@ -80,8 +80,10 @@ nonisolated public struct LibraryLoader: Sendable {
         var games: [Game] = []
         var alternates: [AlternateName] = []
         var extraApps: [AdditionalApplication] = []
+        // eXo lists its media add-on platforms whether or not the add-on is
+        // installed; a platform without a game list would show up empty.
+        platforms.removeAll { !fm.fileExists(atPath: root.platformFile(named: $0.name).path) }
         let platformFiles = platforms.map { (platform: $0, url: root.platformFile(named: $0.name)) }
-            .filter { fm.fileExists(atPath: $0.url.path) }
         // Weight progress by file size so the big MS-DOS file dominates.
         let sizes = platformFiles.map { (try? fm.attributesOfItem(atPath: $0.url.path)[.size] as? Int) ?? 1 }
         let totalSize = max(1, sizes.reduce(0, +))

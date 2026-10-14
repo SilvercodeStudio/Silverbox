@@ -130,6 +130,11 @@ final class AppModel {
     var pendingAlbumRemoval: Game?
     /// A video entry with several videos, waiting for the user to choose one.
     var pendingVideoChoice: VideoChoice?
+    /// An eXo download waiting for setup, shown in the setup sheet.
+    var pendingSetup: PendingSetup?
+    /// The running setup's progress; nil when none runs.
+    var setupProgress: EXoSetupProgress?
+    @ObservationIgnored var setupTask: Task<Void, Never>?
 
     private let userStateStore = UserLibraryStateStore(url: AppPaths.userLibraryState)
     private var saveTask: Task<Void, Never>?
@@ -154,6 +159,10 @@ final class AppModel {
         // Debug conveniences: `-searchText ultima -selectTitle "Ultima V: Warriors of Destiny"`.
         if let text = UserDefaults.standard.string(forKey: "searchText") { searchText = text }
         pendingSelectTitle = UserDefaults.standard.string(forKey: "selectTitle")
+        // `-setupPath <folder>` opens the setup sheet for an eXo download.
+        if let path = UserDefaults.standard.string(forKey: "setupPath"), !path.isEmpty {
+            Task { await prepareSetup(for: URL(fileURLWithPath: path, isDirectory: true)) }
+        }
         launcher.onSessionEnded = { [weak self] session in
             self?.sessionEnded(session)
         }
@@ -200,6 +209,7 @@ final class AppModel {
     var collections: [LibraryCollection] { settings.collections }
 
     func addCollection(url: URL) {
+        guard !settings.collections.contains(where: { $0.root.url == LibraryRoot(url: url).url }) else { return }
         let collection = LibraryCollection(name: LibraryCollection.suggestedName(for: url), rootPath: url.path)
         settings.collections.append(collection)
     }
@@ -218,6 +228,13 @@ final class AppModel {
                 rejected.append(url.lastPathComponent)
                 continue
             }
+            // An eXo download is checked even when it is a collection already:
+            // packs added to it since are set up and merged.
+            if EXoDownload.hasPacks(url) {
+                addFolder(url)
+                added += 1
+                continue
+            }
             let root = LibraryRoot(url: url)
             if settings.collections.contains(where: { $0.root.url == root.url }) { continue }
             if root.inspect().isUsable {
@@ -231,7 +248,7 @@ final class AppModel {
             alert = AppAlert(
                 title: rejected.count == 1 ? "\(rejected[0]) is not a library folder" : "Not library folders",
                 message:
-                    "A collection is an eXoDOS folder, or any LaunchBox library folder that holds Data and Images. "
+                    "A collection is an eXo download (eXoDOS, eXoWin9x and others), or any LaunchBox library folder that holds Data and Images. "
                     + (rejected.count == 1 ? "" : "Skipped: \(rejected.joined(separator: ", ")).")
             )
         }
