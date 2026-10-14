@@ -10,7 +10,10 @@ SCHEME = "Autoexec.Mac"
 CONFIG ?= Debug
 ARGS ?=
 
-XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination 'platform=macOS'
+# Debug builds only this Mac's architecture. A Release build goes to a generic
+# Mac, so it holds every architecture in ARCHS (Apple silicon and Intel).
+DESTINATION = $(if $(filter Release,$(CONFIG)),generic/platform=macOS,platform=macOS)
+XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)'
 
 .PHONY: help build run app test core typecheck sweep format reset
 
@@ -24,7 +27,7 @@ help:
 	@echo "make sweep          translate every eXoDOS config in the mounted library and print a summary"
 	@echo "make format         reformat the Swift sources with swift-format (settings in .swift-format)"
 	@echo "make reset          delete the app's settings and data, to test a first start (asks first; DATA= for a moved data folder)"
-	@echo "Set CONFIG=Release for a release build."
+	@echo "Set CONFIG=Release for a release build (Apple silicon and Intel)."
 
 build:
 	$(XCODEBUILD) -quiet build
@@ -59,7 +62,7 @@ typecheck: core
 	@tmp=$$(mktemp -d); \
 	printf 'module CStbVorbis { umbrella "%s/Sources/CStbVorbis/include" export * }\n' "$(CURDIR)" > $$tmp/stb.modulemap; \
 	printf 'module CXmpLite { umbrella "%s/Sources/CXmpLite/include" export * }\n' "$(CURDIR)" > $$tmp/xmp.modulemap; \
-	swiftc -typecheck -sdk "$$(xcrun --show-sdk-path)" -target arm64-apple-macos27.0 -swift-version 5 \
+	swiftc -typecheck -sdk "$$(xcrun --show-sdk-path)" -target arm64-apple-macos15.0 -swift-version 5 \
 	    -default-isolation MainActor -enable-upcoming-feature MemberImportVisibility \
 	    -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-upcoming-feature InferIsolatedConformances \
 	    -module-name eXoMAC -I .build/out/Products/Debug \

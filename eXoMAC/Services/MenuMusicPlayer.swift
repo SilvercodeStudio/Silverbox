@@ -123,12 +123,16 @@ nonisolated final class DecodedMusicStream: @unchecked Sendable {
         self.format = format
         scratch = [Int16](repeating: 0, count: framesPerBuffer * decoder.channelCount)
         engine.attach(node)
-        try engine.connectNode(node, to: engine.mainMixerNode, format: format)
+        if #available(macOS 27, *) {
+            try engine.connectNode(node, to: engine.mainMixerNode, format: format)
+        } else {
+            engine.connect(node, to: engine.mainMixerNode, format: format)
+        }
     }
 
     func start() throws {
         try engine.start()
-        try node.playAudio()
+        try play()
         let thread = Thread { [self] in feed() }
         thread.name = "eXoMAC.menuMusic"
         thread.qualityOfService = .userInitiated
@@ -141,7 +145,17 @@ nonisolated final class DecodedMusicStream: @unchecked Sendable {
 
     func resume() {
         if !engine.isRunning { try? engine.start() }
-        try? node.playAudio()
+        try? play()
+    }
+
+    /// macOS 27 reports a failed start as an error; older systems have only
+    /// the call that does not throw.
+    private func play() throws {
+        if #available(macOS 27, *) {
+            try node.playAudio()
+        } else {
+            node.play()
+        }
     }
 
     func stop() {

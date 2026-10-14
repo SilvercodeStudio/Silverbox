@@ -1,5 +1,9 @@
 # Autoexec.Mac (eXoMAC)
 
+Welcome to Autoexec.Mac!
+
+<img src="./eXoMAC/Assets.xcassets/AppIconAmber.imageset/autoexec-mac-amber-1024.png" width="400" alt="A.M. logo">
+
 Autoexec.Mac is an emulation front-end for the Mac, built for the eXoDOS and
 eXoWin9x game preservation projects by the eXo team (https://www.retro-exo.com).
 It reads an existing eXoDOS collection (the LaunchBox XML metadata, box art,
@@ -11,8 +15,12 @@ The games, media and emulators are not part of this project.
 
 ## Requirements
 
-- macOS 27 and Xcode 27.
+- macOS 15 or later, on Apple silicon or Intel. 
+  - Building the app from source needs Xcode 27 or higher.
 - An eXoDOS v6 installation (the full set, or Lite with games downloaded).
+  - Currently, you must have run the setup.bat on a Windows machine 
+    before Autoexec.Mac will be able to use it; however, automatic installation
+    is planned for the near future.
 - [DOSBox Staging](https://www.dosbox-staging.org) in `/Applications`, and
   optionally [DOSBox-X](https://dosbox-x.com). Both can be located in Settings.
 - For console, computer and arcade platforms from a LaunchBox library:
