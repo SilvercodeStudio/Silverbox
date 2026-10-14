@@ -137,7 +137,8 @@ struct PlayButtonRow: View {
 
     var body: some View {
         let installed = model.isInstalled(game)
-        let variants = game.isDOSGame && installed ? model.launchVariants(for: game) : []
+        let variants =
+            (game.isDOSGame || game.launchKind == .scummVM) && installed ? model.launchVariants(for: game) : []
         let albumLoaded = game.launchKind == .soundtrack && model.album.game?.id == game.id
         let albumPlaying = albumLoaded && model.album.isPlaying
         HStack(spacing: 8) {
@@ -267,6 +268,11 @@ struct MetadataGrid: View {
             if game.isDOSGame {
                 row("\(game.eXoPack?.displayName ?? "eXo") runs with", build?.displayName ?? "DOSBox")
                 row("Mac emulator", model.emulatorKind(for: game).displayName)
+            } else if game.launchKind == .scummVM {
+                row(
+                    "\(game.eXoPack?.displayName ?? "eXo") runs with",
+                    "ScummVM " + (model.scummVMVersion(for: game, variants: [], variant: nil) ?? ""))
+                row("Mac emulator", model.scummVMInstallation(for: game, variant: nil)?.kind.displayName ?? "ScummVM")
             } else if game.launchKind == .windows9x {
                 let kind = model.emulatorKind(for: game)
                 row("eXoWin9x runs with", "Windows 98 in \(kind.displayName)")

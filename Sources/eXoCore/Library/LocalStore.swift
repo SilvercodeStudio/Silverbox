@@ -30,6 +30,13 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
     }
     /// Save backups made when a game is uninstalled, like eXoDOS's `!save`.
     public var savesDirectory: URL { directory.appendingPathComponent("Saves", isDirectory: true) }
+    /// ScummVM's settings file for eXoScummVM games, kept apart from the
+    /// user's own ScummVM settings.
+    public var scummVMConfigURL: URL {
+        directory.appendingPathComponent("ScummVM", isDirectory: true).appendingPathComponent("scummvm.ini")
+    }
+    /// ScummVM saves, shared by all collections as in eXo.
+    public var scummVMSavesDirectory: URL { savesDirectory.appendingPathComponent("ScummVM", isDirectory: true) }
     /// Per-game edited copies of DOSBox configs.
     public var overridesDirectory: URL { directory.appendingPathComponent("Overrides", isDirectory: true) }
     /// Soundtrack albums unpacked from the library's zips.

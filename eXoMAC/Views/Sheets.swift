@@ -349,6 +349,7 @@ struct LaunchOptionsSheet: View {
     @State private var variantID: String?
     @State private var emulator: EmulatorKind
     @State private var remember: Bool
+    @State private var choices = LaunchChoices()
 
     init(pending: AppModel.PendingLaunch) {
         self.pending = pending
@@ -357,6 +358,9 @@ struct LaunchOptionsSheet: View {
         _emulator = State(initialValue: .dosboxStaging)
         _remember = State(initialValue: false)
     }
+
+    private var isScummVM: Bool { pending.game.launchKind == .scummVM }
+    private var selectedVariant: LaunchVariant? { pending.variants.first { $0.id == variantID } }
 
     var body: some View {
         @Bindable var model = model
@@ -393,8 +397,16 @@ struct LaunchOptionsSheet: View {
                             }
                         }
                         .pickerStyle(.radioGroup)
+                        if isScummVM, let note = model.scummVMNote(for: game, variant: selectedVariant) {
+                            Text(note).font(.caption).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                } else if isScummVM, let note = model.scummVMNote(for: game, variant: selectedVariant) {
+                    Section("Note") {
+                        Text(note).font(.caption).foregroundStyle(Theme.textSecondary)
                     }
                 }
+                if isScummVM, let variant = selectedVariant { scummVMChoices(variant) }
                 Section("Display") {
                     Toggle("Full screen", isOn: $options.fullscreen)
                     if emulator != .box86 { displayOptions }
@@ -402,6 +414,12 @@ struct LaunchOptionsSheet: View {
                 Section("Emulator") {
                     if game.launchKind == .windows9x {
                         LabeledContent("Emulator") { Text("Windows 98 in \(emulator.displayName)") }
+                    } else if isScummVM {
+                        LabeledContent("Emulator") {
+                            Text(
+                                model.scummVMInstallation(for: game, variant: selectedVariant)?.kind.displayName
+                                    ?? "ScummVM")
+                        }
                     } else {
                         Picker("Emulator", selection: $emulator) {
                             ForEach(EmulatorKind.dosBox) { kind in
@@ -443,11 +461,11 @@ struct LaunchOptionsSheet: View {
                     let variant = pending.variants.first { $0.id == variantID }
                     if remember || pending.configureOnly {
                         model.rememberLaunchChoices(
-                            for: game, options: options, variant: variant, emulatorKind: emulator)
+                            for: game, options: options, variant: variant, emulatorKind: emulator, choices: choices)
                     }
                     dismiss()
                     if !pending.configureOnly {
-                        model.launch(game, variant: variant, options: options, emulatorKind: emulator)
+                        model.launch(game, variant: variant, options: options, emulatorKind: emulator, choices: choices)
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -463,10 +481,39 @@ struct LaunchOptionsSheet: View {
             emulator = model.emulatorKind(for: game)
             variantID = model.preferredVariant(for: game, in: pending.variants)?.id
             let state = model.userState.state(for: game.launchBoxID)
+            choices = state.launchChoices ?? LaunchChoices()
             remember =
                 !(state.launchOverrides?.isEmpty ?? true) || state.preferredVariantID != nil
-                || state.emulatorOverride != nil
+                || state.emulatorOverride != nil || state.launchChoices != nil
         }
+    }
+
+    /// The music device and subtitles, when eXo asks for them.
+    @ViewBuilder private func scummVMChoices(_ variant: LaunchVariant) -> some View {
+        let files = model.scummVMFiles(for: variant)
+        let hasSubtitles = !variant.id.contains("/") && files.subtitle != nil
+        if !files.musicChoices.isEmpty || hasSubtitles {
+            Section("Sound") {
+                if !files.musicChoices.isEmpty {
+                    Picker("Music", selection: musicBinding(files.musicChoices)) {
+                        ForEach(files.musicChoices, id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.radioGroup)
+                }
+                if hasSubtitles {
+                    Toggle(
+                        "Subtitles",
+                        isOn: Binding(get: { choices.subtitles ?? true }, set: { choices.subtitles = $0 }))
+                }
+            }
+        }
+    }
+
+    /// The remembered music device when this variant offers it, else its first.
+    private func musicBinding(_ available: [String]) -> Binding<String> {
+        Binding(
+            get: { choices.music.flatMap { available.contains($0) ? $0 : nil } ?? available[0] },
+            set: { choices.music = $0 })
     }
 
     /// Window, aspect and filter choices; 86Box has only full screen.
@@ -478,7 +525,9 @@ struct LaunchOptionsSheet: View {
         Picker("Aspect ratio correction", selection: $options.aspect) {
             ForEach(LaunchOptions.AspectMode.allCases) { Text($0.displayName).tag($0) }
         }
-        if emulator == .dosboxStaging {
+        if isScummVM {
+            EmptyView()
+        } else if emulator == .dosboxStaging {
             Picker("CRT shader", selection: $options.shader) {
                 ForEach(LaunchOptions.Shader.allCases) { Text($0.displayName).tag($0) }
             }
@@ -490,9 +539,17 @@ struct LaunchOptionsSheet: View {
     }
 
     private func subtitle(build: EXoDOSBuild?) -> String {
-        let runs =
-            pending.game.launchKind == .windows9x
-            ? "Windows 98 starts first, then the game." : build.map { "eXoDOS runs this game with \($0.displayName)." }
+        let pack = pending.game.eXoPack?.displayName ?? "eXo"
+        let runs: String?
+        if pending.game.launchKind == .windows9x {
+            runs = "Windows 98 starts first, then the game."
+        } else if isScummVM {
+            runs = model.scummVMVersion(for: pending.game, variants: pending.variants, variant: selectedVariant).map {
+                "\(pack) runs this game in ScummVM \($0)."
+            }
+        } else {
+            runs = build.map { "\(pack) runs this game with \($0.displayName)." }
+        }
         if pending.configureOnly {
             return "These choices are saved for this game and used each time it starts." + (runs.map { " " + $0 } ?? "")
         }

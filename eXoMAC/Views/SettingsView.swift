@@ -40,7 +40,8 @@ struct SettingsView: View {
                 .tabItem { Label("Display & Sound", systemImage: "tv.and.hifispeaker.fill") }
                 .tag(Tab.display)
         }
-        .frame(width: 640)
+        // A fixed size, as macOS settings windows are; long tabs scroll.
+        .frame(width: 780, height: 640)
         .onAppear { if let request = state.request { tab = request.tab } }
         .onChange(of: state.request) { _, request in if let request { tab = request.tab } }
     }
@@ -317,6 +318,18 @@ struct EmulatorSettingsView: View {
                 )
                 .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .box86, picking: $picking)
+            }
+            Section("eXoScummVM games") {
+                Text(
+                    "eXoScummVM games run in ScummVM, with eXo's settings for each game. Their saves and ScummVM settings are kept in the local data folder, apart from your own ScummVM settings."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+                EmulatorPathRow(kind: .scummVM, picking: $picking)
+                Text(
+                    "A few games use engines that ScummVM leaves out of its release builds until they are finished. Choose a daily build (a second ScummVM app) to play them; it is used only for those games."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+                EmulatorPathRow(kind: .scummVMDaily, picking: $picking)
             }
             Section("Consoles, computers and arcade") {
                 Text(

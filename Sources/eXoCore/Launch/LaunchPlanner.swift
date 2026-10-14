@@ -75,6 +75,8 @@ nonisolated public enum LaunchPlanError: Error, Sendable, Equatable {
     case notADOSBoxEmulator(EmulatorKind)
     case needsDOSBoxX
     case needs86Box
+    case needsScummVM
+    case scummVMNotInIndex(String)
 }
 
 nonisolated extension LaunchPlanError: LocalizedError {
@@ -92,6 +94,10 @@ nonisolated extension LaunchPlanError: LocalizedError {
             return "eXoWin9x games run Windows 98 in DOSBox-X. Choose DOSBox-X for this game."
         case .needs86Box:
             return "This eXoWin9x game runs in 86Box. Set the 86Box location in Settings › Emulators."
+        case .needsScummVM:
+            return "eXoScummVM games run in ScummVM. Set the ScummVM location in Settings › Emulators."
+        case .scummVMNotInIndex(let name):
+            return "eXo's ScummVM index (eXo/util/scummvm.txt) has no entry for \(name)."
         }
     }
 }
@@ -138,6 +144,7 @@ nonisolated public struct LaunchPlanner: Sendable {
     }
 
     public func variants(for game: Game) -> [LaunchVariant] {
+        if game.launchKind == .scummVM { return scummVMVariants(for: game) }
         guard game.isDOSGame, let folder = configFolder(for: game) else { return [] }
         return LaunchVariantDetector.variants(inGameConfigFolder: folder)
     }
@@ -148,13 +155,18 @@ nonisolated public struct LaunchPlanner: Sendable {
 
     public func recommendedEmulator(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x { return .dosboxX }
+        if game.launchKind == .scummVM { return .scummVM }
         return eXoDOSBuild(for: game)?.recommendedEmulator ?? .dosboxStaging
     }
 
-    public func plan(game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions) throws
-        -> LaunchPlan
-    {
+    public func plan(
+        game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions,
+        choices: LaunchChoices = LaunchChoices()
+    ) throws -> LaunchPlan {
         if game.eXoPack == .win9x { return try planWindows9x(game: game, emulator: emulator, options: options) }
+        if game.launchKind == .scummVM {
+            return try planScummVM(game: game, variant: variant, emulator: emulator, options: options, choices: choices)
+        }
         guard game.isDOSGame, let pack = game.eXoPack else { throw LaunchPlanError.notADOSGame }
         guard let folderName = game.gameFolderName, let configFolder = configFolder(for: game) else {
             throw LaunchPlanError.missingGameFolder
@@ -226,7 +238,7 @@ nonisolated public struct LaunchPlanner: Sendable {
             ]
         case .dosboxX:
             arguments = ["-defaultdir", workingDirectory.path, "-conf", configURL.path, "-fastlaunch"]
-        case .retroArch, .dolphin, .mame, .mednafen, .box86:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily:
             throw LaunchPlanError.notADOSBoxEmulator(emulator.kind)
         }
 

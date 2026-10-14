@@ -119,8 +119,13 @@ nonisolated public struct EXoSetup: Sendable {
             }
         }
         for pack in download.packs {
+            // Extras without GameData zips stay in the config archive until
+            // the game is installed, like GameData zips.
+            let excluded = !options.unpackGameData && !pack.hasGameData ? ["*/Extras/*"] : []
             steps.append(
-                Step(title: "\(pack.displayName) game configs", archive: pack.configArchive, destination: target))
+                Step(
+                    title: "\(pack.displayName) game configs", archive: pack.configArchive, destination: target,
+                    excluded: excluded))
         }
         for archive in download.utilArchives {
             steps.append(
@@ -190,10 +195,12 @@ nonisolated public struct EXoSetup: Sendable {
         for (index, name) in nested.enumerated() {
             try Task.checkCancellation()
             let archive = util.appendingPathComponent(name)
-            let destination = name.lowercased().hasPrefix("ext") ? eXo : util
+            let isEXT = name.lowercased().hasPrefix("ext")
             let count = max(1, (try? await ZipArchive.entries(of: archive).count) ?? 1)
             let share = 1 / Double(nested.count)
-            try await ZipArchive.extract(archive, into: destination) { files in
+            // The Windows builds of the emulators are of no use on the Mac.
+            let excluded = isEXT ? ["emulators/*.exe", "emulators/*.EXE", "emulators/*.dll", "emulators/*.DLL"] : []
+            try await ZipArchive.extract(archive, into: isEXT ? eXo : util, excluding: excluded) { files in
                 progress((Double(index) + min(1, Double(files) / Double(count))) * share, name)
             }
             try fm.removeItem(at: archive)

@@ -52,4 +52,19 @@ nonisolated public enum WindowsPath {
         }
         return url.standardizedFileURL
     }
+
+    /// The same path with each component spelled as it is on disk, for
+    /// names whose case differs from the file. Missing parts stay as given.
+    public static func matchingCase(_ url: URL) -> URL {
+        let fm = FileManager.default
+        var result = URL(fileURLWithPath: "/")
+        for component in url.standardizedFileURL.pathComponents.dropFirst() {
+            let names = (try? fm.contentsOfDirectory(atPath: result.path)) ?? []
+            let match =
+                names.contains(component)
+                ? component : names.first { $0.caseInsensitiveCompare(component) == .orderedSame } ?? component
+            result = result.appendingPathComponent(match)
+        }
+        return result
+    }
 }

@@ -132,6 +132,8 @@ final class AppModel {
     var pendingVideoChoice: VideoChoice?
     /// An eXo download waiting for setup, shown in the setup sheet.
     var pendingSetup: PendingSetup?
+    /// The games each ScummVM executable can run, by path.
+    @ObservationIgnored var scummVMGameCache: [String: ScummVMGames] = [:]
     /// The running setup's progress; nil when none runs.
     var setupProgress: EXoSetupProgress?
     @ObservationIgnored var setupTask: Task<Void, Never>?
@@ -517,7 +519,7 @@ final class AppModel {
     // MARK: - Launching
 
     func emulatorKind(for game: Game) -> EmulatorKind {
-        if game.eXoPack == .win9x { return defaultEmulatorKind(for: game) }
+        if game.eXoPack == .win9x || game.launchKind == .scummVM { return defaultEmulatorKind(for: game) }
         if let override = userState.state(for: game.launchBoxID).emulatorOverride { return override }
         return defaultEmulatorKind(for: game)
     }
@@ -526,6 +528,7 @@ final class AppModel {
     /// eXoWin9x games boot Windows 98 in DOSBox-X, or in 86Box where eXo does.
     func defaultEmulatorKind(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x { return needs86Box(game) ? .box86 : .dosboxX }
+        if game.launchKind == .scummVM { return .scummVM }
         switch settings.emulatorPolicy {
         case .alwaysStaging: return .dosboxStaging
         case .alwaysDOSBoxX: return .dosboxX
@@ -571,7 +574,7 @@ final class AppModel {
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
         switch game.launchKind {
-        case .dosBox, .windows9x: break
+        case .dosBox, .windows9x, .scummVM: break
         case .emulator:
             launchEmulated(game)
             return
@@ -604,7 +607,8 @@ final class AppModel {
         }
         launch(
             game, variant: variant ?? preferredVariant(for: game, in: variants),
-            options: effectiveLaunchOptions(for: game), emulatorKind: emulatorKind(for: game))
+            options: effectiveLaunchOptions(for: game), emulatorKind: emulatorKind(for: game),
+            choices: userState.state(for: game.launchBoxID).launchChoices ?? LaunchChoices())
     }
 
     /// Opens the launch options dialog to save choices for a game without
@@ -618,9 +622,14 @@ final class AppModel {
     }
 
     /// Starts the emulator with explicit choices.
-    func launch(_ game: Game, variant: LaunchVariant?, options: LaunchOptions, emulatorKind kind: EmulatorKind) {
+    func launch(
+        _ game: Game, variant: LaunchVariant?, options: LaunchOptions, emulatorKind kind: EmulatorKind,
+        choices: LaunchChoices = LaunchChoices()
+    ) {
         guard let snapshot = snapshot(for: game) else { return }
-        guard let emulator = settings.emulatorInstallation(kind), emulator.exists else {
+        let installation =
+            kind.isScummVM ? scummVMInstallation(for: game, variant: variant) : settings.emulatorInstallation(kind)
+        guard let emulator = installation, emulator.exists else {
             alert = AppAlert(
                 title: "\(kind.displayName) not found",
                 message: "Choose the \(kind.displayName) application in Settings › Emulators.")
@@ -628,7 +637,12 @@ final class AppModel {
         }
         let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs)
         do {
-            let plan = try planner.plan(game: game, variant: variant, emulator: emulator, options: options)
+            if kind.isScummVM, let problem = scummVMEngineProblem(game, variant: variant, emulator: emulator) {
+                alert = problem
+                return
+            }
+            let plan = try planner.plan(
+                game: game, variant: variant, emulator: emulator, options: options, choices: choices)
             try plan.writeConfig()
             music.pause()
             album.pause()
@@ -641,7 +655,8 @@ final class AppModel {
 
     /// Keeps the launch dialog's choices for next time.
     func rememberLaunchChoices(
-        for game: Game, options: LaunchOptions, variant: LaunchVariant?, emulatorKind kind: EmulatorKind
+        for game: Game, options: LaunchOptions, variant: LaunchVariant?, emulatorKind kind: EmulatorKind,
+        choices: LaunchChoices = LaunchChoices()
     ) {
         let overrides = LaunchOverrides(base: settings.launchOptions, chosen: options)
         let defaultKind = defaultEmulatorKind(for: game)
@@ -649,6 +664,7 @@ final class AppModel {
             state.launchOverrides = overrides.isEmpty ? nil : overrides
             state.preferredVariantID = variant?.id
             state.emulatorOverride = kind == defaultKind ? nil : kind
+            state.launchChoices = choices.isEmpty ? nil : choices
         }
     }
 
@@ -657,6 +673,7 @@ final class AppModel {
             state.launchOverrides = nil
             state.preferredVariantID = nil
             state.emulatorOverride = nil
+            state.launchChoices = nil
         }
     }
 

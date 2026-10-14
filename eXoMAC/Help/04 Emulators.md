@@ -18,6 +18,12 @@ eXoWin9x games boot Windows 98 from disk images in the collection's `eXo/emulato
 
 You cannot choose another emulator for these games. Get 86Box from https://86box.net and set its location in Settings › Emulators if it is not in the Applications folder.
 
+## ScummVM for eXoScummVM games
+
+eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for every game and version (`eXo/util/scummvm.txt`) and small files in each version's folder for its platform, picture and sound options; Autoexec.Mac reads them as eXo's launcher does. eXo ships several Windows builds of ScummVM because some games broke in newer releases; the Mac uses the one ScummVM you have.
+
+Five games need engines that ScummVM's release builds leave out until they are finished: In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden and Ultima I. Choose a daily build from https://buildbot.scummvm.org as "ScummVM daily build" in Settings › Emulators; it is used only for games the release build cannot run.
+
 ## How a game is configured
 
 Autoexec.Mac reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.

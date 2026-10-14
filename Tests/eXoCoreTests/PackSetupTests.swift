@@ -82,9 +82,33 @@ struct PackSetupTests {
         for (kind, titles) in missing { print("Missing \(kind): \(titles.count) \(titles.prefix(8))") }
         for (note, count) in notes.sorted(by: { $0.value > $1.value }).prefix(15) { print("  \(count)\t\(note)") }
 
+        // ScummVM: which games this Mac's ScummVM cannot run.
+        if let scummVM = EmulatorLocator.discover(.scummVM),
+            FileManager.default.fileExists(atPath: planner.scummVMIndexFile.path)
+        {
+            let listing = try await CommandRunner.run(
+                executable: scummVM.executableURL,
+                arguments: ["--config=\(scratch.appendingPathComponent("games.ini").path)", "--list-games"])
+            let games = ScummVMGames(listGamesOutput: listing.output)
+            let index = try ScummVMIndex(contentsOf: planner.scummVMIndexFile)
+            // Targets such as kq6-cd are eXo's own names; they resolve through eXo's settings files.
+            let missing = index.entries.filter { !games.supports($0.gameID) && $0.gameID.contains(":") }
+            let bare = index.entries.filter { !games.supports($0.gameID) && !$0.gameID.contains(":") }
+            print("ScummVM games: \(games.ids.count); missing: \(missing.map(\.line))")
+            print("Bare ids not found (eXo targets or unsupported): \(bare.map(\.gameID))")
+        }
+
         // Install the three smallest games of each pack and plan the DOSBox ones.
         let installer = GameInstaller(snapshot: snapshot, installLocation: .localStore)
         var installed: [Game] = []
+        // EXOMAC_SMOKE_TITLES="A|B" adds games by title.
+        let titles = Set(environment["EXOMAC_SMOKE_TITLES"]?.components(separatedBy: "|") ?? [])
+        for game in snapshot.games where titles.contains(game.title) {
+            if let plan = installer.plan(for: game) {
+                try await installer.install(plan)
+                installed.append(game)
+            }
+        }
         for pack in Set(snapshot.games.compactMap(\.eXoPack)) {
             let smallest = snapshot.games.filter { $0.eXoPack == pack }
                 .compactMap { game in
@@ -99,12 +123,12 @@ struct PackSetupTests {
         let after = try LibraryLoader(collection: collection, localStore: localStore).load()
         for game in installed {
             #expect(after.installedLocation(for: game)?.isLocal == true, "\(game.title)")
-            guard game.launchKind == .dosBox else { continue }
+            guard game.launchKind == .dosBox || game.launchKind == .scummVM else { continue }
             let afterPlanner = LaunchPlanner(snapshot: after, scratchDirectory: scratch)
             let emulator = try FixtureLibrary.fakeEmulator(afterPlanner.recommendedEmulator(for: game), in: scratch)
             let plan = try afterPlanner.plan(game: game, variant: nil, emulator: emulator, options: LaunchOptions())
             #expect(plan.notes.filter { $0.hasPrefix("Could not find") }.isEmpty, "\(game.title): \(plan.notes)")
-            print("Planned \(game.title) in \(emulator.kind.displayName): \(plan.notes)")
+            print("Planned \(game.title) in \(emulator.kind.displayName): \(plan.commandLine)\n  notes: \(plan.notes)")
             // EXOMAC_LAUNCH_SMOKE=1 also starts it for a few seconds.
             if ProcessInfo.processInfo.environment["EXOMAC_LAUNCH_SMOKE"] == "1",
                 let real = EmulatorLocator.discover(emulator.kind)

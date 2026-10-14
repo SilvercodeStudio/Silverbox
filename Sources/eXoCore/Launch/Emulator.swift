@@ -11,6 +11,10 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
     case mame
     case mednafen
     case box86 = "86Box"
+    case scummVM
+    /// A second ScummVM, such as a daily build, for games whose engine the
+    /// release build leaves out.
+    case scummVMDaily
 
     public var id: String { rawValue }
 
@@ -20,6 +24,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
     public static let romEmulators: [EmulatorKind] = [.retroArch, .dolphin, .mame, .mednafen]
 
     public var isDOSBox: Bool { Self.dosBox.contains(self) }
+    public var isScummVM: Bool { self == .scummVM || self == .scummVMDaily }
 
     public var displayName: String {
         switch self {
@@ -30,6 +35,8 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .mame: return "MAME"
         case .mednafen: return "Mednafen"
         case .box86: return "86Box"
+        case .scummVM: return "ScummVM"
+        case .scummVMDaily: return "ScummVM daily build"
         }
     }
 
@@ -43,6 +50,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .mame: return "mame"
         case .mednafen: return "mednafen"
         case .box86: return "86Box"
+        case .scummVM, .scummVMDaily: return "scummvm"
         }
     }
 
@@ -57,6 +65,9 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .mednafen: return "Runs several consoles from the command line, including Sega Saturn."
         case .box86:
             return "Runs the eXoWin9x games that need a full PC, such as a Pentium with a 3dfx Voodoo card."
+        case .scummVM: return "Runs eXoScummVM games: LucasArts, Sierra and many other adventures."
+        case .scummVMDaily:
+            return "Runs the eXoScummVM games whose engine the release build of ScummVM leaves out."
         }
     }
 
@@ -69,6 +80,8 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .mame: return "https://www.mamedev.org"
         case .mednafen: return "https://mednafen.github.io"
         case .box86: return "https://86box.net"
+        case .scummVM: return "https://www.scummvm.org"
+        case .scummVMDaily: return "https://buildbot.scummvm.org"
         }
     }
 }
@@ -191,6 +204,16 @@ nonisolated public enum EmulatorLocator {
                 home.appendingPathComponent("Applications/86Box.app/Contents/MacOS/86Box"),
                 home.appendingPathComponent("Downloads/86Box.app/Contents/MacOS/86Box"),
             ]
+        case .scummVM:
+            urls += [
+                URL(fileURLWithPath: "/Applications/ScummVM.app/Contents/MacOS/scummvm"),
+                home.appendingPathComponent("Applications/ScummVM.app/Contents/MacOS/scummvm"),
+                URL(fileURLWithPath: "/opt/homebrew/bin/scummvm"),
+                URL(fileURLWithPath: "/usr/local/bin/scummvm"),
+            ]
+        case .scummVMDaily:
+            // A daily build is a second ScummVM.app; it is chosen in Settings.
+            break
         }
         return urls
     }
@@ -212,7 +235,7 @@ nonisolated public enum EmulatorCapabilities {
         switch installation.kind {
         case .dosboxX:
             return true
-        case .retroArch, .dolphin, .mame, .mednafen, .box86:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily:
             return false
         case .dosboxStaging:
             let fm = FileManager.default

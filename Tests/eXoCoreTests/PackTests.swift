@@ -148,4 +148,68 @@ struct PackTests {
         #expect(fm.fileExists(atPath: target.appendingPathComponent("Data/Platforms/Apple IIGS Magazines.xml").path))
         #expect(fm.fileExists(atPath: target.appendingPathComponent("Data/Platforms.xml").path))
     }
+
+    @Test func leavesExtrasAndWindowsBuildsPackedUntilInstall() async throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let download = scratch.appendingPathComponent("download", isDirectory: true)
+        let content = download.appendingPathComponent("Content", isDirectory: true)
+        let folder = "eXo/eXoScummVM/!ScummVM/Sky [CD]"
+        try await DownloadFixture.zip(
+            [
+                "\(folder)/Sky [CD].bat": "@echo off",
+                "\(folder)/Extras/Guide.pdf": String(repeating: "pdf ", count: 1000),
+            ], to: content.appendingPathComponent("!ScummVMmetadata.zip"), scratch: scratch)
+        try await DownloadFixture.zip(
+            [
+                "xml/all/ScummVM.xml": DownloadFixture.list(
+                    DownloadFixture.game(
+                        id: "dddddddd-0000-0000-0000-000000000020", title: "Sky [CD]", platform: "ScummVM",
+                        folder: "eXo\\eXoScummVM\\!ScummVM\\Sky [CD]")),
+                "xml/platforms/scummvm.platforms": "  <Platform>\n    <Name>ScummVM</Name>\n  </Platform>\n",
+                "xml/merge_platforms.bat": DownloadFixture.mergeScript(
+                    output: "Platforms.xml", pattern: "platforms\\*.platforms"),
+            ], to: content.appendingPathComponent("XOScummVMMetadata.zip"), scratch: scratch)
+        let nested = scratch.appendingPathComponent("nested", isDirectory: true)
+        try await DownloadFixture.zip(
+            ["emulators/scmvm/scummvm.exe": "exe", "emulators/scmvm/scummvm.ini": "[scummvm]\n"],
+            to: nested.appendingPathComponent("EXTsvm.zip"), scratch: scratch)
+        let util = download.appendingPathComponent("eXo/util", isDirectory: true)
+        try FileManager.default.createDirectory(at: util, withIntermediateDirectories: true)
+        let zipped = try await CommandRunner.run(
+            executable: URL(fileURLWithPath: "/usr/bin/zip"),
+            arguments: ["-q", "-j", util.appendingPathComponent("utilSVM.zip").path, "EXTsvm.zip"],
+            workingDirectory: nested)
+        #expect(zipped.status == 0)
+        try await DownloadFixture.zip(
+            ["Sky [CD]/Sky (CD DOS)/sky.dsk": "data"],
+            to: download.appendingPathComponent("eXo/eXoScummVM/Sky [CD] (1990).zip"), scratch: scratch)
+
+        let found = try #require(await EXoDownload.inspect(download))
+        #expect(found.packs.first?.hasGameData == false)
+        #expect(found.packedExtrasSize == 4000)
+
+        let target = scratch.appendingPathComponent("setup", isDirectory: true)
+        try await EXoSetup(download: found, target: target, options: EXoSetupOptions()).run { _ in }
+        let fm = FileManager.default
+        let guide = target.appendingPathComponent("\(folder)/Extras/Guide.pdf")
+        #expect(fm.fileExists(atPath: target.appendingPathComponent("\(folder)/Sky [CD].bat").path))
+        #expect(!fm.fileExists(atPath: guide.path))
+        #expect(fm.fileExists(atPath: target.appendingPathComponent("eXo/emulators/scmvm/scummvm.ini").path))
+        #expect(!fm.fileExists(atPath: target.appendingPathComponent("eXo/emulators/scmvm/scummvm.exe").path))
+
+        let collection = LibraryCollection(name: "ScummVM", rootPath: target.path, downloadPath: download.path)
+        let localStore = LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true))
+        let snapshot = try LibraryLoader(collection: collection, localStore: localStore).load()
+        let game = try #require(snapshot.games.first)
+        #expect(game.launchKind == .scummVM)
+        let installer = GameInstaller(snapshot: snapshot, installLocation: .localStore)
+        let plan = try #require(installer.plan(for: game))
+        #expect(plan.extrasPatterns == ["eXo/eXoScummVM/!ScummVM/Sky [[]CD]/Extras/*"])
+        try await installer.install(plan)
+        #expect(fm.fileExists(atPath: guide.path))
+        #expect(
+            fm.fileExists(
+                atPath: localStore.gamesDirectory(for: .scummVM).appendingPathComponent("Sky [CD]/Sky (CD DOS)/sky.dsk")
+                    .path))
+    }
 }

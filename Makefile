@@ -10,9 +10,13 @@ SCHEME = "Autoexec.Mac"
 CONFIG ?= Debug
 ARGS ?=
 
-# Debug builds only this Mac's architecture. A Release build goes to a generic
-# Mac, so it holds every architecture in ARCHS (Apple silicon and Intel).
-DESTINATION = $(if $(filter Release,$(CONFIG)),generic/platform=macOS,platform=macOS)
+# Debug builds only this Mac's architecture (named, as the project also
+# builds for Intel and xcodebuild would otherwise pick one of the two). A
+# Release build goes to a generic Mac, so it holds every architecture in
+# ARCHS (Apple silicon and Intel).
+ARCH := $(shell uname -m)
+DESTINATION = $(if $(filter Release,$(CONFIG)),generic/platform=macOS,platform=macOS$(comma)arch=$(ARCH))
+comma := ,
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)'
 
 .PHONY: help build run app test core typecheck sweep format reset

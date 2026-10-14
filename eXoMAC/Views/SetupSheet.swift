@@ -76,10 +76,10 @@ struct SetupSheet: View {
                     )
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
-                    if !download.gameDataArchives.isEmpty {
+                    if download.extrasSize > 0 {
                         Picker("Manuals, music and extras", selection: $unpackGameData) {
                             Text("Unpack each game's when it is installed").tag(false)
-                            Text("Unpack all now (\(Self.bytes(download.gameDataSize)))").tag(true)
+                            Text("Unpack all now (\(Self.bytes(download.extrasSize)))").tag(true)
                         }
                         .pickerStyle(.radioGroup)
                     }
@@ -157,7 +157,7 @@ struct SetupSheet: View {
     private var neededBytes: Int64 {
         let addOns = download.addOns.filter { !skippedAddOns.contains($0.archive.lastPathComponent) }
         return download.setupArchiveSize + addOns.reduce(0) { $0 + $1.size }
-            + (unpackGameData ? download.gameDataSize : 0)
+            + (unpackGameData ? download.extrasSize : 0)
     }
 
     private func addOnBinding(_ addOn: EXoDownload.AddOn) -> Binding<Bool> {

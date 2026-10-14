@@ -10,12 +10,16 @@ nonisolated public struct LaunchVariant: Identifiable, Hashable, Sendable {
     /// has no Mac equivalent.
     public var needsWindowsHelper: Bool
 
-    public var id: String { configURL.lastPathComponent }
+    /// The config's file name for DOSBox games; the folder path inside the
+    /// game for ScummVM games.
+    public var id: String
 
-    public init(title: String, configURL: URL, needsWindowsHelper: Bool = false) {
+    /// For ScummVM games, `configURL` is the variant's folder.
+    public init(title: String, configURL: URL, needsWindowsHelper: Bool = false, id: String? = nil) {
         self.title = title
         self.configURL = configURL
         self.needsWindowsHelper = needsWindowsHelper
+        self.id = id ?? configURL.lastPathComponent
     }
 }
 

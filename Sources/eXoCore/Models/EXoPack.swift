@@ -36,6 +36,21 @@ nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashab
         }
     }
 
+    /// The name in the download's `Content/!<name>metadata.zip`.
+    public var archiveName: String {
+        switch self {
+        case .dos: return "DOS"
+        case .win9x: return "Win9X"
+        case .demoScene: return "DemoScene"
+        case .scummVM: return "ScummVM"
+        case .appleIIGS: return "AppleIIGS"
+        case .interactiveFiction: return "IF"
+        }
+    }
+
+    /// `Content/!<name>metadata.zip`, relative to the download.
+    public var configArchivePath: String { "Content/!\(archiveName)metadata.zip" }
+
     /// How many folder levels below ``directoryName`` an unpacked game sits:
     /// `<folder>` for most packs, `<year>/<folder>` for eXoWin9x.
     public var installDepth: Int {

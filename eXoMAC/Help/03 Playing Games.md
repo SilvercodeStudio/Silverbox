@@ -4,7 +4,7 @@ Select a game and press Play, press Command-Return, or double-click its box.
 
 ## Installing
 
-The first time you play a game, Autoexec.Mac unpacks its archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If you uninstalled the game before and kept a backup, you can restore your saved progress.
+The first time you play a game, Autoexec.Mac unpacks its archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress.
 
 ## The launch options dialog
 
@@ -28,6 +28,14 @@ Windows starts clean every time. Before each start, Autoexec.Mac makes a new, em
 About thirty games, such as Quake and Die Hard Trilogy, need a faster PC with a 3dfx Voodoo card. eXo runs these in 86Box. To play them, get 86Box from https://86box.net and put 86Box.app in the Applications folder. For these games, the launch options have only Full screen.
 
 Network play is not available. Games that offer Solo, Host or Join on Windows start in Solo mode.
+
+## ScummVM games
+
+eXoScummVM games run in ScummVM. Get it from https://www.scummvm.org and put ScummVM.app in the Applications folder. Play installs the game the first time. Many games come in several versions, such as the DOS, Amiga and CD releases; the launch options list them under Version, with the first one chosen until you pick another. Where eXo asks for a music device (Sound Blaster, Roland MT-32, Sound Canvas and others) or for subtitles, the launch options ask too, and "Remember these choices" keeps the answers.
+
+Window size works as in eXo: Small, Medium and Large scale the picture two, four or eight times; Automatic uses ScummVM's own setting. In the game, Control-F5 opens ScummVM's menu, for saving, loading and quitting.
+
+The games use eXo's ScummVM settings, kept in the local data folder (`ScummVM/scummvm.ini`) apart from your own ScummVM settings. Saved games go to `Saves/ScummVM`, shared by every collection, as in eXo. A few games need ScummVM engines that its release builds leave out; to play them, choose a daily build of ScummVM in Settings › Emulators.
 
 ## Uninstalling
 

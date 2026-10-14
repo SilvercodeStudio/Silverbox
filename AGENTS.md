@@ -126,8 +126,8 @@ Makefile).
   the DOSBox packs (eXoDOS, eXoDemoScene), each with its own build index
   (`dosbox.txt`, `demoscn.txt`); `isEXoGame` is for installing. Folders that
   differ per pack go through `gamesDirectory(for:)`, `overlayDirectory(for:)`
-  and `dosboxIndex(for:)`. eXoScummVM, eXoAppleIIGS and eXoIF games install
-  but do not launch yet. Each pack's `Setup <pack>.bat` entry is hidden
+  and `dosboxIndex(for:)`. eXoAppleIIGS and eXoIF games install but do not
+  launch yet. Each pack's `Setup <pack>.bat` entry is hidden
   (`isEXoSetupScript`). The sidebar's "eXo Packs" section (`LibraryScope.pack`)
   appears when more than one pack is loaded.
 - eXoWin9x. `launchKind == .windows9x`. `LaunchPlanner.planWindows9x`
@@ -150,8 +150,24 @@ Makefile).
   `Collections/<name>` in the local data folder with `LibraryCollection.downloadPath` pointing back
   (`LibraryRoot.downloadFile` finds game zips and extras there). A game's
   GameData zip is unpacked at install when setup left it packed.
-  `ZipArchive` extracts with `unzip`, or `bsdtar` when names are in the DOS
-  code page (CP437) without the UTF-8 flag, which eXo's zips have.
+  `ZipArchive` extracts with `unzip`, or `bsdtar` when the entries to
+  extract have names in the DOS code page (CP437) without the UTF-8 flag,
+  which eXo's zips have. Setup skips `.exe` and `.dll` files under
+  `emulators/` (eXo's Windows emulator builds). Packs without GameData zips
+  keep each game's `Extras` folder in the config archive until install,
+  when "unpack each game's when installed" is chosen
+  (`InstallPlan.extrasPatterns`).
+- eXoScummVM. `launchKind == .scummVM`. `ScummVMLaunch.swift` follows eXo's
+  `launch_svm.bat`: `ScummVMIndex` reads `eXo/util/scummvm.txt` (prefix
+  match, last line wins); variants are the folders in the installed game
+  (a folder with `menu.txt` gives sub-variants, id `Parent/Sub`); each
+  variant's `platform.txt`, `video.txt`, `audio.txt`, `subtitle.txt` and
+  `sound.txt` become options, and the music and subtitle answers are
+  `LaunchChoices`, remembered per game. Settings live in the local
+  `ScummVM/scummvm.ini` (eXo's global settings once, plus the targets eXo
+  defines, such as `kq6-cd`), saves in `Saves/ScummVM`. `.scummVMDaily` is an
+  optional second ScummVM for engines the release build lacks
+  (`AppModel+ScummVM` checks `--list-engines`).
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
@@ -200,7 +216,9 @@ Makefile).
   `settings` with `-settingsTab emulators`) opens that window at start.
   `-keyPresses "right down space"` presses keys (names like `up`, `return`,
   `opt-right`, `cmd-y`) before the screenshot, to test navigation;
-  `-helpPage 07` opens that help page. Example:
+  `-helpPage 07` opens that help page. If the last session closed the main
+  window, macOS restores no window and the screenshot never comes; add
+  `-ApplePersistenceIgnoreState YES`. Example:
 
   ```
   "$BUILT_PRODUCTS_DIR/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \

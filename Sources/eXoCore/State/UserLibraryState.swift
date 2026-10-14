@@ -13,12 +13,14 @@ nonisolated public struct GameUserState: Hashable, Sendable, Codable {
     public var emulatorOverride: EmulatorKind?
     public var preferredVariantID: String?
     public var launchOverrides: LaunchOverrides?
+    /// Choices such as the music device, for games whose launcher asks.
+    public var launchChoices: LaunchChoices?
 
     public init(
         favorite: Bool? = nil, completed: Bool? = nil, hidden: Bool? = nil, broken: Bool? = nil,
         playCount: Int = 0, playTimeSeconds: Int = 0, lastPlayed: Date? = nil,
         emulatorOverride: EmulatorKind? = nil, preferredVariantID: String? = nil,
-        launchOverrides: LaunchOverrides? = nil
+        launchOverrides: LaunchOverrides? = nil, launchChoices: LaunchChoices? = nil
     ) {
         self.favorite = favorite
         self.completed = completed
@@ -30,13 +32,14 @@ nonisolated public struct GameUserState: Hashable, Sendable, Codable {
         self.emulatorOverride = emulatorOverride
         self.preferredVariantID = preferredVariantID
         self.launchOverrides = launchOverrides
+        self.launchChoices = launchChoices
     }
 
     public var isEmpty: Bool {
         favorite == nil && completed == nil && hidden == nil && broken == nil
             && playCount == 0 && playTimeSeconds == 0 && lastPlayed == nil
             && emulatorOverride == nil && preferredVariantID == nil
-            && (launchOverrides?.isEmpty ?? true)
+            && (launchOverrides?.isEmpty ?? true) && (launchChoices?.isEmpty ?? true)
     }
 }
 

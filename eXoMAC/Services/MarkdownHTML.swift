@@ -4,7 +4,7 @@ import eXoCore
 /// A small Markdown-to-HTML converter for the help pages: headings,
 /// paragraphs, bullet and numbered lists, pipe tables, fenced code, inline
 /// code, bold, italics and links.
-enum MarkdownHTML {
+nonisolated enum MarkdownHTML {
     static func render(_ markdown: String) -> String {
         var html: [String] = []
         var paragraph: [String] = []

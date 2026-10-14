@@ -257,6 +257,7 @@ nonisolated extension Game {
     public var launchKind: GameLaunchKind {
         if isDOSGame { return .dosBox }
         if eXoPack == .win9x { return .windows9x }
+        if eXoPack == .scummVM { return .scummVM }
         let path = applicationPath.trimmingCharacters(in: .whitespaces)
         if path.isEmpty { return .windowsProgram }
         if path.range(of: "://") != nil { return .link }
@@ -320,4 +321,6 @@ nonisolated public enum GameLaunchKind: Sendable, Hashable {
     case soundtrack
     /// A video or a menu of videos: a batch file that eXoDOS uses to start VLC.
     case video
+    /// An eXoScummVM game, run in ScummVM with eXo's settings for it.
+    case scummVM
 }

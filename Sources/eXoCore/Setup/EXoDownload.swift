@@ -14,6 +14,10 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
         public var name: String
         /// `Content/!<name>metadata.zip`.
         public var configArchive: URL
+        /// True when the pack's extras come as `Content/GameData/<pack>/*.zip`.
+        /// Other packs keep them in the config archive, under each game's
+        /// `Extras` folder.
+        public var hasGameData = false
         public var id: String { name }
         /// The name eXo uses for the pack, such as `eXoDOS` or `eXoWin9x`.
         public var displayName: String {
@@ -69,6 +73,12 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
 
     /// Bytes of the game extras archives.
     public var gameDataSize: Int64
+    /// Unpacked bytes of the `Extras` folders in config archives of packs
+    /// without GameData zips.
+    public var packedExtrasSize: Int64 = 0
+    /// Bytes of every game's manuals, music and extras, which setup can
+    /// leave packed until a game is installed.
+    public var extrasSize: Int64 { gameDataSize + packedExtrasSize }
     /// Bytes of the archives every setup unpacks: metadata, configs and
     /// tools. The unpacked size is close to this; most files are images.
     public var setupArchiveSize: Int64
@@ -95,9 +105,13 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
                 .map { content.appendingPathComponent($0) }
         }
 
+        let gameDataRoot = content.appendingPathComponent("GameData", isDirectory: true)
         let packs = zips { $0.hasPrefix("!") && $0.lowercased().hasSuffix("metadata.zip") }.map { url in
             let name = url.deletingPathExtension().lastPathComponent
-            return Pack(name: String(name.dropFirst().dropLast("metadata".count)), configArchive: url)
+            var pack = Pack(name: String(name.dropFirst().dropLast("metadata".count)), configArchive: url)
+            pack.hasGameData = fm.fileExists(
+                atPath: gameDataRoot.appendingPathComponent(pack.displayName, isDirectory: true).path)
+            return pack
         }
         guard !packs.isEmpty else { return nil }
         let metadata = zips { $0.lowercased().hasPrefix("xo") && $0.lowercased().hasSuffix("metadata.zip") }
@@ -121,7 +135,6 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
         }
 
         var gameData: [URL] = []
-        let gameDataRoot = content.appendingPathComponent("GameData", isDirectory: true)
         for folder in (try? fm.contentsOfDirectory(atPath: gameDataRoot.path))?.sorted() ?? [] {
             let directory = gameDataRoot.appendingPathComponent(folder, isDirectory: true)
             for name in (try? fm.contentsOfDirectory(atPath: directory.path))?.sorted() ?? []
@@ -135,10 +148,17 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
             .filter { $0.lowercased().hasPrefix("util") && $0.lowercased().hasSuffix(".zip") }.sorted()
             .map { util.appendingPathComponent($0) }
 
-        return EXoDownload(
+        // Packs without GameData zips keep each game's extras in the config
+        // archive; their PDFs can be most of it.
+        let packedExtras = packs.filter { !$0.hasGameData }.reduce(Int64(0)) {
+            $0 + ZipArchive.unpackedSize(of: $1.configArchive, matching: "/Extras/")
+        }
+        var download = EXoDownload(
             root: root, packs: packs, metadataArchives: metadata, addOns: addOns, gameDataArchives: gameData,
             utilArchives: utilArchives, gameDataSize: size(of: gameData),
-            setupArchiveSize: size(of: packs.map(\.configArchive) + metadata + utilArchives))
+            setupArchiveSize: max(0, size(of: packs.map(\.configArchive) + metadata + utilArchives) - packedExtras))
+        download.packedExtrasSize = packedExtras
+        return download
     }
 
     /// eXo's setup registers add-on platforms under these categories.

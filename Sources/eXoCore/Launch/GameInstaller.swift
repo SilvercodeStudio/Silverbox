@@ -14,6 +14,9 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
     public var extrasArchiveURL: URL?
     /// Where the extras unpack: the library folder.
     public var extrasDestination: URL?
+    /// The entries to take from ``extrasArchiveURL``, when it is the pack's
+    /// config archive rather than a GameData zip of the game's own.
+    public var extrasPatterns: [String] = []
     /// An existing save backup that can be restored after unpacking.
     public var saveArchiveURL: URL?
     /// Where a save backup is written on uninstall.
@@ -60,6 +63,14 @@ nonisolated extension InstallError: LocalizedError {
 nonisolated public protocol ArchiveExtractor: Sendable {
     /// Extracts `archive` into `directory`, overwriting existing files.
     func extract(archive: URL, into directory: URL) async throws
+    /// Extracts only the entries that match `patterns`.
+    func extract(archive: URL, into directory: URL, only patterns: [String]) async throws
+}
+
+nonisolated extension ArchiveExtractor {
+    public func extract(archive: URL, into directory: URL, only patterns: [String]) async throws {
+        try await ZipArchive.extract(archive, into: directory, only: patterns)
+    }
 }
 
 /// Extracts with the system tools, through ``ZipArchive``.
@@ -179,11 +190,21 @@ nonisolated public struct GameInstaller: Sendable {
         let existingSave = [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
             .first { FileManager.default.fileExists(atPath: $0.path) }
 
-        // A Mac setup can leave each game's extras packed until it is installed.
+        // A Mac setup can leave each game's extras packed until it is
+        // installed: in a GameData zip of its own, or in the pack's config
+        // archive under the game's `Extras` folder.
         var extras: URL?
+        var extrasPatterns: [String] = []
         if let record = EXoSetupRecord.read(in: root.url), !record.options.unpackGameData {
             let url = root.downloadFile("Content/GameData/\(pack.directoryName)/\(game.launcherBaseName).zip")
-            if FileManager.default.fileExists(atPath: url.path) { extras = url }
+            let configArchive = root.downloadFile(pack.configArchivePath)
+            if FileManager.default.fileExists(atPath: url.path) {
+                extras = url
+            } else if let rootFolder = game.rootFolder, FileManager.default.fileExists(atPath: configArchive.path) {
+                let folder = WindowsPath.components(of: rootFolder).joined(separator: "/")
+                extras = configArchive
+                extrasPatterns = [ZipArchive.literalPattern(folder) + "/Extras/*"]
+            }
         }
 
         return InstallPlan(
@@ -194,6 +215,7 @@ nonisolated public struct GameInstaller: Sendable {
             updateArchiveURL: FileManager.default.fileExists(atPath: update.path) ? update : nil,
             extrasArchiveURL: extras,
             extrasDestination: extras == nil ? nil : root.url,
+            extrasPatterns: extrasPatterns,
             saveArchiveURL: existingSave,
             saveBackupURL: backupTarget,
             location: location
@@ -210,7 +232,11 @@ nonisolated public struct GameInstaller: Sendable {
             try await extractor.extract(archive: update, into: plan.destinationDirectory)
         }
         if let extras = plan.extrasArchiveURL, let destination = plan.extrasDestination {
-            try await extractor.extract(archive: extras, into: destination)
+            if plan.extrasPatterns.isEmpty {
+                try await extractor.extract(archive: extras, into: destination)
+            } else {
+                try await extractor.extract(archive: extras, into: destination, only: plan.extrasPatterns)
+            }
         }
         if restoreSaves, let save = plan.saveArchiveURL {
             try await extractor.extract(archive: save, into: plan.destinationDirectory)

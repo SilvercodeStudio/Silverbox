@@ -38,7 +38,7 @@ use them.
 | eXoWin9x | DOSBox-X | Windows 98 for almost every game. |
 | eXoWin9x | [86Box](https://86box.net) | The thirty or so games that eXo runs in 86Box. |
 | eXoDemoScene | DOSBox-X | About 95% of the demos; DOSBox Staging for the rest. The three MartyPC demos (8088 MPH, Area 5150, CGADEMO) are not supported. |
-| eXoScummVM | [ScummVM](https://www.scummvm.org) 2026.4 or later | Every game. *Launching is planned; the games can be set up and installed today.* Five games use engines that ScummVM leaves out of its release builds (In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden, Ultima I); a [daily build](https://buildbot.scummvm.org) has them. |
+| eXoScummVM | [ScummVM](https://www.scummvm.org) 2026.4 or later | Every game. Five games use engines that ScummVM leaves out of its release builds (In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden, Ultima I); set a [daily build](https://buildbot.scummvm.org) as the second ScummVM in Settings to play them. |
 | eXoAppleIIGS | [GSplus](https://github.com/digarok/gsplus) 1.38 or later | Most games. *Planned.* |
 | eXoAppleIIGS | [MAME](https://www.mamedev.org) (`brew install mame`) | The 74 games eXo runs in MAME. Needs an `apple2gs` ROM set that matches your MAME version; eXo's set is for MAME 0.245. *Planned.* |
 | eXoIF | DOSBox Staging or DOSBox-X | The MS-DOS versions of the games. *Planned.* |
@@ -107,11 +107,11 @@ does on Windows, is available in Settings.
 - ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
   XML beside them, plus single titles configured by hand.
 - More eXo packs. Setup and installing work for eXoDemoScene, eXoScummVM,
-  eXoAppleIIGS and eXoIF; eXoDemoScene also launches. Still to do: a ScummVM
-  launch planner (variants, sound choices, eXo's ScummVM settings), GSplus
-  configs for eXoAppleIIGS, and eXoIF in stages (DOSBox versions, RetroArch
-  cores, a story-file interpreter). Later: MAME for the eXoAppleIIGS games eXo
-  runs in it, and eXoWin3x.
+  eXoAppleIIGS and eXoIF; eXoDemoScene and eXoScummVM also launch. Still to
+  do: GSplus configs for eXoAppleIIGS, and eXoIF in stages (DOSBox versions,
+  RetroArch cores, a story-file interpreter). Later: MAME for the
+  eXoAppleIIGS games eXo runs in it, the eXoScummVM hint files (UHS), and
+  eXoWin3x.
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
 - Later: BitTorrent downloads of the eXoDOS packs, and metadata and media
