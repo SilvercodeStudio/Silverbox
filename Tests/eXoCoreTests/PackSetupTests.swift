@@ -123,20 +123,22 @@ struct PackSetupTests {
         let after = try LibraryLoader(collection: collection, localStore: localStore).load()
         for game in installed {
             #expect(after.installedLocation(for: game)?.isLocal == true, "\(game.title)")
-            let afterPlanner = LaunchPlanner(snapshot: after, scratchDirectory: scratch)
+            let retroArch = EmulatorLocator.discover(.retroArch).map { RetroArchSetup.discover(installation: $0) }
+            let afterPlanner = LaunchPlanner(snapshot: after, scratchDirectory: scratch, retroArch: retroArch)
             if game.launchKind == .interactiveFiction {
-                let versions = afterPlanner.variants(for: game).map { version in
-                    "\(version.title): "
-                        + (afterPlanner.ifRoute(for: game, variant: version)?.emulator?.displayName ?? "-")
-                }
-                print("\(game.title) versions: \(versions)")
-                guard afterPlanner.ifRoute(for: game, variant: nil)?.emulator != nil else { continue }
+                let versions = afterPlanner.variants(for: game)
+                print(
+                    "\(game.title) versions: \(versions.map { "\($0.title): \($0.unsupportedReason ?? afterPlanner.ifRoute(for: game, variant: $0)?.emulator?.displayName ?? "-")" })"
+                )
+                guard LaunchPlanner.defaultIFVersion(versions)?.isPlayable == true else { continue }
             }
             guard [.dosBox, .scummVM, .interactiveFiction].contains(game.launchKind) else { continue }
             let kind = afterPlanner.recommendedEmulator(for: game)
             let emulator =
                 kind == .spatterlight
-                ? try IFFixture.spatterlight(in: scratch) : try FixtureLibrary.fakeEmulator(kind, in: scratch)
+                ? try IFFixture.spatterlight(in: scratch)
+                : kind == .retroArch
+                    ? try #require(retroArch?.installation) : try FixtureLibrary.fakeEmulator(kind, in: scratch)
             let plan = try afterPlanner.plan(game: game, variant: nil, emulator: emulator, options: LaunchOptions())
             #expect(plan.notes.filter { $0.hasPrefix("Could not find") }.isEmpty, "\(game.title): \(plan.notes)")
             print("Planned \(game.title) in \(emulator.kind.displayName): \(plan.commandLine)\n  notes: \(plan.notes)")

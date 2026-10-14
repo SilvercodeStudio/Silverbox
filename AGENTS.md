@@ -175,8 +175,14 @@ Makefile).
   `launch_if.bat` itself. `IFRoute`: MS-DOS versions go through
   `planDOSBox`, interpreter versions (WinFrotz, Lectrote, Gargoyle and the
   like) open in Spatterlight with `open -W -a` (it ignores files passed as
-  arguments), everything else is `unsupported` (`LaunchVariant.unsupportedReason`).
-  The default version is the best `preference`: Spatterlight, then DOS.
+  arguments), 8-bit versions go to the RetroArch cores in
+  `ifRetroArchCores` (a VICE `fliplist.vfl` becomes an m3u playlist;
+  atari800 gets eXo's Altirra ROMs in its own system folder through
+  `--appendconfig`; PUAE needs a Kickstart in RetroArch's system folder),
+  everything else is `unsupported` (`LaunchVariant.unsupportedReason`, which
+  also names a missing core or ROM). The app's `launchPlanner(_:)` passes
+  `settings.retroArchSetup`. The default version is the best `preference`:
+  Spatterlight, then DOS, then RetroArch.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the

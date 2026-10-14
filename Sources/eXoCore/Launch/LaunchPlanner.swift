@@ -79,6 +79,7 @@ nonisolated public enum LaunchPlanError: Error, Sendable, Equatable {
     case scummVMNotInIndex(String)
     case needsSpatterlight
     case ifVersionUnsupported(String)
+    case needsRetroArchCore(String)
 }
 
 nonisolated extension LaunchPlanError: LocalizedError {
@@ -101,6 +102,9 @@ nonisolated extension LaunchPlanError: LocalizedError {
         case .needsSpatterlight:
             return
                 "This version is a text adventure for Spatterlight. Set the Spatterlight location in Settings › Emulators."
+        case .needsRetroArchCore(let core):
+            return
+                "This version runs in RetroArch's \(core) core. Install RetroArch, then the core from its Online Updater › Core Downloader."
         case .ifVersionUnsupported(let system):
             return "\(system) is not supported on the Mac yet. Choose another version in the launch options."
         case .scummVMNotInIndex(let name):
@@ -114,10 +118,13 @@ nonisolated public struct LaunchPlanner: Sendable {
     public let snapshot: LibrarySnapshot
     /// Where generated config files are written.
     public let scratchDirectory: URL
+    /// RetroArch and its cores, for eXoIF versions for 8-bit computers.
+    public let retroArch: RetroArchSetup?
 
-    public init(snapshot: LibrarySnapshot, scratchDirectory: URL) {
+    public init(snapshot: LibrarySnapshot, scratchDirectory: URL, retroArch: RetroArchSetup? = nil) {
         self.snapshot = snapshot
         self.scratchDirectory = scratchDirectory
+        self.retroArch = retroArch
     }
 
     public var localStore: LocalStore? { snapshot.localStore }

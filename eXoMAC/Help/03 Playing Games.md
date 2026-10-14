@@ -39,7 +39,7 @@ The games use eXo's ScummVM settings, kept in the local data folder (`ScummVM/sc
 
 ## Interactive fiction
 
-eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for other computers are marked "not supported on the Mac" for now. Unless you pick one, Play starts a Spatterlight version, else a DOS version.
+eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for the Commodore 64 and 128, ZX Spectrum and ZX81, Apple II and Atari 8-bit run in RetroArch, with its cores installed from RetroArch's Online Updater; a C64 game on several disks gets a playlist, so the other disks are in RetroArch's Disk Control menu. Versions for other computers are marked "not supported on the Mac", with the reason. Unless you pick one, Play starts a Spatterlight version, else a DOS version, else a RetroArch one.
 
 Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight ends the game for Autoexec.Mac.
 

@@ -33,7 +33,7 @@ extension AppModel {
 
     private func scummVMGameID(for game: Game, variant: LaunchVariant?) -> String? {
         snapshot(for: game).flatMap {
-            LaunchPlanner(snapshot: $0, scratchDirectory: AppPaths.launchConfigs).scummVMGameID(
+            launchPlanner($0).scummVMGameID(
                 for: game, variant: variant)
         }
     }
@@ -68,7 +68,7 @@ extension AppModel {
 
 extension AppModel {
     private func planner(for game: Game) -> LaunchPlanner? {
-        snapshot(for: game).map { LaunchPlanner(snapshot: $0, scratchDirectory: AppPaths.launchConfigs) }
+        snapshot(for: game).map { launchPlanner($0) }
     }
 
     /// The variant's music devices, subtitle option and the like.

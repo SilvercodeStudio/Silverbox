@@ -31,11 +31,25 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
     public var installation: EmulatorInstallation
     public var coresDirectory: URL?
     public var infoDirectory: URL?
+    /// Where cores look for BIOS and ROM files (`system_directory`).
+    public var systemDirectory: URL?
 
-    public init(installation: EmulatorInstallation, coresDirectory: URL?, infoDirectory: URL?) {
+    public init(
+        installation: EmulatorInstallation, coresDirectory: URL?, infoDirectory: URL?, systemDirectory: URL? = nil
+    ) {
         self.installation = installation
         self.coresDirectory = coresDirectory
         self.infoDirectory = infoDirectory
+        self.systemDirectory = systemDirectory
+    }
+
+    /// True when RetroArch's system folder holds `name`, matched without
+    /// regard to case.
+    public func hasSystemFile(_ name: String) -> Bool {
+        guard let systemDirectory,
+            let names = try? FileManager.default.contentsOfDirectory(atPath: systemDirectory.path)
+        else { return false }
+        return names.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
     }
 
     /// RetroArch's user folder on macOS.
@@ -79,7 +93,12 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
             bundleResources?.appendingPathComponent("info", isDirectory: true),
             cores,
         ])
-        return RetroArchSetup(installation: installation, coresDirectory: cores, infoDirectory: info)
+        let system =
+            config["system_directory"].flatMap { Self.directory(fromConfigValue: $0, bundleResources: bundleResources) }
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+                "Documents/RetroArch/system", isDirectory: true)
+        return RetroArchSetup(
+            installation: installation, coresDirectory: cores, infoDirectory: info, systemDirectory: system)
     }
 
     /// `key = "value"` lines from a RetroArch config file.

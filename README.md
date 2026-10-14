@@ -42,9 +42,31 @@ use them.
 | eXoAppleIIGS | [GSplus](https://github.com/digarok/gsplus) 1.38 or later | Most games. *Planned.* |
 | eXoAppleIIGS | [MAME](https://www.mamedev.org) (`brew install mame`) | The 74 games eXo runs in MAME. Needs an `apple2gs` ROM set that matches your MAME version; eXo's set is for MAME 0.245. *Planned.* |
 | eXoIF | DOSBox Staging or DOSBox-X | The MS-DOS versions of the games. |
-| eXoIF | [RetroArch](https://www.retroarch.com) cores | C64 (VICE), ZX Spectrum (Fuse), Apple II (AppleWin), Amiga (PUAE), Atari 8-bit and ST, MSX. *Planned.* |
+| eXoIF | [RetroArch](https://www.retroarch.com) cores | C64 and other Commodores (VICE), ZX Spectrum and ZX81 (Fuse, 81), Apple II (AppleWin), Atari 8-bit (atari800, with eXo's ROMs), Amstrad CPC (cap32), Amiga (PUAE, with a Kickstart ROM you supply). |
 | eXoIF | [Spatterlight](https://ccxvii.net/spatterlight/) | Infocom and other story files that eXo plays in WinFrotz, Lectrote, Gargoyle and similar interpreters. Versions that need Windows programs, MAME or mainframe emulators are not supported. |
 | LaunchBox libraries | RetroArch, [Dolphin](https://dolphin-emu.org), MAME or [Mednafen](https://mednafen.github.io) | Console, computer and arcade platforms. Settings › Emulators assigns one per platform, following the library's `Emulators.xml` by default. |
+
+## What plays
+
+With the right Mac emulators installed, nearly every game in the DOS and
+Windows packs, the demo scene pack and the ScummVM pack can start. The
+exceptions are a few games in some packs, and whole systems in eXoIF and
+eXoAppleIIGS. "Can start" means a Mac emulator is known to load the game.
+Each game has not been played through.
+
+| Pack | Games | Can start | Notes |
+|---|---|---|---|
+| eXoDOS | 7,667 | Nearly all | DOSBox Staging or DOSBox-X. A few games show their own version menu inside DOSBox, and a few menu choices need a Windows helper. |
+| eXoWin9x (1994–1996) | 665 | All | Windows 98 in DOSBox-X, about thirty games in 86Box. Network play (Host, Join) is not supported; games start in Solo mode. |
+| eXoWin3x | — | Expected: nearly all | Not tried yet. eXo runs it in DOSBox, like the DOS and Windows 9x packs. |
+| eXoDemoScene | 2,425 | About 99% | DOSBox. Not supported: the three MartyPC demos (8088 MPH, Area 5150, CGADEMO). Four demos have no archive in eXo's download either. |
+| eXoScummVM | 832 | About 99% (all with a daily build) | Five games need engines that ScummVM's release builds leave out. |
+| eXoIF | 2,331 | About 64% (about 68% with extra cores and a Kickstart ROM) | Story files in Spatterlight, MS-DOS versions in DOSBox, Commodore, ZX Spectrum, Apple II and Atari 8-bit versions in RetroArch. Not supported yet: BBC Micro, TRS-80, Dragon/CoCo, Oric, TI-99 and other machines, and versions that need MAME, mainframes or Windows programs. |
+| eXoAppleIIGS | 460 | None yet | Planned: GSplus for about 84% of the games. The rest need MAME and a current Apple IIGS ROM set. |
+
+Many eXoIF games come in versions for several computers, and a game counts
+when any of its versions can start. Where a version needs a RetroArch core or
+ROM that is not installed, the launch options say which.
 
 ## Build
 
@@ -108,9 +130,10 @@ does on Windows, is available in Settings.
   XML beside them, plus single titles configured by hand.
 - More eXo packs. Setup and installing work for eXoDemoScene, eXoScummVM,
   eXoAppleIIGS and eXoIF; eXoDemoScene and eXoScummVM launch, and eXoIF
-  launches its story-file and MS-DOS versions (about 520 of 2,331 games).
-  Still to do: GSplus configs for eXoAppleIIGS, and RetroArch cores for the
-  eXoIF versions for 8-bit computers (C64, ZX Spectrum, Apple II and others).
+  launches its story-file, MS-DOS and most 8-bit versions (about 1,500 of
+  2,331 games). Still to do: GSplus configs for eXoAppleIIGS, and eXoIF's
+  BBC Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or native
+  emulators).
   Later: MAME for the eXoAppleIIGS games eXo runs in it, the eXoScummVM hint
   files (UHS), and eXoWin3x.
 - Couch mode: a full-screen, controller-first view on top of the grid and the

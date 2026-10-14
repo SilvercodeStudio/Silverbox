@@ -20,12 +20,19 @@ nonisolated enum IFFixture {
         	    "Lectrote=Lectrote"\r
         	    "ZX Spectrum=ZXSpectrum"\r
         	    "Proteus__Poly=Windows"\r
+        	    "Atari 8bit=Atari8"\r
+        	    "Amiga=AMIGA"\r
         	) do (\r
         """
 
     static let game = Game(
         id: "if-zork", title: "Zork I", platform: "Interactive Fiction",
         applicationPath: "eXo\\eXoIF\\!IF\\\(folder)\\\(folder).bat", rootFolder: "eXo\\eXoIF\\!IF\\\(folder)\\")
+
+    static let mission = "Secret Mission (1984)"
+    static let missionGame = Game(
+        id: "if-mission", title: "Secret Mission", platform: "Interactive Fiction",
+        applicationPath: "eXo\\eXoIF\\!IF\\\(mission)\\\(mission).bat", rootFolder: "eXo\\eXoIF\\!IF\\\(mission)")
 
     static func make(in scratch: URL) throws -> LibrarySnapshot {
         let fm = FileManager.default
@@ -47,14 +54,35 @@ nonisolated enum IFFixture {
             game + "MS-DOS/dosbox.conf")
         try write("com", game + "MS-DOS/ZORK1.COM")
         try write("d64", game + "C64/zork.d64")
+        try write("d64", game + "C64/zork2.d64")
+        try write("zork.d64", game + "C64/launch.file")
+        try write("# Vice fliplist file\r\nUNIT 8\r\nzork.d64\r\nzork2.d64\r\n", game + "C64/fliplist.vfl")
         try write("menu", game + "English/menu.txt")
         try write("tzx", game + "English/ZX Spectrum/zork.tzx")
         try write("exe", game + "Proteus__Poly/zork.exe")
+        try write("xex", "eXoIF/\(mission)/Atari 8bit/mission.xex")
+        try write("adf", "eXoIF/\(mission)/Amiga/mission.adf")
+        for rom in ["REV02.ROM", "REVBNTSC.ROM", "REVC.ROM"] { try write("rom", "emulators/Altirra-4.31/\(rom)") }
         return LibrarySnapshot(
-            root: root, games: [Self.game], platforms: [], categories: [], platformFolders: [], playlists: [],
+            root: root, games: [Self.game, Self.missionGame], platforms: [], categories: [], platformFolders: [],
+            playlists: [],
             parents: [], alternateNames: [], additionalApplications: [],
             installedGamePaths: LibraryLoader.installedGamePaths(in: root.eXoDirectory),
             localStore: LocalStore(directory: scratch.appendingPathComponent("local", isDirectory: true)))
+    }
+
+    /// A stand-in RetroArch with the VICE C64, atari800 and PUAE cores, and
+    /// an empty system folder.
+    static func retroArch(in scratch: URL) throws -> RetroArchSetup {
+        let cores = scratch.appendingPathComponent("cores", isDirectory: true)
+        let system = scratch.appendingPathComponent("system", isDirectory: true)
+        try FileManager.default.createDirectory(at: cores, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: system, withIntermediateDirectories: true)
+        for core in ["vice_x64sc", "atari800", "puae"] {
+            try Data().write(to: cores.appendingPathComponent("\(core)_libretro.dylib"))
+        }
+        let app = try FixtureLibrary.fakeEmulator(.retroArch, in: scratch)
+        return RetroArchSetup(installation: app, coresDirectory: cores, infoDirectory: nil, systemDirectory: system)
     }
 
     /// A stand-in Spatterlight.app with an executable inside.
@@ -71,7 +99,7 @@ struct IFTests {
     @Test func readsEXosSystemTable() {
         let table = IFSystemTable.parse(IFFixture.launcher)
         #expect(table.labels["PC Booter"] == "MSDOS")
-        #expect(table.labels.count == 7)
+        #expect(table.labels.count == 9)
         // A language folder is not a system; the folder inside it is.
         #expect(table.label(forFolders: ["English", "ZX Spectrum"]) == "ZXSpectrum")
     }
@@ -123,11 +151,71 @@ struct IFTests {
         let scratch = try FixtureLibrary.scratchDirectory()
         let snapshot = try IFFixture.make(in: scratch)
         let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch)
-        let c64 = try #require(planner.variants(for: IFFixture.game).first)
-        #expect(c64.unsupportedReason == "C64 is not supported on the Mac yet")
+        let versions = planner.variants(for: IFFixture.game)
+        let proteus = try #require(versions.first { $0.id == "Proteus__Poly" })
+        #expect(proteus.unsupportedReason == "Proteus/Poly is not supported on the Mac yet")
+        #expect(versions.first?.unsupportedReason == "needs RetroArch")
         let spatterlight = try IFFixture.spatterlight(in: scratch)
-        #expect(throws: LaunchPlanError.ifVersionUnsupported("C64")) {
-            try planner.plan(game: IFFixture.game, variant: c64, emulator: spatterlight, options: LaunchOptions())
+        #expect(throws: LaunchPlanError.ifVersionUnsupported("Proteus__Poly")) {
+            try planner.plan(game: IFFixture.game, variant: proteus, emulator: spatterlight, options: LaunchOptions())
         }
+    }
+
+    @Test func runsEightBitVersionsInRetroArch() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let snapshot = try IFFixture.make(in: scratch)
+        let retroArch = try IFFixture.retroArch(in: scratch)
+        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch, retroArch: retroArch)
+        let versions = planner.variants(for: IFFixture.game)
+        // The C64 core is installed; the Spectrum one is not.
+        #expect(versions.first { $0.id == "C64" }?.isPlayable == true)
+        #expect(versions.first { $0.id == "English/ZX Spectrum" }?.unsupportedReason == "needs RetroArch's fuse core")
+
+        let c64 = try #require(versions.first { $0.id == "C64" })
+        let plan = try planner.plan(
+            game: IFFixture.game, variant: c64, emulator: retroArch.installation,
+            options: LaunchOptions(fullscreen: true))
+        let folder = snapshot.root.eXoDirectory.appendingPathComponent("eXoIF/\(IFFixture.folder)/C64")
+        #expect(
+            plan.arguments == [
+                "-L", retroArch.coresDirectory!.appendingPathComponent("vice_x64sc_libretro.dylib").path, "-f",
+                plan.configURL.path,
+            ])
+        // The fliplist becomes a playlist, with eXo's start disk first.
+        #expect(plan.configURL.pathExtension == "m3u")
+        #expect(
+            plan.configText
+                == "\(folder.appendingPathComponent("zork.d64").path)\n\(folder.appendingPathComponent("zork2.d64").path)\n"
+        )
+    }
+
+    @Test func givesCoresTheROMsTheyNeed() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let snapshot = try IFFixture.make(in: scratch)
+        let retroArch = try IFFixture.retroArch(in: scratch)
+        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: scratch, retroArch: retroArch)
+        let versions = planner.variants(for: IFFixture.missionGame)
+        let amiga = try #require(versions.first { $0.id == "Amiga" })
+        #expect(
+            amiga.unsupportedReason
+                == "needs the Amiga Kickstart 1.3 ROM (kick34005.A500) in RetroArch's system folder")
+
+        // atari800 gets eXo's Altirra ROMs in a system folder of its own.
+        let atari = try #require(versions.first { $0.id == "Atari 8bit" })
+        #expect(atari.isPlayable)
+        let plan = try planner.plan(
+            game: IFFixture.missionGame, variant: atari, emulator: retroArch.installation, options: LaunchOptions())
+        #expect(plan.arguments.prefix(2) == ["--appendconfig", plan.configURL.path])
+        #expect(plan.configText == "system_directory = \"\(planner.ifRetroArchSystemDirectory.path)\"\n")
+        #expect(
+            plan.fileCopies.map(\.destination.lastPathComponent) == ["ATARIXL.ROM", "ATARIOSB.ROM", "ATARIBAS.ROM"])
+        try plan.writeConfig()
+        #expect(
+            FileManager.default.fileExists(
+                atPath: planner.ifRetroArchSystemDirectory.appendingPathComponent("ATARIXL.ROM").path))
+
+        // With a Kickstart in RetroArch's system folder, Amiga versions play.
+        try Data("rom".utf8).write(to: retroArch.systemDirectory!.appendingPathComponent("kick34005.A500"))
+        #expect(planner.variants(for: IFFixture.missionGame).first { $0.id == "Amiga" }?.isPlayable == true)
     }
 }

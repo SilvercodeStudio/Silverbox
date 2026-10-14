@@ -6,6 +6,8 @@ nonisolated public enum IFRoute: Hashable, Sendable {
     case dosBox(config: URL, dosboxX: Bool)
     /// A story file for a text-adventure interpreter, opened in Spatterlight.
     case storyFile(URL)
+    /// A disk, tape or program for an 8-bit computer, in a RetroArch core.
+    case retroArch(core: String, file: URL)
     /// No Mac route yet, with the system eXo runs it on.
     case unsupported(system: String)
 
@@ -13,6 +15,7 @@ nonisolated public enum IFRoute: Hashable, Sendable {
         switch self {
         case .dosBox(_, let dosboxX): return dosboxX ? .dosboxX : .dosboxStaging
         case .storyFile: return .spatterlight
+        case .retroArch: return .retroArch
         case .unsupported: return nil
         }
     }
@@ -23,6 +26,7 @@ nonisolated public enum IFRoute: Hashable, Sendable {
         switch self {
         case .storyFile: return 0
         case .dosBox: return 1
+        case .retroArch: return 2
         case .unsupported: return 9
         }
     }
@@ -70,6 +74,63 @@ nonisolated extension LaunchPlanner {
         "WinFrotz", "Lectrote", "Gargoyle", "Glulxe", "HUGO", "TADS", "Level9", "Magnetic", "dMagnetic", "Adrift",
     ]
 
+    /// The RetroArch core for each of eXo's emulator sections that one can
+    /// replace. Most have the machine's ROMs built in.
+    static let ifRetroArchCores: [String: String] = [
+        "C64": "vice_x64sc", "C128": "vice_x128", "VIC20": "vice_xvic", "PLUS4": "vice_xplus4", "PET": "vice_xpet",
+        "ZXSpectrum": "fuse", "ZX81": "81", "TS1000": "81", "APPLEII": "applewin", "CPC": "cap32",
+        "AMIGA": "puae", "Atari8": "atari800",
+    ]
+
+    /// ROMs a core needs in RetroArch's system folder, which eXo does not ship.
+    static let ifRetroArchSystemFiles: [String: (file: String, description: String)] = [
+        "puae": ("kick34005.A500", "the Amiga Kickstart 1.3 ROM")
+    ]
+
+    /// ROMs eXo ships for its own emulator that a core can use: the folder
+    /// under `eXo/emulators` (by prefix), and each file with the name the
+    /// core looks for. atari800 takes the OS and BASIC ROMs from Altirra.
+    static let ifRetroArchEXoROMs: [String: (folder: String, files: [(source: String, name: String)])] = [
+        "atari800": (
+            "Altirra",
+            [("REV02.ROM", "ATARIXL.ROM"), ("REVBNTSC.ROM", "ATARIOSB.ROM"), ("REVC.ROM", "ATARIBAS.ROM")]
+        )
+    ]
+
+    /// eXo's ROM files for a core, as copies to make: from `eXo/emulators`
+    /// to `directory`. Nil when the core needs none; empty when eXo's are missing.
+    func ifEXoROMCopies(for core: String, into directory: URL) -> [FileCopy]? {
+        guard let roms = Self.ifRetroArchEXoROMs[core] else { return nil }
+        let emulators = snapshot.root.emulatorsDirectory
+        let folder = ((try? FileManager.default.contentsOfDirectory(atPath: emulators.path)) ?? []).sorted()
+            .last { $0.lowercased().hasPrefix(roms.folder.lowercased()) }
+        guard let folder else { return [] }
+        let copies = roms.files.map { file in
+            FileCopy(
+                source: WindowsPath.matchingCase(
+                    emulators.appendingPathComponent(folder, isDirectory: true).appendingPathComponent(file.source)),
+                destination: directory.appendingPathComponent(file.name))
+        }
+        return copies.allSatisfy { FileManager.default.fileExists(atPath: $0.source.path) } ? copies : []
+    }
+
+    /// Why a RetroArch version cannot start here, or nil when it can.
+    func ifRetroArchProblem(core: String, file: URL) -> String? {
+        guard let retroArch else { return "needs RetroArch" }
+        if retroArch.resolveCore(named: core) == nil { return "needs RetroArch's \(core) core" }
+        if let needed = Self.ifRetroArchSystemFiles[core], !retroArch.hasSystemFile(needed.file) {
+            return "needs \(needed.description) (\(needed.file)) in RetroArch's system folder"
+        }
+        if ifEXoROMCopies(for: core, into: scratchDirectory)?.isEmpty == true { return "eXo's ROMs for it are missing" }
+        if file.pathExtension.lowercased() == "fs-uae" { return "FS-UAE configurations are not supported" }
+        return nil
+    }
+
+    /// RetroArch's system folder for cores that take eXo's ROMs.
+    var ifRetroArchSystemDirectory: URL {
+        (localStore?.directory ?? scratchDirectory).appendingPathComponent("RetroArch/system", isDirectory: true)
+    }
+
     /// `eXo/util/launch_if.bat`.
     public var ifLauncherFile: URL { snapshot.root.utilDirectory.appendingPathComponent("launch_if.bat") }
 
@@ -101,6 +162,8 @@ nonisolated extension LaunchPlanner {
                 } else if folders.count == 1 {
                     title = Self.storyFormat(of: file)
                 }
+            case .retroArch(let core, let file):
+                reason = ifRetroArchProblem(core: core, file: file)
             case .dosBox:
                 break
             }
@@ -173,6 +236,9 @@ nonisolated extension LaunchPlanner {
         if Self.ifStoryLabels.contains(label), let file {
             return .storyFile(file)
         }
+        if let core = Self.ifRetroArchCores[label], let file {
+            return .retroArch(core: core, file: file)
+        }
         return .unsupported(system: label == "MSDOS" ? "This MS-DOS version" : name)
     }
 
@@ -230,8 +296,58 @@ nonisolated extension LaunchPlanner {
                 game: game, variant: version, emulator: open, arguments: ["-W", "-a", app.path, file.path],
                 workingDirectory: file.deletingLastPathComponent(), configURL: note,
                 configText: "Spatterlight opens \(file.path)\n", sourceConfigURL: file, notes: [])
+        case .retroArch(let core, let file):
+            guard emulator.kind == .retroArch else { throw LaunchPlanError.needsRetroArchCore(core) }
+            guard emulator.exists, let coreURL = retroArch?.resolveCore(named: core)?.url else {
+                throw LaunchPlanError.needsRetroArchCore(core)
+            }
+            if let problem = ifRetroArchProblem(core: core, file: file) {
+                throw LaunchPlanError.ifVersionUnsupported(problem)
+            }
+            let base = scratchDirectory.appendingPathComponent(Self.safeFileName(game.launchBoxID))
+            // A core that takes eXo's ROMs gets its own system folder,
+            // through a config RetroArch adds to its own for this launch.
+            if let copies = ifEXoROMCopies(for: core, into: ifRetroArchSystemDirectory) {
+                let append = base.appendingPathExtension("cfg")
+                var arguments = ["--appendconfig", append.path, "-L", coreURL.path]
+                if options.fullscreen { arguments.append("-f") }
+                arguments.append(file.path)
+                return LaunchPlan(
+                    game: game, variant: version, emulator: emulator, arguments: arguments,
+                    workingDirectory: file.deletingLastPathComponent(), configURL: append,
+                    configText: "system_directory = \"\(ifRetroArchSystemDirectory.path)\"\n", sourceConfigURL: file,
+                    notes: [], fileCopies: copies)
+            }
+            // A fliplist (eXo's list of a C64 game's disks) becomes an m3u
+            // playlist, so RetroArch can swap disks; eXo's start disk first.
+            let fliplist = file.deletingLastPathComponent().appendingPathComponent("fliplist.vfl")
+            let playlist = Self.playlist(fromFliplist: fliplist, startingWith: file)
+            let configURL = base.appendingPathExtension(playlist == nil ? "txt" : "m3u")
+            var arguments = ["-L", coreURL.path]
+            if options.fullscreen { arguments.append("-f") }
+            arguments.append(playlist == nil ? file.path : configURL.path)
+            return LaunchPlan(
+                game: game, variant: version, emulator: emulator, arguments: arguments,
+                workingDirectory: file.deletingLastPathComponent(), configURL: configURL,
+                configText: playlist ?? "RetroArch \(core) opens \(file.path)\n", sourceConfigURL: file,
+                notes: playlist == nil ? [] : ["Disks are in RetroArch's Disk Control menu."])
         case .unsupported(let system):
             throw LaunchPlanError.ifVersionUnsupported(system)
         }
+    }
+
+    /// An m3u playlist of the disks a VICE fliplist names, `start` first.
+    /// Nil when there is no fliplist.
+    static func playlist(fromFliplist url: URL, startingWith start: URL) -> String? {
+        guard let data = FileManager.default.contents(atPath: url.path) else { return nil }
+        let folder = url.deletingLastPathComponent()
+        var disks = [start.path]
+        for raw in String(decoding: data, as: UTF8.self).components(separatedBy: .newlines) {
+            let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !line.isEmpty, !line.hasPrefix("#"), !line.uppercased().hasPrefix("UNIT") else { continue }
+            let disk = WindowsPath.matchingCase(WindowsPath.resolve(line, against: folder)).path
+            if !disks.contains(disk) { disks.append(disk) }
+        }
+        return disks.joined(separator: "\n") + "\n"
     }
 }

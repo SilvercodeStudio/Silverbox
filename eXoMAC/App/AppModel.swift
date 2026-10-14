@@ -518,6 +518,11 @@ final class AppModel {
 
     // MARK: - Launching
 
+    /// A planner for the snapshot, with RetroArch for eXoIF's 8-bit versions.
+    func launchPlanner(_ snapshot: LibrarySnapshot) -> LaunchPlanner {
+        LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs, retroArch: settings.retroArchSetup)
+    }
+
     func emulatorKind(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x || game.launchKind == .scummVM { return defaultEmulatorKind(for: game) }
         if game.launchKind == .interactiveFiction {
@@ -538,7 +543,7 @@ final class AppModel {
         case .alwaysDOSBoxX: return .dosboxX
         case .recommended:
             guard let snapshot = snapshot(for: game) else { return .dosboxStaging }
-            return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).recommendedEmulator(
+            return launchPlanner(snapshot).recommendedEmulator(
                 for: game)
         }
     }
@@ -546,12 +551,12 @@ final class AppModel {
     /// True for the eXoWin9x games that eXo runs in 86Box instead of DOSBox-X.
     func needs86Box(_ game: Game) -> Bool {
         guard game.launchKind == .windows9x, let snapshot = snapshot(for: game) else { return false }
-        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).needs86Box(game)
+        return launchPlanner(snapshot).needs86Box(game)
     }
 
     func launchVariants(for game: Game) -> [LaunchVariant] {
         guard let snapshot = snapshot(for: game) else { return [] }
-        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).variants(for: game)
+        return launchPlanner(snapshot).variants(for: game)
     }
 
     func eXoDOSBuild(for game: Game) -> EXoDOSBuild? {
@@ -580,7 +585,7 @@ final class AppModel {
     /// Spatterlight for story files.
     func ifEmulatorKind(for game: Game, variant: LaunchVariant?) -> EmulatorKind {
         guard let snapshot = snapshot(for: game) else { return .spatterlight }
-        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs)
+        return launchPlanner(snapshot)
             .ifRoute(for: game, variant: variant)?.emulator ?? .spatterlight
     }
 
@@ -652,7 +657,7 @@ final class AppModel {
                 message: "Choose the \(kind.displayName) application in Settings › Emulators.")
             return
         }
-        let planner = LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs)
+        let planner = launchPlanner(snapshot)
         do {
             if kind.isScummVM, let problem = scummVMEngineProblem(game, variant: variant, emulator: emulator) {
                 alert = problem
@@ -698,7 +703,7 @@ final class AppModel {
 
     func overrideConfigURL(for game: Game) -> URL? {
         guard let snapshot = snapshot(for: game) else { return nil }
-        return LaunchPlanner(snapshot: snapshot, scratchDirectory: AppPaths.launchConfigs).overrideConfigURL(
+        return launchPlanner(snapshot).overrideConfigURL(
             for: game, variant: nil)
     }
 

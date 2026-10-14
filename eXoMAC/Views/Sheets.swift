@@ -415,7 +415,8 @@ struct LaunchOptionsSheet: View {
                 if !(isIF && effectiveEmulator == .spatterlight) {
                     Section("Display") {
                         Toggle("Full screen", isOn: $options.fullscreen)
-                        if emulator != .box86 { displayOptions }
+                        // 86Box and RetroArch take only full screen from here.
+                        if emulator != .box86, !(isIF && effectiveEmulator == .retroArch) { displayOptions }
                     }
                 }
                 Section("Emulator") {
@@ -556,7 +557,8 @@ struct LaunchOptionsSheet: View {
         if pending.game.launchKind == .windows9x {
             runs = "Windows 98 starts first, then the game."
         } else if isIF {
-            runs = "Text adventures open in Spatterlight; MS-DOS versions run in DOSBox."
+            runs =
+                "Text adventures open in Spatterlight, MS-DOS versions run in DOSBox, and 8-bit computer versions in RetroArch."
         } else if isScummVM {
             runs = model.scummVMVersion(for: pending.game, variants: pending.variants, variant: selectedVariant).map {
                 "\(pack) runs this game in ScummVM \($0)."

@@ -26,7 +26,18 @@ Five games need engines that ScummVM's release builds leave out until they are f
 
 ## Spatterlight and DOSBox for eXoIF games
 
-eXo's launcher for interactive fiction picks an emulator by the name of each version's folder (`eXo/util/launch_if.bat` holds the table) and the file to run in it: the only file in the folder, else its `dosbox.conf`, else the name in `launch.file`. Autoexec.Mac reads the same table. Versions eXo plays in WinFrotz, Lectrote, Gargoyle, Glulxe, Hugor, QTads, Level9, Magnetic or Adrift open in **Spatterlight** instead; when two of them hold the same story file, the list shows it once. MS-DOS versions run in **DOSBox Staging**, or in **DOSBox-X** when eXo's config is a `dosbox-x.conf`. Versions for other computers, mainframes and Windows programs are not supported yet.
+eXo's launcher for interactive fiction picks an emulator by the name of each version's folder (`eXo/util/launch_if.bat` holds the table) and the file to run in it: the only file in the folder, else its `dosbox.conf`, else the name in `launch.file`. Autoexec.Mac reads the same table. Versions eXo plays in WinFrotz, Lectrote, Gargoyle, Glulxe, Hugor, QTads, Level9, Magnetic or Adrift open in **Spatterlight** instead; when two of them hold the same story file, the list shows it once. MS-DOS versions run in **DOSBox Staging**, or in **DOSBox-X** when eXo's config is a `dosbox-x.conf`. Versions for 8-bit computers run in **RetroArch** cores:
+
+| eXo system | RetroArch core | Notes |
+|---|---|---|
+| C64, C128, VIC-20, Plus/4, PET | VICE (`vice_x64sc`, `vice_x128`, `vice_xvic`, `vice_xplus4`, `vice_xpet`) | ROMs built in. |
+| ZX Spectrum, ZX81 | Fuse, 81 | ROMs built in. |
+| Apple II | AppleWin | ROMs built in. |
+| Amstrad CPC | cap32 | ROMs built in. |
+| Atari 8-bit | atari800 | Uses the OS and BASIC ROMs eXo ships with Altirra, copied to `RetroArch/system` in the local data folder; RetroArch's own system folder is not changed. |
+| Amiga | PUAE | Needs the Kickstart 1.3 ROM, `kick34005.A500`, in RetroArch's system folder. Versions that use FS-UAE configurations are not supported. |
+
+A version whose core is not installed says so; install it from RetroArch's Online Updater › Core Downloader. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
 
 ## How a game is configured
 
