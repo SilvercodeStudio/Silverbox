@@ -4,7 +4,7 @@ import Foundation
 /// megabytes of XML. A cache entry is used only while the data files it was
 /// built from are unchanged.
 nonisolated public struct LibraryCache: Sendable {
-    public static let version = 2
+    public static let version = 3
 
     public let directory: URL
 

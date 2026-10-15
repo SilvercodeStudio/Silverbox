@@ -176,7 +176,7 @@ struct GameTileView: View {
             BoxArtView(game: game, width: width)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
-                        .stroke(isSelected ? Theme.accent : Color.white.opacity(0.08), lineWidth: isSelected ? 3 : 1)
+                        .stroke(isSelected ? Theme.accent : Theme.border, lineWidth: isSelected ? 3 : 1)
                 )
                 .overlay(alignment: .topTrailing) {
                     HStack(spacing: 4) {

@@ -1,21 +1,25 @@
+import AppKit
 import SwiftUI
 import eXoCore
 
-/// The dark, amber-accented look from the design prototypes.
+/// The look from the design prototypes, dark or light with the system or
+/// the Appearance setting, and accented in the colour of the chosen app
+/// icon: amber or green. Each colour has a value for each appearance.
 enum Theme {
-    static let window = Color(hex: 0x181A1D)
-    static let sidebar = Color(hex: 0x202226)
-    static let panel = Color(hex: 0x1D1F23)
-    static let panelRaised = Color(hex: 0x26292E)
-    static let card = Color(hex: 0x24262A)
-    static let field = Color(hex: 0x1A1C1F)
-    static let border = Color(hex: 0x2A2D32)
-    static let borderStrong = Color(hex: 0x3A3E45)
-    static let textPrimary = Color(hex: 0xECEDEF)
-    static let textSecondary = Color(hex: 0xA3A7AE)
-    static let textTertiary = Color(hex: 0x8C9199)
-    static let accent = Color(hex: 0xF2B544)
-    static let accentText = Color(hex: 0x1B1404)
+    static let window = Color(light: 0xF4F4F6, dark: 0x181A1D)
+    static let sidebar = Color(light: 0xE9EAED, dark: 0x202226)
+    static let panel = Color(light: 0xFAFAFB, dark: 0x1D1F23)
+    static let panelRaised = Color(light: 0xFFFFFF, dark: 0x26292E)
+    static let card = Color(light: 0xFFFFFF, dark: 0x24262A)
+    static let field = Color(light: 0xFFFFFF, dark: 0x1A1C1F)
+    static let border = Color(light: 0xDCDDE1, dark: 0x2A2D32)
+    static let borderStrong = Color(light: 0xC4C6CC, dark: 0x3A3E45)
+    static let textPrimary = Color(light: 0x1C1D20, dark: 0xECEDEF)
+    static let textSecondary = Color(light: 0x5B5F67, dark: 0xA3A7AE)
+    static let textTertiary = Color(light: 0x777C84, dark: 0x8C9199)
+    static var accent: Color { ThemeAccent.shared.variant.accent }
+    /// Text on an accent fill, such as the Play button.
+    static var accentText: Color { ThemeAccent.shared.variant.accentText }
     static let mono = Font.system(size: 11, design: .monospaced)
 
     /// A stable hue for a title, used for placeholder tiles and header tints.
@@ -32,8 +36,44 @@ enum Theme {
         Color(hue: hue(for: title), saturation: 0.38, brightness: 0.42)
     }
 
+    /// The tint behind a game's header in the inspector and on its page.
     static func toneColor(for title: String) -> Color {
-        Color(hue: hue(for: title), saturation: 0.32, brightness: 0.27)
+        let hue = hue(for: title)
+        return Color(
+            nsColor: NSColor(name: nil) { appearance in
+                appearance.isDark
+                    ? NSColor(hue: hue, saturation: 0.32, brightness: 0.27, alpha: 1)
+                    : NSColor(hue: hue, saturation: 0.18, brightness: 0.92, alpha: 1)
+            })
+    }
+}
+
+/// The icon whose colour accents the app. Views that read ``Theme/accent``
+/// redraw when it changes.
+@Observable
+final class ThemeAccent {
+    static let shared = ThemeAccent()
+    var variant: AppIconVariant = .amber
+}
+
+extension AppIconVariant {
+    /// A softer take on the icon's phosphor (amber #FFB000, green #33FF00),
+    /// dark enough for dark text on it, and darker again on a light
+    /// background so that it reads as text and outlines.
+    var accentHex: (light: UInt32, dark: UInt32) {
+        switch self {
+        case .amber: return (0xC0820F, 0xF2B544)
+        case .green: return (0x2E8B42, 0x3FA453)
+        }
+    }
+
+    var accent: Color { Color(light: accentHex.light, dark: accentHex.dark) }
+
+    var accentText: Color {
+        switch self {
+        case .amber: return Color(hex: 0x1B1404)
+        case .green: return Color(hex: 0x06170B)
+        }
     }
 }
 
@@ -45,6 +85,26 @@ extension Color {
             blue: Double(hex & 0xFF) / 255
         )
     }
+
+    /// A colour that follows the window's appearance.
+    init(light: UInt32, dark: UInt32) {
+        self.init(
+            nsColor: NSColor(name: nil) { appearance in
+                NSColor(hex: appearance.isDark ? dark : light)
+            })
+    }
+}
+
+extension NSColor {
+    convenience init(hex: UInt32) {
+        self.init(
+            srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+    }
+}
+
+extension NSAppearance {
+    var isDark: Bool { bestMatch(from: [.darkAqua, .aqua]) == .darkAqua }
 }
 
 enum Formatters {

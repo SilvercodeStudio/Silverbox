@@ -6,8 +6,16 @@
     {
       "layers" : [
         {
+          "hidden" : false,
           "image-name" : "scanlines.svg",
-          "name" : "scanlines"
+          "name" : "scanlines",
+          "position" : {
+            "scale" : 3,
+            "translation-in-points" : [
+              0,
+              22
+            ]
+          }
         },
         {
           "image-name" : "glyph.svg",

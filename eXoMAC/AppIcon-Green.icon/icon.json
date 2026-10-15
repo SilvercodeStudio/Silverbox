@@ -7,7 +7,14 @@
       "layers" : [
         {
           "image-name" : "scanlines.svg",
-          "name" : "scanlines"
+          "name" : "scanlines",
+          "position" : {
+            "scale" : 3,
+            "translation-in-points" : [
+              13,
+              21
+            ]
+          }
         },
         {
           "image-name" : "glyph.svg",
@@ -15,7 +22,14 @@
         },
         {
           "image-name" : "background.png",
-          "name" : "background"
+          "name" : "background",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              5.594999999999914
+            ]
+          }
         }
       ],
       "shadow" : {

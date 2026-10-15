@@ -75,7 +75,6 @@ struct ShortcutsView: View {
         .padding(24)
         .frame(width: 800)
         .background(Theme.window)
-        .preferredColorScheme(.dark)
         .onAppear { model.shortcutsShown = true }
         .onDisappear { model.shortcutsShown = false }
     }

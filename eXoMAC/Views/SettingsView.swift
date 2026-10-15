@@ -62,9 +62,15 @@ struct GeneralSettingsView: View {
                     }
                 }
                 Text(
-                    "The Dock and the About window show the chosen icon. The Finder shows the amber icon built into the app."
+                    "The Dock and the About window show the chosen icon, and the app takes its colour for highlights. The Finder shows the amber icon built into the app."
                 )
                 .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Appearance") {
+                Picker("Appearance", selection: $model.settings.appearance) {
+                    ForEach(AppAppearance.allCases) { Text($0.displayName).tag($0) }
+                }
+                .pickerStyle(.segmented)
             }
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
@@ -642,11 +648,11 @@ struct AppIconChoice: View {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? Color.accentColor.opacity(0.18) : Color.clear)
+                    .fill(isSelected ? Theme.accent.opacity(0.18) : Color.clear)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Theme.accent : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

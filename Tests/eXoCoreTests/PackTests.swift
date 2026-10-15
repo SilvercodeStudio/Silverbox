@@ -122,9 +122,15 @@ struct PackTests {
                 folder: "eXo\\Magazines"))
         try await DownloadFixture.zip(
             [
-                "xml/all/Apple IIGS.xml": DownloadFixture.list(""),
+                // eXo's data gives a game and a magazine the same ID.
+                "xml/all/Apple IIGS.xml": DownloadFixture.list(
+                    DownloadFixture.game(
+                        id: "dddddddd-0000-0000-0000-000000000010", title: "Arkanoid", platform: "Apple IIGS",
+                        folder: "eXo\\eXoAppleIIGS\\!appleiigs\\Arkanoid (1987)")),
                 "xml/Apple IIGS Magazines.xml": magazines,
-                "xml/platforms/appleIIGS.platforms": "  <Platform>\n    <Name>Apple IIGS</Name>\n  </Platform>\n",
+                // eXo lists the add-on platform already, with elements before its name.
+                "xml/platforms/appleIIGS.platforms":
+                    "  <Platform>\n    <Name>Apple IIGS</Name>\n  </Platform>\n  <Platform>\n    <Category />\n    <Name>Apple IIGS Magazines</Name>\n  </Platform>\n",
                 "xml/merge_platforms.bat": DownloadFixture.mergeScript(
                     output: "Platforms.xml", pattern: "platforms\\*.platforms"),
             ], to: content.appendingPathComponent("XOAppleIIGSMetadata.zip"), scratch: scratch)
@@ -146,7 +152,12 @@ struct PackTests {
         #expect(fm.fileExists(atPath: target.appendingPathComponent("eXo/Magazines/GS+.pdf").path))
         #expect(fm.fileExists(atPath: target.appendingPathComponent("eXo/Videos/Demo Film/film.mp4").path))
         #expect(fm.fileExists(atPath: target.appendingPathComponent("Data/Platforms/Apple IIGS Magazines.xml").path))
-        #expect(fm.fileExists(atPath: target.appendingPathComponent("Data/Platforms.xml").path))
+        let platforms = try String(contentsOf: target.appendingPathComponent("Data/Platforms.xml"), encoding: .utf8)
+        #expect(platforms.components(separatedBy: "<Name>Apple IIGS Magazines</Name>").count == 2)
+
+        let snapshot = try LibraryLoader(root: LibraryRoot(url: target)).load()
+        #expect(snapshot.games.map(\.title).sorted() == ["Arkanoid", "GS+"])
+        #expect(Set(snapshot.games.map(\.id)).count == 2)
     }
 
     @Test func leavesExtrasAndWindowsBuildsPackedUntilInstall() async throws {

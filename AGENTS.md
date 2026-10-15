@@ -228,8 +228,16 @@ Makefile).
   compiled only when the target's "Include all app icon assets" is on. The app
   icon setting shows the chosen one in the Dock and the About window through
   `AppIconVariant.image`, which falls back to the flat 1024 px PNGs in the
-  `AppIconAmber` and `AppIconGreen` image sets. The design sources (SVG masters,
-  Icon Composer layers, classic PNG sets) live in `AM_icons/`.
+  `AppIconAmber` and `AppIconGreen` image sets. The chosen icon also sets the
+  accent: `Theme.accent` and `Theme.accentText` read `ThemeAccent.shared`
+  (observable, set by `AppModel.applyAppIcon`), and each scene applies
+  `.tint(Theme.accent)` for controls. Use `Theme.accent`, not
+  `Color.accentColor` (the asset catalog's fixed amber). Every `Theme`
+  colour has a light and a dark value (`Color(light:dark:)`, a dynamic
+  `NSColor`), and the Appearance setting sets `NSApp.appearance`
+  (`AppModel.applyAppearance`); do not force a colour scheme on a view. The
+  Help page's CSS follows with `prefers-color-scheme`. The design sources
+  (SVG masters, Icon Composer layers, classic PNG sets) live in `AM_icons/`.
 - Reference material: a read-only eXoDOS v6 copy at `/Volumes/eXoDOS_ro`,
   LaunchBox screenshots in `Launchbox Screenshots/`, and the design prototypes
   linked from `prompt.md`.
@@ -237,7 +245,7 @@ Makefile).
 ## Debugging aids
 
 - Launch arguments (debug builds): `-libraryPath "<folder>|<folder>"` (one or
-  more collections) and `-musicEnabled 0` override saved settings for one run; `-searchText ultima` and
+  more collections) and `-musicEnabled 0` and `-appearance light` (or `dark`, `system`) override saved settings for one run; `-searchText ultima` and
   `-selectTitle "Ultima V: Warriors of Destiny"` preset the view;
   `-screenshotPath out.png [-screenshotDelay 10]` renders every visible window
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and

@@ -58,12 +58,13 @@ struct HelpView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 220)
         } detail: {
             if let topic = topics.first(where: { $0.id == selection }) ?? topics.first {
-                HelpWebView(html: MarkdownHTML.page(body: MarkdownHTML.render(topic.markdown)))
+                HelpWebView(
+                    html: MarkdownHTML.page(
+                        body: MarkdownHTML.render(topic.markdown), accent: ThemeAccent.shared.variant.accentHex))
             } else {
                 Text("No help pages are bundled.").foregroundStyle(.secondary)
             }
         }
-        .preferredColorScheme(.dark)
         .frame(minWidth: 700, minHeight: 480)
         .onAppear { select(helpState.request) }
         .onChange(of: helpState.request) { _, request in select(request) }
@@ -179,6 +180,5 @@ struct AboutView: View {
         .padding(24)
         .padding(.top, 12)
         .background(Theme.window)
-        .preferredColorScheme(.dark)
     }
 }

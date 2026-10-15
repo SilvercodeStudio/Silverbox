@@ -34,6 +34,8 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // Sidebar icons take the app's accent from the asset catalog otherwise.
+        .listItemTint(Theme.accent)
         .scrollContentBackground(.hidden)
         .background(Theme.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 360)

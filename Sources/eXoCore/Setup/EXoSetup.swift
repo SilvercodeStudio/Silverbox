@@ -308,8 +308,10 @@ nonisolated public struct EXoSetup: Sendable {
                     into: platforms)
             }
             for name in addOn.platforms.map(Self.escape) {
+                // eXo's own entries have other elements before the name.
                 if platforms.range(
-                    of: "<Platform>\\s*<Name>\(NSRegularExpression.escapedPattern(for: name))</Name>",
+                    of:
+                        "(?s)<Platform>(?:(?!</Platform>).)*?<Name>\(NSRegularExpression.escapedPattern(for: name))</Name>",
                     options: .regularExpression) == nil
                 {
                     platforms = Self.inserting(

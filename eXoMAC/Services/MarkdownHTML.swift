@@ -151,28 +151,38 @@ nonisolated enum MarkdownHTML {
             .replacingOccurrences(of: ">", with: "&gt;")
     }
 
-    /// Wraps rendered content in a page that matches the app's dark theme.
-    static func page(body: String) -> String {
+    /// A colour value as CSS, such as `#F2B544`.
+    private static func css(_ hex: UInt32) -> String { String(format: "#%06X", hex) }
+
+    /// Wraps rendered content in a page that matches the app's theme: light
+    /// or dark with the window, and links in the accent colour.
+    static func page(body: String, accent: (light: UInt32, dark: UInt32)) -> String {
         """
         <!doctype html><html><head><meta charset="utf-8">
         <style>
-        :root { color-scheme: dark; }
-        body { margin: 0; padding: 28px 36px 48px; background: #181A1D; color: #ECEDEF;
+        :root { color-scheme: light dark;
+                --bg: #F4F4F6; --text: #1C1D20; --heading3: #2E3036; --body: #3A3D44; --raised: #FFFFFF;
+                --panel: #FAFAFB; --border: #DCDDE1; --border-strong: #C4C6CC; --accent: \(css(accent.light)); }
+        @media (prefers-color-scheme: dark) {
+          :root { --bg: #181A1D; --text: #ECEDEF; --heading3: #D9DBDF; --body: #C9CCD1; --raised: #26292E;
+                  --panel: #1D1F23; --border: #2A2D32; --border-strong: #3A3E45; --accent: \(css(accent.dark)); }
+        }
+        body { margin: 0; padding: 28px 36px 48px; background: var(--bg); color: var(--text);
                font: 14px/1.55 -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif; max-width: 72ch; }
         h1 { font-size: 24px; margin: 0 0 16px; letter-spacing: -0.01em; }
         h2 { font-size: 17px; margin: 28px 0 8px; }
-        h3 { font-size: 14px; margin: 20px 0 6px; color: #D9DBDF; }
-        p, li { color: #C9CCD1; }
-        a { color: #F2B544; text-decoration: none; } a:hover { text-decoration: underline; }
-        code { font: 12px "SF Mono", Menlo, monospace; background: #26292E; padding: 1px 5px; border-radius: 4px; color: #ECEDEF; }
-        pre { background: #1D1F23; border: 1px solid #2A2D32; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+        h3 { font-size: 14px; margin: 20px 0 6px; color: var(--heading3); }
+        p, li { color: var(--body); }
+        a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+        code { font: 12px "SF Mono", Menlo, monospace; background: var(--raised); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+        pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
         pre code { background: none; padding: 0; }
         ul, ol { padding-left: 22px; } li { margin: 4px 0; }
         table { border-collapse: collapse; margin: 8px 0 18px; width: 100%; }
-        th, td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid #2A2D32; color: #C9CCD1; }
-        th { color: #ECEDEF; font-weight: 600; border-bottom-color: #3A3E45; }
-        td:first-child { white-space: nowrap; color: #ECEDEF; padding-right: 18px; }
-        strong { color: #ECEDEF; }
+        th, td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--border); color: var(--body); }
+        th { color: var(--text); font-weight: 600; border-bottom-color: var(--border-strong); }
+        td:first-child { white-space: nowrap; color: var(--text); padding-right: 18px; }
+        strong { color: var(--text); }
         </style></head><body>\(body)</body></html>
         """
     }

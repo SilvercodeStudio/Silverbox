@@ -22,6 +22,21 @@ enum LibraryViewMode: String, Codable, CaseIterable {
     case grid, list
 }
 
+/// Light or dark, or whichever the system uses.
+enum AppAppearance: String, CaseIterable, Codable, Identifiable {
+    case system, light, dark
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .system: return "Match System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+}
+
 /// The two app icons from the design: amber or green phosphor on a dark CRT.
 enum AppIconVariant: String, CaseIterable, Codable, Identifiable {
     case amber, green
@@ -84,6 +99,7 @@ struct AppSettings: Codable, Equatable {
     var inspectorShown = true
     /// Which of the two app icons the Dock and the About window show.
     var appIcon: AppIconVariant = .amber
+    var appearance: AppAppearance = .system
 
     static let defaultsKey = "eXoMAC.settings"
 
@@ -128,6 +144,7 @@ struct AppSettings: Codable, Equatable {
         showHiddenGames = try c.decodeIfPresent(Bool.self, forKey: .showHiddenGames) ?? false
         inspectorShown = try c.decodeIfPresent(Bool.self, forKey: .inspectorShown) ?? true
         appIcon = try c.decodeIfPresent(AppIconVariant.self, forKey: .appIcon) ?? .amber
+        appearance = try c.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
     }
 
     /// The bundle identifier before the app was renamed. Settings saved under it
@@ -163,6 +180,9 @@ struct AppSettings: Codable, Equatable {
         if defaults.object(forKey: "musicEnabled") != nil {
             settings.musicEnabled = defaults.bool(forKey: "musicEnabled")
         }
+        if let name = defaults.string(forKey: "appearance"), let appearance = AppAppearance(rawValue: name) {
+            settings.appearance = appearance
+        }
         return settings
     }
 
@@ -183,7 +203,7 @@ struct AppSettings: Codable, Equatable {
             musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder,
             showHiddenGames,
             inspectorShown,
-            appIcon
+            appIcon, appearance
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -208,6 +228,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(showHiddenGames, forKey: .showHiddenGames)
         try c.encode(inspectorShown, forKey: .inspectorShown)
         try c.encode(appIcon, forKey: .appIcon)
+        try c.encode(appearance, forKey: .appearance)
     }
 
     var enabledCollections: [LibraryCollection] { collections.filter(\.isEnabled) }

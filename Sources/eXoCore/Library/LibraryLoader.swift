@@ -82,7 +82,12 @@ nonisolated public struct LibraryLoader: Sendable {
         var extraApps: [AdditionalApplication] = []
         // eXo lists its media add-on platforms whether or not the add-on is
         // installed; a platform without a game list would show up empty.
-        platforms.removeAll { !fm.fileExists(atPath: root.platformFile(named: $0.name).path) }
+        // Earlier Mac setups listed some add-on platforms twice.
+        var platformNames = Set<String>()
+        platforms.removeAll {
+            !fm.fileExists(atPath: root.platformFile(named: $0.name).path)
+                || !platformNames.insert($0.name.lowercased()).inserted
+        }
         let platformFiles = platforms.map { (platform: $0, url: root.platformFile(named: $0.name)) }
         // Weight progress by file size so the big MS-DOS file dominates.
         let sizes = platformFiles.map { (try? fm.attributesOfItem(atPath: $0.url.path)[.size] as? Int) ?? 1 }
@@ -116,6 +121,13 @@ nonisolated public struct LibraryLoader: Sendable {
                 }
             }
             doneSize += size
+        }
+        // eXo gives a few games the same ID on two platforms, such as
+        // Lighthouse: The Dark Being in MS-DOS and Windows 9x. The later one
+        // gets its platform added, so that each game has an ID of its own.
+        var gameIDs = Set<String>()
+        for index in games.indices where !gameIDs.insert(games[index].launchBoxID).inserted {
+            games[index].launchBoxID += "#" + games[index].platform
         }
 
         progress?(LibraryLoadProgress(stage: "Reading emulators", fraction: 0.96, gamesLoaded: games.count))

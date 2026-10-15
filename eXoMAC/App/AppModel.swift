@@ -24,6 +24,7 @@ final class AppModel {
             }
             if settings.musicEnabled != oldValue.musicEnabled { updateMusic() }
             if settings.appIcon != oldValue.appIcon { applyAppIcon() }
+            if settings.appearance != oldValue.appearance { applyAppearance() }
             if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
                 refreshVisibleGames()
             }
@@ -161,6 +162,7 @@ final class AppModel {
         music.volume = settings.musicVolume
         album.volume = settings.musicVolume
         applyAppIcon()
+        applyAppearance()
         // Debug conveniences: `-searchText ultima -selectTitle "Ultima V: Warriors of Destiny"`.
         if let text = UserDefaults.standard.string(forKey: "searchText") { searchText = text }
         pendingSelectTitle = UserDefaults.standard.string(forKey: "selectTitle")
@@ -204,10 +206,21 @@ final class AppModel {
 
     // MARK: - Collections and loading
 
-    /// Shows the chosen icon in the Dock; nil restores the bundle icon with its
-    /// appearance variants. The Finder keeps the icon built into the bundle.
+    /// Shows the chosen icon in the Dock, and accents the app in its colour;
+    /// nil restores the bundle icon with its appearance variants. The Finder
+    /// keeps the icon built into the bundle.
     private func applyAppIcon() {
         NSApplication.shared.applicationIconImage = settings.appIcon == .amber ? nil : settings.appIcon.image
+        ThemeAccent.shared.variant = settings.appIcon
+    }
+
+    /// Sets the appearance of every window, menu and alert; nil follows the system.
+    private func applyAppearance() {
+        switch settings.appearance {
+        case .system: NSApplication.shared.appearance = nil
+        case .light: NSApplication.shared.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApplication.shared.appearance = NSAppearance(named: .darkAqua)
+        }
     }
 
     var localStore: LocalStore { settings.localStore }

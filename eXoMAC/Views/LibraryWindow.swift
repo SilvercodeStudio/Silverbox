@@ -36,7 +36,6 @@ struct LibraryWindow: View {
                     .allowsHitTesting(false)
             }
         }
-        .preferredColorScheme(.dark)
         .frame(minWidth: 1040, minHeight: 640)
         .onAppear {
             #if DEBUG
