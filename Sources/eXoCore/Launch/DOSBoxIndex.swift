@@ -33,6 +33,25 @@ nonisolated public struct DOSBoxIndex: Sendable, Hashable, Codable {
         return DOSBoxIndex(buildByGame: map)
     }
 
+    /// The index eXoWin3x implies: each game's launcher in `configs`
+    /// (`!win3x/<folder>/<game>.bat`) starts its build directly, as in
+    /// `".\dosbox\ece\dosbox.exe" -conf …`.
+    public static func fromLaunchers(in configs: URL) -> DOSBoxIndex {
+        let fm = FileManager.default
+        var map: [String: String] = [:]
+        for folder in (try? fm.contentsOfDirectory(atPath: configs.path)) ?? [] {
+            let directory = configs.appendingPathComponent(folder, isDirectory: true)
+            for name in (try? fm.contentsOfDirectory(atPath: directory.path)) ?? []
+            where name.lowercased().hasSuffix(".bat") && name.lowercased() != "install.bat" {
+                guard let data = fm.contents(atPath: directory.appendingPathComponent(name).path) else { continue }
+                let text = String(decoding: data, as: UTF8.self)
+                guard let match = text.firstMatch(of: /(?i)\\dosbox\\([^\\"]+)\\dosbox\.exe/) else { continue }
+                map[String(name.dropLast(4)).lowercased()] = "\(match.1)\\dosbox.exe"
+            }
+        }
+        return DOSBoxIndex(buildByGame: map)
+    }
+
     public var count: Int { buildByGame.count }
 
     public func build(forLauncherBaseName name: String) -> EXoDOSBuild? {
@@ -68,8 +87,11 @@ nonisolated public struct EXoDOSBuild: Hashable, Sendable, Codable {
             family = .ece
         } else if lowered.hasPrefix("staging") {
             family = .staging
-        } else if lowered.hasPrefix("daum") {
+        } else if lowered.hasPrefix("daum") || lowered == "svn" {
+            // eXoWin3x calls its Daum build "svn" and its Staging 0.76 "svn_2".
             family = .daum
+        } else if lowered == "svn_2" {
+            family = .staging
         } else if lowered == "x" || lowered == "x2" || lowered.hasPrefix("x_") || lowered.hasPrefix("x-")
             || lowered.hasPrefix("dosbox-x")
         {

@@ -61,6 +61,15 @@ nonisolated public struct EXoDownload: Hashable, Sendable {
 
     public var contentDirectory: URL { root.appendingPathComponent("Content", isDirectory: true) }
 
+    /// `Content/LaunchBox.zip`: LaunchBox for Windows with its `Data`
+    /// folder. Setup takes only `Data/Platforms.xml` and `Data/Parents.xml`
+    /// from it, for packs whose metadata has no `merge_platforms.bat`, such
+    /// as eXoWin3x.
+    public var launchBoxArchive: URL? {
+        let url = contentDirectory.appendingPathComponent("LaunchBox.zip")
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
     /// True when a setup has already written `Data/Platforms.xml` here.
     public var isSetUp: Bool {
         FileManager.default.fileExists(atPath: root.appendingPathComponent("Data/Platforms.xml").path)

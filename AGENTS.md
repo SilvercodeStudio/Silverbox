@@ -116,15 +116,20 @@ Makefile).
   with aliases for renamed cores). `RomLaunchPlanner` builds the command
   line. Never call another front-end such as OpenEmu.
 - eXo packs. `EXoPack` names the projects whose games install from zips:
-  eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`), eXoWin9x
+  eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`), eXoWin3x
+  (`!win3x/<folder>`, eXoDOS-shaped; each game zip holds its own Windows 3.1),
+  eXoWin9x
   (`!win9x/<year>/<folder>`, unpacked to `eXoWin9x/<year>/<folder>`),
   eXoDemoScene (`eXoDemoScn/!demoscn`), eXoScummVM (`!ScummVM`),
   eXoAppleIIGS (`!appleiigs`) and eXoIF (`!IF`); the pack comes from the
   game's `RootFolder`. `Game.installPath` is the unpacked folder relative to
   `eXo/`; installed-game sets in `LibrarySnapshot` use it, matched without
   regard to case (some zips unpack to another case). `isDOSGame` is true for
-  the DOSBox packs (eXoDOS, eXoDemoScene), each with its own build index
-  (`dosbox.txt`, `demoscn.txt`); `isEXoGame` is for installing. Folders that
+  the DOSBox packs (eXoDOS, eXoWin3x, eXoDemoScene). eXoDOS and eXoDemoScene
+  have a build index (`dosbox.txt`, `demoscn.txt`); eXoWin3x's launchers name
+  the build (`.\dosbox\ece\dosbox.exe`; `svn` is Daum, `svn_2` Staging), so
+  the loader builds its index with `DOSBoxIndex.fromLaunchers(in:)`.
+  `isEXoGame` is for installing. Folders that
   differ per pack go through `gamesDirectory(for:)`, `overlayDirectory(for:)`
   and `dosboxIndex(for:)`. eXoAppleIIGS games install but do not launch yet. Each pack's `Setup <pack>.bat` entry is hidden
   (`isEXoSetupScript`). The sidebar's "eXo Packs" section (`LibraryScope.pack`)
@@ -155,7 +160,13 @@ Makefile).
   `emulators/` (eXo's Windows emulator builds). Packs without GameData zips
   keep each game's `Extras` folder in the config archive until install,
   when "unpack each game's when installed" is chosen
-  (`InstallPlan.extrasPatterns`).
+  (`InstallPlan.extrasPatterns`). eXoWin3x is set up the older way: no
+  `merge_platforms.bat`, so `Platforms.xml` and `Parents.xml` come from
+  `Content/LaunchBox.zip` (`copyLaunchBoxPlatforms`); its family list is
+  `xml/WinFAMILY.xml`, copied over `Windows 3x.xml`; util3x.zip nests
+  `mt32.zip` (unpacked into `eXo`) beside Windows DOSBox builds and shaders.
+  Its banner entry, titled `eXoWin3x` with no launcher, is hidden like the
+  setup scripts.
 - eXoScummVM. `launchKind == .scummVM`. `ScummVMLaunch.swift` follows eXo's
   `launch_svm.bat`: `ScummVMIndex` reads `eXo/util/scummvm.txt` (prefix
   match, last line wins); variants are the folders in the installed game

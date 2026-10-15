@@ -147,6 +147,9 @@ nonisolated public struct LibraryLoader: Sendable {
         for pack in EXoPack.allCases {
             if let file = root.dosboxIndexFile(for: pack), let index = try? DOSBoxIndex(contentsOf: file) {
                 dosboxIndexes[pack] = index
+            } else if pack.runsInDOSBox, pack.dosboxIndexName == nil {
+                let configs = root.gameConfigsDirectory(for: pack)
+                if fm.fileExists(atPath: configs.path) { dosboxIndexes[pack] = DOSBoxIndex.fromLaunchers(in: configs) }
             }
         }
 

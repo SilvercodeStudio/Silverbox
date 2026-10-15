@@ -244,8 +244,15 @@ nonisolated extension Game {
     }
 
     /// True for the entry each eXo pack adds for its Windows setup script,
-    /// `Setup <pack>.bat` at the top of the library. The Mac setup replaces it.
+    /// `Setup <pack>.bat` at the top of the library, which the Mac setup
+    /// replaces, and for eXoWin3x's banner entry, titled after the pack,
+    /// which starts nothing.
     public var isEXoSetupScript: Bool {
+        if applicationPath.isEmpty,
+            EXoPack.allCases.contains(where: { $0.rawValue.caseInsensitiveCompare(title) == .orderedSame })
+        {
+            return true
+        }
         let parts = WindowsPath.components(of: applicationPath)
         guard parts.count == 1 else { return false }
         let name = parts[0].lowercased()

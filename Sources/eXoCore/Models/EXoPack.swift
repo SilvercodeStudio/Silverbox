@@ -7,9 +7,11 @@ import Foundation
 /// to `eXo/eXoDOS/<folder>`. eXoWin9x adds a year: configs in
 /// `eXo/eXoWin9x/!win9x/<year>/<folder>`, the game in
 /// `eXo/eXoWin9x/<year>/<folder>`, its zip beside that folder. The other
-/// packs have the eXoDOS shape under their own folder names.
+/// packs have the eXoDOS shape under their own folder names; eXoWin3x is an
+/// eXoDOS-style pack whose games boot their own Windows 3.1 in DOSBox.
 nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashable {
     case dos = "eXoDOS"
+    case win3x = "eXoWin3x"
     case win9x = "eXoWin9x"
     case demoScene = "eXoDemoScene"
     case scummVM = "eXoScummVM"
@@ -28,6 +30,7 @@ nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashab
     public var configFolderName: String {
         switch self {
         case .dos: return "!dos"
+        case .win3x: return "!win3x"
         case .win9x: return "!win9x"
         case .demoScene: return "!demoscn"
         case .scummVM: return "!ScummVM"
@@ -40,6 +43,7 @@ nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashab
     public var archiveName: String {
         switch self {
         case .dos: return "DOS"
+        case .win3x: return "Win3X"
         case .win9x: return "Win9X"
         case .demoScene: return "DemoScene"
         case .scummVM: return "ScummVM"
@@ -60,8 +64,8 @@ nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashab
         }
     }
 
-    /// The pack's index of DOSBox builds in `eXo/util`, for packs whose
-    /// games run in DOSBox with a per-game `dosbox.conf`.
+    /// The pack's index of DOSBox builds in `eXo/util`. eXoWin3x has none:
+    /// each launcher names its build (``DOSBoxIndex/fromLaunchers(in:)``).
     public var dosboxIndexName: String? {
         switch self {
         case .dos: return "dosbox.txt"
@@ -71,7 +75,12 @@ nonisolated public enum EXoPack: String, CaseIterable, Sendable, Codable, Hashab
     }
 
     /// True when the games run in DOSBox through a translated `dosbox.conf`.
-    public var runsInDOSBox: Bool { dosboxIndexName != nil }
+    public var runsInDOSBox: Bool {
+        switch self {
+        case .dos, .win3x, .demoScene: return true
+        case .win9x, .scummVM, .appleIIGS, .interactiveFiction: return false
+        }
+    }
 
     public var displayName: String { rawValue }
 }

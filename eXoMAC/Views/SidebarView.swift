@@ -57,6 +57,7 @@ extension EXoPack {
     var systemImage: String {
         switch self {
         case .dos: return "pc"
+        case .win3x: return "macwindow.on.rectangle"
         case .win9x: return "macwindow"
         case .demoScene: return "sparkles.tv"
         case .scummVM: return "cursorarrow.click.2"

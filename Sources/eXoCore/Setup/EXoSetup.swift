@@ -171,6 +171,7 @@ nonisolated public struct EXoSetup: Sendable {
 
         progress?(EXoSetupProgress(stage: "Game lists", detail: nil, fraction: 0.98))
         try mergeXML()
+        try await copyLaunchBoxPlatforms()
         try registerAddOns()
         let downloadPath = download.root.standardizedFileURL == target ? nil : download.root.path
         try EXoSetupRecord(
@@ -182,7 +183,9 @@ nonisolated public struct EXoSetup: Sendable {
     /// util*.zip holds `EXT<pack>.zip` (emulators, MT-32 files and updates,
     /// unpacked into `eXo`) and `OPT<pack>.zip` (optional Windows tools,
     /// unpacked into `eXo/util`). eXo's setup deletes them afterwards; the
-    /// util zip still holds them.
+    /// util zip still holds them. eXoWin3x's older util3x.zip has
+    /// `mt32.zip` instead (into `eXo`), beside Windows DOSBox builds and
+    /// shaders that stay packed.
     func unpackNestedUtilArchives(progress: @escaping @Sendable (Double, String) -> Void) async throws {
         let fm = FileManager.default
         let eXo = target.appendingPathComponent("eXo", isDirectory: true)
@@ -190,12 +193,13 @@ nonisolated public struct EXoSetup: Sendable {
         let names = ((try? fm.contentsOfDirectory(atPath: util.path)) ?? []).sorted()
         let nested = names.filter {
             let lowered = $0.lowercased()
-            return lowered.hasSuffix(".zip") && (lowered.hasPrefix("ext") || lowered.hasPrefix("opt"))
+            return lowered.hasSuffix(".zip")
+                && (lowered.hasPrefix("ext") || lowered.hasPrefix("opt") || lowered == "mt32.zip")
         }
         for (index, name) in nested.enumerated() {
             try Task.checkCancellation()
             let archive = util.appendingPathComponent(name)
-            let isEXT = name.lowercased().hasPrefix("ext")
+            let isEXT = name.lowercased().hasPrefix("ext") || name.lowercased() == "mt32.zip"
             let count = max(1, (try? await ZipArchive.entries(of: archive).count) ?? 1)
             let share = 1 / Double(nested.count)
             // The Windows builds of the emulators are of no use on the Mac.
@@ -237,7 +241,16 @@ nonisolated public struct EXoSetup: Sendable {
         }
         // Loose platform files beside the merge scripts, such as eXoAppleIIGS's
         // "Apple IIGS Magazines.xml"; the merged lists are written below.
-        try copyFiles(in: xml, withExtension: "xml", to: platforms, except: ["platforms.xml", "parents.xml"])
+        // eXoWin3x has "Windows 3x.xml" and, without the adult games,
+        // "WinFAMILY.xml", which its setup copies over it.
+        try copyFiles(
+            in: xml, withExtension: "xml", to: platforms, except: ["platforms.xml", "parents.xml", "winfamily.xml"])
+        let family = xml.appendingPathComponent("WinFAMILY.xml")
+        if !options.includeAdultGames, fm.fileExists(atPath: family.path) {
+            let destination = platforms.appendingPathComponent("Windows 3x.xml")
+            try? fm.removeItem(at: destination)
+            try fm.copyItem(at: family, to: destination)
+        }
         if let folder = Self.subfolder(of: xml, named: "Playlists") {
             try copyFiles(in: folder, withExtension: nil, to: playlists)
         }
@@ -267,6 +280,17 @@ nonisolated public struct EXoSetup: Sendable {
             let destination = (isDataFile ? data : platforms).appendingPathComponent(merge.output)
             try text.write(to: destination, atomically: true, encoding: .utf8)
         }
+    }
+
+    /// eXoWin3x's metadata has no `merge_platforms.bat`; its platform list
+    /// comes with LaunchBox in `Content/LaunchBox.zip`, which eXo's setup
+    /// unpacks whole. This takes only the two lists, when no merge wrote them.
+    func copyLaunchBoxPlatforms() async throws {
+        let data = target.appendingPathComponent("Data", isDirectory: true)
+        guard !FileManager.default.fileExists(atPath: data.appendingPathComponent("Platforms.xml").path),
+            let archive = download.launchBoxArchive
+        else { return }
+        try await ZipArchive.extract(archive, into: target, only: ["Data/Platforms.xml", "Data/Parents.xml"])
     }
 
     /// The output file and fragment pattern of one merge batch file.

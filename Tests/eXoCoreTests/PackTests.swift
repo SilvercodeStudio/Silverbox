@@ -160,6 +160,83 @@ struct PackTests {
         #expect(Set(snapshot.games.map(\.id)).count == 2)
     }
 
+    /// eXoWin3x is set up the older way: its platform list comes from
+    /// LaunchBox.zip, its family list is a separate file, the MT-32 files
+    /// are nested in util3x.zip, and each launcher names its DOSBox build.
+    @Test func setsUpEXoWin3x() async throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let download = scratch.appendingPathComponent("download", isDirectory: true)
+        let content = download.appendingPathComponent("Content", isDirectory: true)
+        let configs = "eXo/eXoWin3x/!win3x"
+        try await DownloadFixture.zip(
+            [
+                "\(configs)/CasWind/Castle of the Winds (1990).bat":
+                    "cd ..\r\n\".\\dosbox\\ece\\dosbox.exe\" -conf \"%var%\\dosbox.conf\" -noconsole -exit\r\n",
+                "\(configs)/CasWind/dosbox.conf": "[autoexec]\nmount c .\\eXoWin3x\\CasWind\nc:\ncall run\n",
+                "\(configs)/CasWind/install.bat": "@echo off",
+                "\(configs)/Beast96/Beauty and the Beast (1996).bat": "\".\\dosbox\\svn\\dosbox.exe\" -conf x",
+            ], to: content.appendingPathComponent("!Win3Xmetadata.zip"), scratch: scratch)
+        let castle = DownloadFixture.game(
+            id: "dddddddd-0000-0000-0000-000000000020", title: "Castle of the Winds", platform: "Windows 3x",
+            folder: "eXo\\eXoWin3X\\!win3x\\CasWind")
+        let beast = DownloadFixture.game(
+            id: "dddddddd-0000-0000-0000-000000000021", title: "Beauty and the Beast", platform: "Windows 3x",
+            folder: "eXo\\eXoWin3X\\!win3x\\Beast96")
+        // eXo's banner entry for the pack starts nothing.
+        let banner =
+            "  <Game>\n    <ID>dddddddd-0000-0000-0000-000000000022</ID>\n    <Title>eXoWin3x</Title>\n    <ApplicationPath />\n    <Platform>Windows 3x</Platform>\n  </Game>\n"
+        try await DownloadFixture.zip(
+            [
+                "xml/Windows 3x.xml": DownloadFixture.list(banner + castle + beast),
+                "xml/WinFAMILY.xml": DownloadFixture.list(banner + castle),
+                // Not a merge script eXoWin3x's setup runs.
+                "xml/merge.bat": "copy exodos.game MS-DOS.xml",
+            ], to: content.appendingPathComponent("XOWin3xMetadata.zip"), scratch: scratch)
+        try await DownloadFixture.zip(
+            [
+                "Data/Platforms.xml": DownloadFixture.list(
+                    "  <Platform>\n    <Name>MS-DOS</Name>\n  </Platform>\n  <Platform>\n    <Name>Windows 3x</Name>\n  </Platform>\n"
+                ),
+                "Data/Parents.xml": DownloadFixture.list(""),
+                "LaunchBox.exe": "exe",
+            ], to: content.appendingPathComponent("LaunchBox.zip"), scratch: scratch)
+        let nested = scratch.appendingPathComponent("nested", isDirectory: true)
+        try await DownloadFixture.zip(
+            ["mt32/MT32_CONTROL.ROM": "rom"], to: nested.appendingPathComponent("mt32.zip"), scratch: scratch)
+        try await DownloadFixture.zip(
+            ["dosbox/ece/DOSBox.exe": "exe"], to: nested.appendingPathComponent("dosbox.zip"), scratch: scratch)
+        let util = download.appendingPathComponent("eXo/util", isDirectory: true)
+        try FileManager.default.createDirectory(at: util, withIntermediateDirectories: true)
+        let zipped = try await CommandRunner.run(
+            executable: URL(fileURLWithPath: "/usr/bin/zip"),
+            arguments: ["-q", "-r", util.appendingPathComponent("util3x.zip").path, "."], workingDirectory: nested)
+        #expect(zipped.status == 0)
+
+        let found = try #require(await EXoDownload.inspect(download))
+        #expect(found.packs.map(\.displayName) == ["eXoWin3x"])
+        let target = scratch.appendingPathComponent("setup", isDirectory: true)
+        try await EXoSetup(download: found, target: target, options: EXoSetupOptions(includeAdultGames: false)).run {
+            _ in
+        }
+        let fm = FileManager.default
+        #expect(fm.fileExists(atPath: target.appendingPathComponent("eXo/mt32/MT32_CONTROL.ROM").path))
+        #expect(!fm.fileExists(atPath: target.appendingPathComponent("eXo/dosbox").path))
+        #expect(!fm.fileExists(atPath: target.appendingPathComponent("LaunchBox.exe").path))
+        #expect(!fm.fileExists(atPath: target.appendingPathComponent("Data/Platforms/WinFAMILY.xml").path))
+
+        let snapshot = try LibraryLoader(root: LibraryRoot(url: target)).load()
+        // The family list leaves out Beauty and the Beast; the banner is hidden.
+        #expect(snapshot.games.map(\.title) == ["Castle of the Winds"])
+        let game = try #require(snapshot.games.first)
+        #expect(game.eXoPack == .win3x)
+        #expect(game.isDOSGame)
+        #expect(game.installPath == "eXoWin3x/CasWind")
+        #expect(snapshot.dosboxBuild(for: game)?.family == .ece)
+        #expect(
+            snapshot.dosboxIndex(for: .win3x).build(forLauncherBaseName: "Beauty and the Beast (1996)")?.family == .daum
+        )
+    }
+
     @Test func leavesExtrasAndWindowsBuildsPackedUntilInstall() async throws {
         let scratch = try FixtureLibrary.scratchDirectory()
         let download = scratch.appendingPathComponent("download", isDirectory: true)

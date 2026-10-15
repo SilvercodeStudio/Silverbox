@@ -34,6 +34,10 @@ nonisolated public struct LibraryCache: Sendable {
         var files: [URL] =
             [root.platformsFile, root.parentsFile, root.emulatorsFile]
             + EXoPack.allCases.compactMap { root.dosboxIndexFile(for: $0) }
+            // eXoWin3x's builds come from its launchers; a new setup replaces their folder.
+            + EXoPack.allCases.filter { $0.runsInDOSBox && $0.dosboxIndexName == nil }.map {
+                root.gameConfigsDirectory(for: $0)
+            }
         for directory in [root.platformsDirectory, root.playlistsDirectory] {
             if let names = try? fm.contentsOfDirectory(atPath: directory.path) {
                 files += names.sorted().filter { $0.lowercased().hasSuffix(".xml") }.map {
