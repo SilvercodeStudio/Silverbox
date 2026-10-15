@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import eXoCore
 
@@ -12,6 +13,7 @@ struct SetupSheet: View {
     /// Media add-ons to leave out, by archive name.
     @State private var skippedAddOns: Set<String> = []
     @State private var setUpInPlace = true
+    @State private var freeBytes: Int64?
 
     private var download: EXoDownload { pending.download }
     private var running: Bool { model.setupProgress != nil }
@@ -151,7 +153,13 @@ struct SetupSheet: View {
         }
         .padding(20)
         .frame(width: 560)
+        .frame(maxHeight: Self.maxHeight)
         .interactiveDismissDisabled(running)
+        .task(id: target) {
+            // Off the main thread: on a network volume each lookup is a round trip.
+            let target = target
+            freeBytes = await Task.detached { Self.freeBytes(at: target) }.value
+        }
     }
 
     private var neededBytes: Int64 {
@@ -169,14 +177,24 @@ struct SetupSheet: View {
             })
     }
 
-    /// Free space on the volume setup writes to.
-    private var freeBytes: Int64? {
+    /// Free space on the volume setup writes to. Network volumes give 0 for
+    /// "important usage", so the plain free space is the fallback.
+    nonisolated private static func freeBytes(at target: URL) -> Int64? {
         var url = target
         while !FileManager.default.fileExists(atPath: url.path), url.pathComponents.count > 1 {
             url = url.deletingLastPathComponent()
         }
-        let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
-        return values?.volumeAvailableCapacityForImportantUsage
+        let values = try? url.resourceValues(forKeys: [
+            .volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey,
+        ])
+        if let important = values?.volumeAvailableCapacityForImportantUsage, important > 0 { return important }
+        return values?.volumeAvailableCapacity.map(Int64.init)
+    }
+
+    /// Keeps the sheet on small screens, such as a laptop's; the form scrolls instead.
+    private static var maxHeight: CGFloat {
+        guard let screen = NSScreen.main else { return .infinity }
+        return max(400, screen.visibleFrame.height - 120)
     }
 
     static func bytes(_ count: Int64) -> String {

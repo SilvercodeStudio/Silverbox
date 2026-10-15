@@ -83,7 +83,11 @@ extension AppModel {
             do {
                 try await setup.run { progress in
                     guard throttle.shouldReport(progress) else { return }
-                    Task { @MainActor in self?.setupProgress = progress }
+                    // An update can arrive after the setup finished; it must not bring the progress back.
+                    Task { @MainActor in
+                        guard let self, self.setupTask != nil else { return }
+                        self.setupProgress = progress
+                    }
                 }
                 guard let self else { return }
                 self.setupTask = nil
