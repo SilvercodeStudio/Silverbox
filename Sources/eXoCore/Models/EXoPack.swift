@@ -89,6 +89,14 @@ nonisolated extension Game {
     /// True for games that install from an eXo archive and can be uninstalled.
     public var isEXoGame: Bool { eXoPack != nil }
 
+    /// One of eXo's picks: in an eXo pack's XML, `Favorite` marks the games
+    /// eXo recommends, not the user's favorites.
+    public var isEXoFavorite: Bool { favorite && isEXoGame }
+
+    /// A favorite before the user changes it: the XML flag, which outside the
+    /// eXo packs is the user's own from LaunchBox.
+    public var isFavoriteByDefault: Bool { favorite && !isEXoGame }
+
     /// The unpacked game folder relative to `eXo/`, as path components: for
     /// example `["eXoDOS", "ultima5"]` or `["eXoWin9x", "1996", "A-10 Cuba (1996)"]`.
     public var installPathComponents: [String]? {

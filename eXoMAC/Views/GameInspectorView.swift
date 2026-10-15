@@ -255,7 +255,9 @@ struct MetadataGrid: View {
         Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
             row("Developer", game.developer)
             row("Publisher", game.publisher)
-            row("eXo pack", game.eXoPack?.displayName)
+            row(
+                "eXo pack",
+                game.eXoPack.map { game.isEXoFavorite ? "\($0.displayName), an eXo Favorite" : $0.displayName })
             row("Genre", game.genres.isEmpty ? nil : game.genres.joined(separator: ", "))
             row("Play mode", game.playMode)
             row("Players", game.maxPlayers.map(String.init))

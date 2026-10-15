@@ -58,6 +58,12 @@ nonisolated public struct UserLibraryState: Hashable, Sendable, Codable {
         games[gameID] ?? GameUserState()
     }
 
+    /// The user's favorite, which is never one of eXo's picks unless the
+    /// user chose it (``Game/isEXoFavorite``).
+    public func isFavorite(_ game: Game) -> Bool {
+        state(for: game.launchBoxID).favorite ?? game.isFavoriteByDefault
+    }
+
     public mutating func update(_ gameID: String, _ change: (inout GameUserState) -> Void) {
         var state = games[gameID] ?? GameUserState()
         change(&state)

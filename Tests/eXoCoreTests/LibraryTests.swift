@@ -60,7 +60,9 @@ struct LibraryQueryTests {
             query.games(in: .node(collectionID: snapshot.collection.id, ref: .category("Literature"))).map(\.title) == [
                 "Programmer's Guide to MS-DOS"
             ])
-        #expect(query.games(in: .favorites).map(\.launchBoxID) == [FixtureLibrary.ultimaID])
+        // eXo marks Ultima V as a favorite: one of its picks, not the user's.
+        #expect(query.games(in: .favorites).isEmpty)
+        #expect(query.games(in: .eXoFavorites).map(\.launchBoxID) == [FixtureLibrary.ultimaID])
         #expect(
             query.games(in: .installed).map(\.launchBoxID) == [
                 FixtureLibrary.ultimaID, "bbbbbbbb-0000-0000-0000-000000000001",
@@ -122,6 +124,19 @@ struct LibraryQueryTests {
         state.update(FixtureLibrary.ultimaID) { $0.favorite = false }
         let favorites = LibraryQuery(snapshot: snapshot).games(in: .favorites, overlay: state)
         #expect(favorites.map(\.launchBoxID) == [FixtureLibrary.tetrisID])
+        // Choosing one of eXo's picks makes it the user's favorite too.
+        state.update(FixtureLibrary.ultimaID) { $0.favorite = true }
+        #expect(LibraryQuery(snapshot: snapshot).games(in: .favorites, overlay: state).count == 2)
+    }
+
+    @Test func keepsLaunchBoxFavoritesOutsideTheEXoPacks() {
+        // Outside the eXo packs, the XML flag is the user's own from LaunchBox.
+        let rom = Game(
+            id: "rom", title: "Sonic the Hedgehog", platform: "Sega Genesis",
+            applicationPath: "Games\\Sega Genesis\\Sonic.zip", favorite: true)
+        #expect(rom.isFavoriteByDefault)
+        #expect(!rom.isEXoFavorite)
+        #expect(UserLibraryState().isFavorite(rom))
     }
 }
 

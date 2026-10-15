@@ -482,6 +482,7 @@ struct GameContextMenu: View {
         Divider()
         Button("Open Game Page") { model.openedGameID = game.id }
         GameExtrasMenu(game: game)
+        OtherVersionsMenu(game: game)
         Divider()
         Button(model.isFavorite(game) ? "Remove from Favorites" : "Add to Favorites") { model.toggleFavorite(game) }
         Button("Edit Game Info…") { model.pendingInfoGame = game }
@@ -490,6 +491,30 @@ struct GameContextMenu: View {
         if installed, game.isEXoGame {
             Button("Uninstall…") { model.pendingUninstall = game }
         }
+    }
+}
+
+/// The same game in other collections and packs; choosing one selects it.
+struct OtherVersionsMenu: View {
+    let game: Game
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let versions = model.otherVersions(of: game)
+        if !versions.isEmpty {
+            Menu("Other Versions") {
+                ForEach(versions) { version in
+                    Button(Self.label(for: version)) { model.reveal(version) }
+                }
+            }
+        }
+    }
+
+    /// "A Mind Forever Voyaging — eXoIF", with the year when known.
+    static func label(for game: Game) -> String {
+        let source = GameVersionIndex.source(of: game)
+        let detail = game.releaseYear.map { "\(source), \($0)" } ?? source
+        return "\(game.title) — \(detail)"
     }
 }
 

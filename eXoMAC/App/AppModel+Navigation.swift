@@ -62,6 +62,37 @@ extension AppModel {
         selectedGameID = visibleGames.last?.id
     }
 
+    /// The same game in other collections and packs, without hidden games
+    /// unless they are on show.
+    func otherVersions(of game: Game) -> [Game] {
+        guard let library, let versionIndex else { return [] }
+        let versions = versionIndex.otherVersions(of: game, in: library)
+        guard !settings.showHiddenGames else { return versions }
+        return versions.filter { !(userState.state(for: $0.launchBoxID).hidden ?? $0.hidden) }
+    }
+
+    /// Selects a game that may be outside the current scope or search: the
+    /// search is cleared, and the scope widens to the game's pack (or all
+    /// games) when it does not hold the game. An open game page follows.
+    func reveal(_ game: Game) {
+        if !visibleGames.contains(where: { $0.id == game.id }) {
+            searchText = ""
+            let inScope = query?.games(in: scope, overlay: userState).contains { $0.id == game.id } ?? false
+            if !inScope {
+                if let pack = game.eXoPack, (library?.packs.count ?? 0) > 1 {
+                    scope = .pack(pack)
+                } else {
+                    scope = .all
+                }
+            }
+            refreshVisibleGames()
+        }
+        selectedGameID = game.id
+        if openedGameID != nil { openedGameID = game.id }
+        // After the grid has scrolled to the top of a new scope.
+        Task { @MainActor in self.revealSelectionRequest += 1 }
+    }
+
     /// Return, or the controller's main button.
     func activateSelection() {
         if let game = selectedGame { play(game) }

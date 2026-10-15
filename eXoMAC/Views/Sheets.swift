@@ -212,7 +212,7 @@ struct GameInfoSheet: View {
                     LabeledContent("Music") { PathText(game.musicPath ?? "") }
                 }
                 Section("Status") {
-                    Toggle("Favorite", isOn: flag(\.favorite, fallback: game.favorite))
+                    Toggle("Favorite", isOn: flag(\.favorite, fallback: game.isFavoriteByDefault))
                     Toggle("Completed", isOn: flag(\.completed, fallback: game.completed))
                     Toggle("Hidden from library", isOn: flag(\.hidden, fallback: game.hidden))
                     Toggle("Broken", isOn: flag(\.broken, fallback: game.broken))

@@ -5,6 +5,8 @@ nonisolated public enum LibraryScope: Hashable, Sendable {
     case all
     case node(collectionID: UUID, ref: LibraryEntityRef)
     case favorites
+    /// The games eXo recommends, marked `Favorite` in its XML.
+    case eXoFavorites
     case installed
     case recentlyPlayed
     /// The games of one eXo pack, across collections.
@@ -40,7 +42,9 @@ nonisolated public struct LibraryQuery: Sendable {
         case .all:
             return library.games
         case .favorites:
-            return library.games.filter { overlay?.state(for: $0.launchBoxID).favorite ?? $0.favorite }
+            return library.games.filter { overlay?.isFavorite($0) ?? $0.isFavoriteByDefault }
+        case .eXoFavorites:
+            return library.games.filter(\.isEXoFavorite)
         case .installed:
             return library.games.filter { library.isInstalled($0) }
         case .recentlyPlayed:

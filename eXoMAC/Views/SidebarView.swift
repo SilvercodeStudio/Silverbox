@@ -9,6 +9,9 @@ struct SidebarView: View {
             Section("Library") {
                 Label("All Games", systemImage: "square.grid.3x3").tag(LibraryScope.all)
                 Label("Favorites", systemImage: "heart").tag(LibraryScope.favorites)
+                if model.library?.hasEXoFavorites == true {
+                    Label("eXo Favorites", systemImage: "star").tag(LibraryScope.eXoFavorites)
+                }
                 Label("Installed", systemImage: "internaldrive").tag(LibraryScope.installed)
                 Label("Recently Played", systemImage: "clock").tag(LibraryScope.recentlyPlayed)
             }

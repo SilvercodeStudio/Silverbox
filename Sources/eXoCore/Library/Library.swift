@@ -7,6 +7,8 @@ nonisolated public struct Library: Sendable {
     public let games: [Game]
     /// The eXo packs that have games here, in ``EXoPack`` order.
     public let packs: [EXoPack]
+    /// True when any eXo pack marks games as its favorites.
+    public let hasEXoFavorites: Bool
     private let locations: [String: (snapshot: Int, game: Int)]
     private let snapshotIndexByID: [UUID: Int]
 
@@ -26,6 +28,7 @@ nonisolated public struct Library: Sendable {
         self.games = games
         let present = Set(games.lazy.compactMap(\.eXoPack))
         self.packs = EXoPack.allCases.filter(present.contains)
+        self.hasEXoFavorites = games.contains(where: \.isEXoFavorite)
         self.locations = locations
         self.snapshotIndexByID = byID
     }

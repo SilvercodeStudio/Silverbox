@@ -41,6 +41,9 @@ final class AppModel {
     private(set) var library: Library?
     private(set) var media: [UUID: MediaCatalog] = [:]
     private(set) var searchIndex: LibrarySearchIndex?
+    /// Other versions of each game, for the context menu. Installing does
+    /// not change titles, so it lasts until the next load.
+    private(set) var versionIndex: GameVersionIndex?
     private(set) var rootReports: [UUID: LibraryRootReport] = [:]
     private(set) var loadErrors: [UUID: String] = [:]
     /// Platforms whose games start in a console or arcade emulator.
@@ -349,7 +352,9 @@ final class AppModel {
             guard let self, !Task.isCancelled else { return }
             let ordered = collections.compactMap { snapshots[$0.id] }
             let library = Library(snapshots: ordered)
-            let index = await Task.detached(priority: .utility) { LibrarySearchIndex(library: library) }.value
+            let (index, versions) = await Task.detached(priority: .utility) {
+                (LibrarySearchIndex(library: library), GameVersionIndex(library: library))
+            }.value
             guard !Task.isCancelled else { return }
             self.loadErrors = errors
             if ordered.isEmpty, let message = errors.values.first {
@@ -366,6 +371,7 @@ final class AppModel {
             }
             self.media = catalogs
             self.searchIndex = index
+            self.versionIndex = versions
             self.loadState = .loaded
             self.refreshVisibleGames()
             if ProcessInfo.processInfo.environment["EXOMAC_LOG"] != nil {
@@ -465,6 +471,7 @@ final class AppModel {
         switch scope {
         case .all: return "All Games"
         case .favorites: return "Favorites"
+        case .eXoFavorites: return "eXo Favorites"
         case .installed: return "Installed"
         case .recentlyPlayed: return "Recently Played"
         case .pack(let pack): return pack.displayName
@@ -475,13 +482,14 @@ final class AppModel {
 
     // MARK: - Per-game state
 
+    /// The user's favorite; eXo's own picks are apart (``Game/isEXoFavorite``).
     func isFavorite(_ game: Game) -> Bool {
-        userState.state(for: game.launchBoxID).favorite ?? game.favorite
+        userState.isFavorite(game)
     }
 
     func toggleFavorite(_ game: Game) {
         let next = !isFavorite(game)
-        userState.update(game.launchBoxID) { $0.favorite = next == game.favorite ? nil : next }
+        userState.update(game.launchBoxID) { $0.favorite = next == game.isFavoriteByDefault ? nil : next }
         if scope == .favorites { refreshVisibleGames() }
     }
 

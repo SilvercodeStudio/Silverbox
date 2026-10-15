@@ -183,6 +183,22 @@ Makefile).
   also names a missing core or ROM). The app's `launchPlanner(_:)` passes
   `settings.retroArchSetup`. The default version is the best `preference`:
   Spatterlight, then DOS, then RetroArch.
+- Favorites. In an eXo pack's XML, `Favorite` marks eXo's picks
+  (`Game.isEXoFavorite`, the `.eXoFavorites` scope, "eXo Favorites" in the
+  sidebar), not the user's. The user's favorites are
+  `UserLibraryState.isFavorite`: the user's choice, else
+  `Game.isFavoriteByDefault`, which is the XML flag only outside the eXo
+  packs (a LaunchBox library's own favorites). Each copy of a game is a
+  favorite on its own. Playlist filters on `Favorite` still read the XML.
+- Other versions. `GameVersionIndex` (core, `GameVersions.swift`) groups
+  games by a title key (case, accents, punctuation, a leading article and a
+  trailing note in brackets left out) and links two games when they also
+  share a word of their developer or publisher names (common words such as
+  "Software" or "Freeware" do not count) or the LaunchBox database id.
+  Documents, links, soundtracks and videos are left out. The app builds it
+  with the search index at load; `OtherVersionsMenu` in the context menu
+  lists the matches and `AppModel.reveal(_:)` selects one, clearing the
+  search or widening the scope to the game's pack when needed.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
