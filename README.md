@@ -103,7 +103,7 @@ you can share the installation between both systems. However, don't open
 the same folder on multiple PCs at the same time unless the Mac uses a 
 separate folder for unpacked files.
 
-### Can I use this for other consoles (SNES, etc.)
+### Can I use this for other consoles (SNES, etc.)?
 
 Yes, but currently Autoexec.Mac depends on an existing LaunchBox
 library for the moment. You can set up individual games manually, but it does
@@ -117,7 +117,8 @@ registered by LaunchBox.
 I am a software engineer with decades of industry experience, who is interested
 in classic game and media preservation. 
 
-Note: this app was developed with extensive AI coding assistance.
+Note: this app was developed with extensive AI coding tool assistance, under
+my close supervision and direction.
 
 ## Requirements
 

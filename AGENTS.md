@@ -52,6 +52,8 @@ make test                        # swift test: core tests (fast; real-library te
 make core                        # swift build: core only
 make sweep                       # translate every eXoDOS config in the mounted library, print a summary
 make format                      # swift-format the Swift sources (settings in .swift-format)
+make lint                        # report formatting problems without changing files
+make install-app                 # universal Release build copied to ~/Applications (APP_DIR=... elsewhere)
 make reset                       # delete the app's settings and local data folder (asks first; YES=1 skips)
 ```
 

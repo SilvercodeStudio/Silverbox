@@ -106,8 +106,8 @@ nonisolated private final class RecordDelegate: NSObject, XMLParserDelegate {
         if depth == 3 { text += string }
     }
 
-    func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
-        if depth == 3, let string = String(data: CDATABlock, encoding: .utf8) { text += string }
+    func parser(_ parser: XMLParser, foundCDATA block: Data) {
+        if depth == 3, let string = String(data: block, encoding: .utf8) { text += string }
     }
 
     func parser(
