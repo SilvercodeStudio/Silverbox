@@ -103,7 +103,7 @@ struct HelpWebView: NSViewRepresentable {
 
         func webView(
             _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+            decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
         ) {
             if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
                 NSWorkspace.shared.open(url)

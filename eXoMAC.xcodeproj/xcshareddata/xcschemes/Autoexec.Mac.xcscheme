@@ -30,28 +30,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "04788C63307BEF960061AE3E"
-               BuildableName = "eXoMACTests.xctest"
-               BlueprintName = "eXoMACTests"
-               ReferencedContainer = "container:eXoMAC.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "04788C6D307BEF960061AE3E"
-               BuildableName = "eXoMACUITests.xctest"
-               BlueprintName = "eXoMACUITests"
-               ReferencedContainer = "container:eXoMAC.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

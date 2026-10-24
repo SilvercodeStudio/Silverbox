@@ -585,8 +585,9 @@ struct GameExtrasMenu: View {
     }
 }
 
-extension Game {
-    /// Sort keys for the list's column headers; `KeyPathComparator` needs non-optional values.
+nonisolated extension Game {
+    /// Sort keys for the list's column headers; `KeyPathComparator` needs non-optional values
+    /// and key paths that are `Sendable`, so not isolated to the main actor.
     var sortYear: Int { releaseYear ?? 0 }
     var sortDeveloper: String { developer ?? "" }
 }

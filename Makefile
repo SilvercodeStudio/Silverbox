@@ -20,9 +20,11 @@ DESTINATION = $(if $(filter Release,$(CONFIG)),generic/platform=macOS,platform=m
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)'
 
 # The Swift sources that swift-format checks; the vendored C targets are untouched.
-SWIFT_SOURCES = Package.swift Sources/eXoCore eXoMAC eXoMACTests eXoMACUITests Tests
+SWIFT_SOURCES = Package.swift Sources/eXoCore eXoMAC Tests
 # Where make install-app puts the app.
 APP_DIR ?= $(HOME)/Applications
+# Registers a copied app with Launch Services, so that the Dock and Finder show its new icon.
+LSREGISTER = /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 
 .PHONY: help build run app test core typecheck sweep format lint install-app reset
 
@@ -77,6 +79,8 @@ install-app:
 	install -d "$(APP_DIR)"; \
 	rm -rf "$(APP_DIR)/$$(basename "$$app")"; \
 	ditto "$$app" "$(APP_DIR)/$$(basename "$$app")"; \
+	touch "$(APP_DIR)/$$(basename "$$app")"; \
+	$(LSREGISTER) -f "$(APP_DIR)/$$(basename "$$app")"; \
 	echo "Installed $(APP_DIR)/$$(basename "$$app")"
 
 # Checks that the app only uses public core API, using the package's build

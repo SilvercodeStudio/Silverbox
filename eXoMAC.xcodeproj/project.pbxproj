@@ -10,43 +10,14 @@
 		040E9EFD307C63D700F9423C /* eXoCore in Frameworks */ = {isa = PBXBuildFile; productRef = 040E9EFC307C63D700F9423C /* eXoCore */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		04788C65307BEF960061AE3E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 04788C4D307BEF960061AE3E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 04788C54307BEF960061AE3E;
-			remoteInfo = eXoMAC;
-		};
-		04788C6F307BEF960061AE3E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 04788C4D307BEF960061AE3E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 04788C54307BEF960061AE3E;
-			remoteInfo = eXoMAC;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		04788C55307BEF960061AE3E /* Autoexec.Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Autoexec.Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		04788C64307BEF960061AE3E /* eXoMACTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = eXoMACUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		04788C57307BEF960061AE3E /* eXoMAC */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = eXoMAC;
-			sourceTree = "<group>";
-		};
-		04788C67307BEF960061AE3E /* eXoMACTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = eXoMACTests;
-			sourceTree = "<group>";
-		};
-		04788C71307BEF960061AE3E /* eXoMACUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = eXoMACUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -58,16 +29,6 @@
 				040E9EFD307C63D700F9423C /* eXoCore in Frameworks */,
 			);
 		};
-		04788C61307BEF960061AE3E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
-		04788C6B307BEF960061AE3E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -75,8 +36,6 @@
 			isa = PBXGroup;
 			children = (
 				04788C57307BEF960061AE3E /* eXoMAC */,
-				04788C67307BEF960061AE3E /* eXoMACTests */,
-				04788C71307BEF960061AE3E /* eXoMACUITests */,
 				04788C56307BEF960061AE3E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,8 +44,6 @@
 			isa = PBXGroup;
 			children = (
 				04788C55307BEF960061AE3E /* Autoexec.Mac.app */,
-				04788C64307BEF960061AE3E /* eXoMACTests.xctest */,
-				04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,48 +72,6 @@
 			productReference = 04788C55307BEF960061AE3E /* Autoexec.Mac.app */;
 			productType = "com.apple.product-type.application";
 		};
-		04788C63307BEF960061AE3E /* eXoMACTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 04788C79307BEF960061AE3E /* Build configuration list for PBXNativeTarget "eXoMACTests" */;
-			buildPhases = (
-				04788C60307BEF960061AE3E /* Sources */,
-				04788C61307BEF960061AE3E /* Frameworks */,
-				04788C62307BEF960061AE3E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				04788C66307BEF960061AE3E /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				04788C67307BEF960061AE3E /* eXoMACTests */,
-			);
-			name = eXoMACTests;
-			productName = eXoMACTests;
-			productReference = 04788C64307BEF960061AE3E /* eXoMACTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		04788C6D307BEF960061AE3E /* eXoMACUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 04788C7C307BEF960061AE3E /* Build configuration list for PBXNativeTarget "eXoMACUITests" */;
-			buildPhases = (
-				04788C6A307BEF960061AE3E /* Sources */,
-				04788C6B307BEF960061AE3E /* Frameworks */,
-				04788C6C307BEF960061AE3E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				04788C70307BEF960061AE3E /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				04788C71307BEF960061AE3E /* eXoMACUITests */,
-			);
-			name = eXoMACUITests;
-			productName = eXoMACUITests;
-			productReference = 04788C6E307BEF960061AE3E /* eXoMACUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -169,14 +84,6 @@
 				TargetAttributes = {
 					04788C54307BEF960061AE3E = {
 						CreatedOnToolsVersion = 27.0;
-					};
-					04788C63307BEF960061AE3E = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 04788C54307BEF960061AE3E;
-					};
-					04788C6D307BEF960061AE3E = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 04788C54307BEF960061AE3E;
 					};
 				};
 			};
@@ -198,24 +105,12 @@
 			projectRoot = "";
 			targets = (
 				04788C54307BEF960061AE3E /* eXoMAC */,
-				04788C63307BEF960061AE3E /* eXoMACTests */,
-				04788C6D307BEF960061AE3E /* eXoMACUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		04788C53307BEF960061AE3E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		04788C62307BEF960061AE3E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		04788C6C307BEF960061AE3E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -228,30 +123,7 @@
 			files = (
 			);
 		};
-		04788C60307BEF960061AE3E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
-		04788C6A307BEF960061AE3E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		04788C66307BEF960061AE3E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 04788C54307BEF960061AE3E /* eXoMAC */;
-			targetProxy = 04788C65307BEF960061AE3E /* PBXContainerItemProxy */;
-		};
-		04788C70307BEF960061AE3E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 04788C54307BEF960061AE3E /* eXoMAC */;
-			targetProxy = 04788C6F307BEF960061AE3E /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		04788C74307BEF960061AE3E /* Debug configuration for PBXProject "eXoMAC" */ = {
@@ -378,7 +250,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -386,6 +258,8 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Autoexec.Mac;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Preston Landers. MIT License.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -400,7 +274,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				OTHER_LDFLAGS = (
 					"-framework",
 					AVKit,
@@ -422,7 +296,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
@@ -436,7 +310,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -444,6 +318,8 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Autoexec.Mac;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Preston Landers. MIT License.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -458,7 +334,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				OTHER_LDFLAGS = (
 					"-framework",
 					AVKit,
@@ -480,110 +356,8 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Release;
-		};
-		04788C7A307BEF960061AE3E /* Debug configuration for PBXNativeTarget "eXoMACTests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4327JHRP8K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMACTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac";
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Debug;
-		};
-		04788C7B307BEF960061AE3E /* Release configuration for PBXNativeTarget "eXoMACTests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4327JHRP8K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMACTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac";
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Release;
-		};
-		04788C7D307BEF960061AE3E /* Debug configuration for PBXNativeTarget "eXoMACUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4327JHRP8K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMACUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = eXoMAC;
-				XROS_DEPLOYMENT_TARGET = 27.0;
-			};
-			name = Debug;
-		};
-		04788C7E307BEF960061AE3E /* Release configuration for PBXNativeTarget "eXoMACUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4327JHRP8K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.eXoMACUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = eXoMAC;
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
@@ -604,22 +378,6 @@
 			buildConfigurations = (
 				04788C77307BEF960061AE3E /* Debug configuration for PBXNativeTarget "eXoMAC" */,
 				04788C78307BEF960061AE3E /* Release configuration for PBXNativeTarget "eXoMAC" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		04788C79307BEF960061AE3E /* Build configuration list for PBXNativeTarget "eXoMACTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				04788C7A307BEF960061AE3E /* Debug configuration for PBXNativeTarget "eXoMACTests" */,
-				04788C7B307BEF960061AE3E /* Release configuration for PBXNativeTarget "eXoMACTests" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		04788C7C307BEF960061AE3E /* Build configuration list for PBXNativeTarget "eXoMACUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				04788C7D307BEF960061AE3E /* Debug configuration for PBXNativeTarget "eXoMACUITests" */,
-				04788C7E307BEF960061AE3E /* Release configuration for PBXNativeTarget "eXoMACUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};

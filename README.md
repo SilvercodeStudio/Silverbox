@@ -227,6 +227,10 @@ does on Windows, is available in Settings.
 
 ## To do
 
+What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
+milestones, with what is done and what is not, are in
+[docs/internal/Milestones.md](docs/internal/Milestones.md).
+
 - On-demand game download / support for Lite
 - Menu music: replace the vendored libxmp-lite with the full libxmp (without
   its depackers). That adds the two AMF variants and Epic MegaGames PSM, which

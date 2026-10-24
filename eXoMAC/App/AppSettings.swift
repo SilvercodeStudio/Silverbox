@@ -170,8 +170,9 @@ struct AppSettings: Codable, Equatable {
         }
         // Launch arguments such as `-libraryPath /Volumes/eXoDOS` replace the
         // collections for this run only. Handy for testing other installs.
-        // Several folders can be given, separated by "|".
-        if let paths = defaults.string(forKey: "libraryPath"), !paths.isEmpty {
+        // Several folders can be given, separated by "|". `-demoLibrary 1`
+        // gives the test fixtures' small libraries.
+        if let paths = defaults.string(forKey: "libraryPath") ?? AppPaths.demoLibraryPaths, !paths.isEmpty {
             settings.collections = paths.split(separator: "|").enumerated().map { offset, path in
                 let url = URL(fileURLWithPath: String(path), isDirectory: true)
                 let id = UUID(uuidString: String(format: "11111111-1111-1111-1111-%012d", offset + 1))!
@@ -180,10 +181,11 @@ struct AppSettings: Codable, Equatable {
             }
             settings.transient = true
         }
-        // `-dataPath <folder>` sends installs, caches and logs to a scratch
-        // folder for this run only, so a test never touches the real data.
-        if let path = defaults.string(forKey: "dataPath"), !path.isEmpty {
-            settings.localStorePath = path
+        // `-dataPath <folder>` sends installs, caches, logs and the user's
+        // state to a scratch folder for this run only, so a test never
+        // touches the real data.
+        if let folder = AppPaths.scratchData {
+            settings.localStorePath = folder.path
             settings.installLocation = .localStore
             settings.transient = true
         }
@@ -320,5 +322,33 @@ enum AppPaths {
     static var logs: URL { dataRoot.appendingPathComponent("Logs", isDirectory: true) }
     static var mediaIndexes: URL { dataRoot.appendingPathComponent("MediaIndex", isDirectory: true) }
     static var libraryCache: URL { dataRoot.appendingPathComponent("LibraryCache", isDirectory: true) }
-    static var userLibraryState: URL { applicationSupport.appendingPathComponent("user-library.json") }
+    static var userLibraryState: URL {
+        (scratchData ?? applicationSupport).appendingPathComponent("user-library.json")
+    }
+
+    /// The scratch data folder for this run: `-dataPath <folder>`, or a
+    /// folder in the temporary folder for `-demoLibrary 1`. Nil normally.
+    static let scratchData: URL? = {
+        let defaults = UserDefaults.standard
+        if let path = defaults.string(forKey: "dataPath"), !path.isEmpty {
+            return URL(fileURLWithPath: path, isDirectory: true)
+        }
+        guard demoLibraryPaths != nil else { return nil }
+        return FileManager.default.temporaryDirectory.appendingPathComponent("Autoexec.Mac Demo", isDirectory: true)
+    }()
+
+    /// The test fixtures' eXoDOS-style and console libraries, for
+    /// `-demoLibrary 1` in a debug build run from this source tree.
+    static var demoLibraryPaths: String? {
+        #if DEBUG
+            guard UserDefaults.standard.bool(forKey: "demoLibrary") else { return nil }
+            let fixtures = URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("Tests/eXoCoreTests/Fixtures", isDirectory: true)
+            return [fixtures, fixtures.appendingPathComponent("ConsoleLibrary", isDirectory: true)]
+                .map(\.path).joined(separator: "|")
+        #else
+            return nil
+        #endif
+    }
 }

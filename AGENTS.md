@@ -62,13 +62,23 @@ so it shares Xcode's DerivedData.
 
 If an Xcode MCP server is connected, use it to build, read diagnostics and
 change build settings; otherwise build with `make build`. Do not edit
-`project.pbxproj` by hand. New files under `eXoMAC/`, `eXoMACTests/` and
-`eXoMACUITests/` are picked up automatically; files under `Sources/` and
-`Tests/` belong to the package.
+`project.pbxproj` by hand. New files under `eXoMAC/` are picked up
+automatically; files under `Sources/` and `Tests/` belong to the package.
+The Xcode project has only the app target: all tests are in the package.
 
 To check that the app sources still compile against the core without Xcode,
 type-check them against the package build (see the `typecheck` target in the
 Makefile).
+
+Run `make format`, `make lint` and `make test` (and build the app) before you
+report work as done.
+
+`CHANGELOG.md` has an entry for each version, for people who use the app:
+Added, Changed and Fixed, in plain words, with no internal names. When you
+change what a user sees or can do, add a line to the newest entry. Start a
+new entry after the version is tagged; the version is the app target's
+`MARKETING_VERSION`. The milestones and what is still to do are in
+`docs/internal/Milestones.md`; keep it and the README's "To do" up to date.
 
 ## Conventions
 
@@ -79,15 +89,6 @@ Makefile).
   `.swift-format` (4-space indent, 120 columns, sorted imports). Run it after
   changing Swift files and before the work is reviewed or committed; do not
   hand-wrap code that the formatter will rewrite.
-- Dependencies. Ask before adding one. Declare package dependencies in
-  `Package.swift` (remote packages pinned by `Package.resolved`, which is
-  committed); dependencies of the app target alone go through Xcode's Add
-  Package Dependencies, which the user does. Prefer vendoring small, stable C
-  libraries over binary packages or Homebrew: each in its own target under
-  `Sources/`, with the upstream `LICENSE` and a `VENDOR.md` that records the
-  upstream URL, version or commit, the subset copied and any local changes.
-  Never edit vendored files; put wrappers and shims in our own code (a shim
-  header in `include/` is fine when it says so).
 - Collections. The app loads several `LibraryCollection`s (LaunchBox-format
   libraries: eXoDOS mirrors, the console LaunchBox install) into one `Library`
   aggregate of `LibrarySnapshot`s. `Game.id` is collection-scoped
@@ -301,11 +302,60 @@ Makefile).
   LaunchBox screenshots in `Launchbox Screenshots/`, and the design prototypes
   linked from `prompt.md`.
 
+## Verified vs. unverified
+
+- **Verified** with real data: the eXoDOS v6 library at `/Volumes/eXoDOS_ro`
+  (`RealLibraryTests`, `make sweep` over every config), the Mac setup of the
+  eXoDOS v6 archives against the Windows setup (`matchesTheWindowsSetup`),
+  and the downloads of the other packs (`setsUpAndPlansTheDownload`). The
+  `LaunchSmoke` tests start eXoDOS games in DOSBox Staging and boot Windows 98
+  in DOSBox-X and 86Box. Games confirmed by the user: Marathon 2 (eXoWin9x,
+  DOSBox-X) and Locus (eXoWin9x, 86Box); eXoWin3x games boot to Windows 3.1.
+- **Not yet verified:** launches of console, computer and arcade games
+  (RetroArch, Dolphin, MAME, Mednafen), eXoIF's RetroArch versions, and
+  eXoDOS Lite downloads. Say so when a change touches
+  these, and do not describe them as working in the README or the help.
+- The real-library tests check values read from eXo's own files. Do not
+  change them to make a test pass.
+
+## Constraints
+
+- **Dependencies:** ask before adding one. Today there are none outside the
+  two vendored C decoders. Declare package dependencies in `Package.swift`
+  (remote packages pinned by `Package.resolved`, which is committed);
+  dependencies of the app target alone go through Xcode's Add Package
+  Dependencies, which the user does. Prefer vendoring small, stable C
+  libraries over binary packages or Homebrew: each in its own target under
+  `Sources/`, with the upstream `LICENSE` and a `VENDOR.md` that records the
+  upstream URL, version or commit, the subset copied and any local changes.
+  Never edit vendored files; put wrappers and shims in our own code (a shim
+  header in `include/` is fine when it says so). Emulators and `unzip`/`bsdtar`
+  are external programs, never linked.
+- **Licensing:** the code is under the MIT License (`LICENSE`); the name and
+  the icon artwork are excluded from it. The app shows it and the vendored
+  licenses from `eXoMAC/Licenses/`, which `ProjectFilesTests` keeps identical
+  to the originals. Credit new outside code in the README's "Third-party
+  code", in `eXoMAC/Licenses/` and in `AcknowledgmentsSheet`. Do not port GPL
+  code (DOSBox, 86Box, ScummVM and most emulators are GPL): read it to
+  understand a format, then write our own.
+- **Distribution:** Developer ID, not the App Store. App Sandbox is off,
+  because the app reads libraries anywhere and starts other programs.
+- **Platform versions:** Swift 6 language mode for the package and the app.
+  Both require macOS 15 Sequoia. Do not use APIs from later releases without
+  `if #available` (as `MenuMusicPlayer` does for macOS 27). The tests run
+  only on the current macOS here, so read the availability of each new API.
+- **Network:** the app makes no network requests. Ask before adding any (an
+  update check, downloads for eXoDOS Lite, scraping), and keep them polite:
+  a descriptive User-Agent, a cache, and the service's rate limit.
+
 ## Debugging aids
 
 - Launch arguments (debug builds): `-libraryPath "<folder>|<folder>"` (one or
-  more collections), `-dataPath <folder>` (a scratch local data folder, so a
-  test install or setup never touches the real one) and `-musicEnabled 0` and `-appearance light` (or `dark`, `system`) override saved settings for one run; `-searchText ultima` and
+  more collections), `-demoLibrary 1` (the test fixtures' eXoDOS-style and
+  console libraries, with a scratch data folder in the temporary folder),
+  `-dataPath <folder>` (a scratch local data folder, which also holds
+  `user-library.json`, so a test install or setup never touches the real
+  data; settings are not saved while either is given) and `-musicEnabled 0` and `-appearance light` (or `dark`, `system`) override saved settings for one run; `-searchText ultima` and
   `-selectTitle "Ultima V: Warriors of Destiny"` preset the view;
   `-screenshotPath out.png [-screenshotDelay 10]` renders every visible window
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and
