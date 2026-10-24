@@ -285,7 +285,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.autoexec-mac";
+				PRODUCT_BUNDLE_IDENTIFIER = app.autoexecmac.AutoexecMac;
 				PRODUCT_MODULE_NAME = eXoMAC;
 				PRODUCT_NAME = Autoexec.Mac;
 				REGISTER_APP_GROUPS = YES;
@@ -345,7 +345,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.github.preston-landers.autoexec-mac";
+				PRODUCT_BUNDLE_IDENTIFIER = app.autoexecmac.AutoexecMac;
 				PRODUCT_MODULE_NAME = eXoMAC;
 				PRODUCT_NAME = Autoexec.Mac;
 				REGISTER_APP_GROUPS = YES;

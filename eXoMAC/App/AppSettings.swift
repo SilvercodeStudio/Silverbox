@@ -69,8 +69,6 @@ enum AppIconVariant: String, CaseIterable, Codable, Identifiable {
 
 /// Everything the user configures. Saved as JSON in UserDefaults.
 struct AppSettings: Codable, Equatable {
-    /// Kept for migration from the single-library days.
-    var libraryPath: String?
     var collections: [LibraryCollection] = []
     var localStorePath: String?
     var installLocation: InstallLocation = .localStore
@@ -115,23 +113,11 @@ struct AppSettings: Codable, Equatable {
     /// resets what the user already configured.
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        libraryPath = try c.decodeIfPresent(String.self, forKey: .libraryPath)
         collections = try c.decodeIfPresent([LibraryCollection].self, forKey: .collections) ?? []
         localStorePath = try c.decodeIfPresent(String.self, forKey: .localStorePath)
         installLocation = try c.decodeIfPresent(InstallLocation.self, forKey: .installLocation) ?? .localStore
         showLaunchOptions = try c.decodeIfPresent(Bool.self, forKey: .showLaunchOptions) ?? true
         emulatorPaths = try c.decodeIfPresent([String: String].self, forKey: .emulatorPaths) ?? [:]
-        // Paths saved before every emulator had a slot in the dictionary.
-        if let legacy = try c.decodeIfPresent(String.self, forKey: .stagingExecutablePath),
-            emulatorPaths[EmulatorKind.dosboxStaging.rawValue] == nil
-        {
-            emulatorPaths[EmulatorKind.dosboxStaging.rawValue] = legacy
-        }
-        if let legacy = try c.decodeIfPresent(String.self, forKey: .dosboxXExecutablePath),
-            emulatorPaths[EmulatorKind.dosboxX.rawValue] == nil
-        {
-            emulatorPaths[EmulatorKind.dosboxX.rawValue] = legacy
-        }
         retroArchCoresPath = try c.decodeIfPresent(String.self, forKey: .retroArchCoresPath)
         platformEmulators = try c.decodeIfPresent([PlatformEmulatorAssignment].self, forKey: .platformEmulators) ?? []
         emulatorPolicy = try c.decodeIfPresent(EmulatorPolicy.self, forKey: .emulatorPolicy) ?? .recommended
@@ -150,24 +136,8 @@ struct AppSettings: Codable, Equatable {
         appearance = try c.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
     }
 
-    /// The bundle identifier before the app was renamed. Settings saved under it
-    /// are used until a collection is configured under the new one.
-    static let legacyDefaultsSuite = "com.github.preston-landers.eXoMAC"
-
     static func load(from defaults: UserDefaults = .standard) -> AppSettings {
         var settings = decode(defaults.data(forKey: defaultsKey)) ?? AppSettings()
-        if settings.collections.isEmpty, Bundle.main.bundleIdentifier != legacyDefaultsSuite,
-            let legacy = decode(UserDefaults(suiteName: legacyDefaultsSuite)?.data(forKey: defaultsKey)),
-            !legacy.collections.isEmpty
-        {
-            settings = legacy
-        }
-        // A library chosen before collections existed becomes the first collection.
-        if settings.collections.isEmpty, let path = settings.libraryPath, !path.isEmpty {
-            let url = URL(fileURLWithPath: path, isDirectory: true)
-            settings.collections = [LibraryCollection(name: LibraryCollection.suggestedName(for: url), rootPath: path)]
-            settings.libraryPath = nil
-        }
         // Launch arguments such as `-libraryPath /Volumes/eXoDOS` replace the
         // collections for this run only. Handy for testing other installs.
         // Several folders can be given, separated by "|". `-demoLibrary 1`
@@ -210,8 +180,8 @@ struct AppSettings: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
-            dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
+        case collections, localStorePath, installLocation, showLaunchOptions, emulatorPaths, retroArchCoresPath,
+            platformEmulators, emulatorPolicy, launchOptions,
             musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder, sortAscending,
             showHiddenGames,
             inspectorShown,
@@ -220,7 +190,6 @@ struct AppSettings: Codable, Equatable {
 
     func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encodeIfPresent(libraryPath, forKey: .libraryPath)
         try c.encode(collections, forKey: .collections)
         try c.encodeIfPresent(localStorePath, forKey: .localStorePath)
         try c.encode(installLocation, forKey: .installLocation)
@@ -297,19 +266,13 @@ struct AppSettings: Codable, Equatable {
 /// user can move to another drive; the small, important `user-library.json`
 /// (favorites, play history) stays in Application Support with the settings.
 enum AppPaths {
-    /// `~/Library/Application Support/Autoexec.Mac`. The folder was called
-    /// `eXoMAC` before the app was renamed; an old folder is moved over once.
+    /// `~/Library/Application Support/Autoexec.Mac`.
     static let applicationSupport: URL = {
         let fm = FileManager.default
         let base =
             fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
-        let current = base.appendingPathComponent("Autoexec.Mac", isDirectory: true)
-        let legacy = base.appendingPathComponent("eXoMAC", isDirectory: true)
-        if !fm.fileExists(atPath: current.path), fm.fileExists(atPath: legacy.path) {
-            try? fm.moveItem(at: legacy, to: current)
-        }
-        return current
+        return base.appendingPathComponent("Autoexec.Mac", isDirectory: true)
     }()
 
     /// The local data folder chosen in Settings, when there is one. Set by

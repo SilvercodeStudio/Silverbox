@@ -98,30 +98,24 @@ typecheck: core
 	status=$$?; rm -rf $$tmp; exit $$status
 
 # Deletes everything the app has written, so the next start is a first start:
-# the Application Support folder (plus its old eXoMAC name: user-library.json, and the local data
+# the Application Support folder (user-library.json, and the local data
 # folder when it is the default: installed games, save backups, overrides,
-# overlays, soundtracks, launch configs, logs, caches) and the settings (both
-# defaults domains, which also hold the window positions). The libraries
+# overlays, soundtracks, launch configs, logs, caches) and the settings (the
+# app's defaults domain, which also holds the window positions). The libraries
 # themselves are never touched. Set DATA= to the local data folder when
 # Settings points it at another drive; YES=1 skips the question.
-#
-# The sandbox is off, so the app has no container. A leftover
-# ~/Library/Containers/com.github.preston-landers.eXoMAC from an early
-# sandboxed build is empty and harmless; macOS blocks shell tools from
-# deleting other apps' containers, so remove it in the Finder if it bothers you.
 APPDATA = $(HOME)/Library/Application Support/Autoexec.Mac
-LEGACYDATA = $(HOME)/Library/Application Support/eXoMAC
 DATA ?=
-DOMAINS ?= com.github.preston-landers.autoexec-mac com.github.preston-landers.eXoMAC
+DOMAIN ?= app.autoexecmac.AutoexecMac
 
 reset:
 	@if pgrep -xq "Autoexec.Mac"; then echo "Quit Autoexec.Mac first."; exit 1; fi
 	@echo "This deletes:"; \
 	size=$$([ -e "$(APPDATA)" ] && du -sh "$(APPDATA)" | cut -f1 || echo missing); echo "  app data     $(APPDATA) ($$size)"; \
 	if [ -n "$(DATA)" ]; then size=$$([ -e "$(DATA)" ] && du -sh "$(DATA)" | cut -f1 || echo missing); echo "  data folder  $(DATA) ($$size)"; fi; \
-	echo "  settings     $(DOMAINS)"; \
+	echo "  settings     $(DOMAIN)"; \
 	if [ "$(YES)" != 1 ]; then printf "Continue? [y/N] "; read answer; [ "$$answer" = y ] || [ "$$answer" = Y ] || { echo "Nothing deleted."; exit 1; }; fi
-	@rm -rf "$(APPDATA)" "$(LEGACYDATA)"
+	@rm -rf "$(APPDATA)"
 	@[ -z "$(DATA)" ] || rm -rf "$(DATA)"
-	@for domain in $(DOMAINS); do defaults delete $$domain >/dev/null 2>&1 || true; done
+	@defaults delete $(DOMAIN) >/dev/null 2>&1 || true
 	@echo "Done. The next start asks for a library again; make run ARGS='-libraryPath /Volumes/eXoDOS_ro' skips that for one run."

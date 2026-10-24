@@ -11,10 +11,8 @@ eXoDOS installation or download is usable on the Mac. The actual emulators
 (DOSBox and related) are external to this front-end project.
 
 Names: `eXoMAC` is the internal name (project, module, folders). The local
-data folder is `~/Library/Application Support/Autoexec.Mac`; an older
-`eXoMAC` folder there is moved over on first start. The bundle identifier
-is `com.github.preston-landers.autoexec-mac`; settings saved under the old
-`…eXoMAC` identifier are read until a collection is configured.
+data folder is `~/Library/Application Support/Autoexec.Mac`. The bundle
+identifier is `app.autoexecmac.AutoexecMac`.
 The display name is "Autoexec.Mac"; it is set once in `AppInfo`
 (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 `INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
