@@ -17,6 +17,12 @@ enum Theme {
     static let textPrimary = Color(light: 0x1C1D20, dark: 0xECEDEF)
     static let textSecondary = Color(light: 0x5B5F67, dark: 0xA3A7AE)
     static let textTertiary = Color(light: 0x777C84, dark: 0x8C9199)
+    /// Status tones: a thing that is ready, one that needs attention, and
+    /// one that is broken. Kept apart from the amber accent so that a
+    /// warning never looks like a highlight.
+    static let good = Color(light: 0x237A3C, dark: 0x5BC46E)
+    static let warning = Color(light: 0xB8561A, dark: 0xF08A4B)
+    static let bad = Color(light: 0xC1272D, dark: 0xF2655C)
     static var accent: Color { ThemeAccent.shared.variant.accent }
     /// Text on an accent fill, such as the Play button.
     static var accentText: Color { ThemeAccent.shared.variant.accentText }

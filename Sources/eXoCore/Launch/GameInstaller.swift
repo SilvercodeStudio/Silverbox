@@ -60,16 +60,45 @@ nonisolated extension InstallError: LocalizedError {
     }
 }
 
+/// How far an installation has come: the step under way and the files
+/// written so far, out of the archive's total when that is known.
+nonisolated public struct InstallProgress: Sendable, Hashable {
+    public var stage: String
+    public var filesDone: Int
+    public var filesTotal: Int?
+
+    public init(stage: String, filesDone: Int = 0, filesTotal: Int? = nil) {
+        self.stage = stage
+        self.filesDone = filesDone
+        self.filesTotal = filesTotal
+    }
+
+    /// 0 to 1, or nil while the total is unknown.
+    public var fraction: Double? {
+        guard let filesTotal, filesTotal > 0 else { return nil }
+        return min(1, Double(filesDone) / Double(filesTotal))
+    }
+}
+
 nonisolated public protocol ArchiveExtractor: Sendable {
     /// Extracts `archive` into `directory`, overwriting existing files.
     func extract(archive: URL, into directory: URL) async throws
     /// Extracts only the entries that match `patterns`.
     func extract(archive: URL, into directory: URL, only patterns: [String]) async throws
+    /// The same, telling `onFile` the number of entries written so far.
+    func extract(archive: URL, into directory: URL, only patterns: [String], onFile: (@Sendable (Int) -> Void)?)
+        async throws
 }
 
 nonisolated extension ArchiveExtractor {
     public func extract(archive: URL, into directory: URL, only patterns: [String]) async throws {
         try await ZipArchive.extract(archive, into: directory, only: patterns)
+    }
+
+    public func extract(
+        archive: URL, into directory: URL, only patterns: [String], onFile: (@Sendable (Int) -> Void)?
+    ) async throws {
+        try await ZipArchive.extract(archive, into: directory, only: patterns, onFile: onFile)
     }
 }
 
@@ -223,23 +252,34 @@ nonisolated public struct GameInstaller: Sendable {
     }
 
     public func install(
-        _ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor()
+        _ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor(),
+        progress: (@Sendable (InstallProgress) -> Void)? = nil
     ) async throws {
         guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
         try FileManager.default.createDirectory(at: plan.destinationDirectory, withIntermediateDirectories: true)
-        try await extractor.extract(archive: plan.archiveURL, into: plan.destinationDirectory)
+        var steps: [(stage: String, archive: URL, destination: URL, patterns: [String])] = [
+            ("Unpacking the game", plan.archiveURL, plan.destinationDirectory, [])
+        ]
         if let update = plan.updateArchiveURL {
-            try await extractor.extract(archive: update, into: plan.destinationDirectory)
+            steps.append(("Applying eXo's update", update, plan.destinationDirectory, []))
         }
         if let extras = plan.extrasArchiveURL, let destination = plan.extrasDestination {
-            if plan.extrasPatterns.isEmpty {
-                try await extractor.extract(archive: extras, into: destination)
-            } else {
-                try await extractor.extract(archive: extras, into: destination, only: plan.extrasPatterns)
-            }
+            steps.append(("Unpacking the extras", extras, destination, plan.extrasPatterns))
         }
         if restoreSaves, let save = plan.saveArchiveURL {
-            try await extractor.extract(archive: save, into: plan.destinationDirectory)
+            steps.append(("Restoring saved progress", save, plan.destinationDirectory, []))
+        }
+        for step in steps {
+            guard let progress else {
+                try await extractor.extract(archive: step.archive, into: step.destination, only: step.patterns)
+                continue
+            }
+            // The total is the whole archive's entry count; with patterns only part of it is written.
+            let total: Int? = step.patterns.isEmpty ? try? await ZipArchive.entries(of: step.archive).count : nil
+            progress(InstallProgress(stage: step.stage, filesDone: 0, filesTotal: total))
+            try await extractor.extract(archive: step.archive, into: step.destination, only: step.patterns) { done in
+                progress(InstallProgress(stage: step.stage, filesDone: done, filesTotal: total))
+            }
         }
         guard plan.isInstalled else { throw InstallError.folderMissingAfterExtract(plan.installedFolderURL) }
     }

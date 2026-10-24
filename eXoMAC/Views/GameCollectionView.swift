@@ -20,16 +20,19 @@ struct EmptyCollectionView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        VStack(spacing: 10) {
+        Group {
             if model.searchText.isEmpty {
-                Text("No games here yet").font(.headline)
-                Text("Pick another platform or playlist in the sidebar.")
-                    .foregroundStyle(Theme.textSecondary)
+                ContentUnavailableView(
+                    "No Games Here Yet", systemImage: "gamecontroller",
+                    description: Text("Pick another platform or playlist in the sidebar."))
             } else {
-                Text("No games match “\(model.searchText)”").font(.headline)
-                Text("Check the spelling, or clear the search to see every game.")
-                    .foregroundStyle(Theme.textSecondary)
-                Button("Clear Search") { model.searchText = "" }
+                ContentUnavailableView {
+                    Label("No Results for “\(model.searchText)”", systemImage: "magnifyingglass")
+                } description: {
+                    Text("Check the spelling, or clear the search to see every game.")
+                } actions: {
+                    Button("Clear Search") { model.searchText = "" }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -317,8 +320,8 @@ struct GameListView: View {
     @State private var clickMonitor: Any?
 
     var body: some View {
-        Table(games, selection: selection) {
-            TableColumn("Title") { game in
+        Table(games, selection: selection, sortOrder: tableSort) {
+            TableColumn("Title", value: \.title) { game in
                 HStack(spacing: 10) {
                     BoxArtView(game: game, width: 22, maxPixelSize: 64)
                         .frame(height: 30)
@@ -330,11 +333,11 @@ struct GameListView: View {
                 .onHover { if $0 { model.prefetchExtras(for: game) } }
             }
             .width(min: 240, ideal: 360)
-            TableColumn("Year") { game in
-                Text(game.releaseYear.map(String.init) ?? "").foregroundStyle(Theme.textSecondary)
+            TableColumn("Year", value: \.sortYear) { game in
+                Text(game.releaseYear.map(String.init) ?? "").foregroundStyle(Theme.textSecondary).monospacedDigit()
             }
             .width(52)
-            TableColumn("Developer") { game in
+            TableColumn("Developer", value: \.sortDeveloper) { game in
                 Text(game.developer ?? "").foregroundStyle(Theme.textSecondary)
             }
             TableColumn("Genre") { game in
@@ -352,8 +355,9 @@ struct GameListView: View {
             }
             .width(100)
             TableColumn("Played") { game in
-                Text(model.playCount(game) == 0 ? "" : String(model.playCount(game))).foregroundStyle(
-                    Theme.textSecondary)
+                Text(model.playCount(game) == 0 ? "" : String(model.playCount(game)))
+                    .foregroundStyle(Theme.textSecondary)
+                    .monospacedDigit()
             }
             .width(52)
         }
@@ -405,6 +409,36 @@ struct GameListView: View {
 
     private var selection: Binding<String?> {
         Binding(get: { model.selectedGameID }, set: { model.selectedGameID = $0 })
+    }
+
+    /// A click on a column header sorts by it, through the same setting as
+    /// the toolbar's Sort menu; a second click turns the order around. The
+    /// columns that read the user's play history have no key path to sort
+    /// by here; the Sort menu covers them.
+    private var tableSort: Binding<[KeyPathComparator<Game>]> {
+        Binding(
+            get: {
+                let order: SortOrder = model.settings.sortAscending ? .forward : .reverse
+                switch model.settings.sortOrder {
+                case .title: return [KeyPathComparator(\.title, order: order)]
+                case .releaseYear: return [KeyPathComparator(\.sortYear, order: order)]
+                case .developer: return [KeyPathComparator(\.sortDeveloper, order: order)]
+                default: return []
+                }
+            },
+            set: { comparators in
+                guard let first = comparators.first else { return }
+                let column: GameSortOrder?
+                switch first.keyPath {
+                case \Game.title: column = .title
+                case \Game.sortYear: column = .releaseYear
+                case \Game.sortDeveloper: column = .developer
+                default: column = nil
+                }
+                guard let column else { return }
+                model.settings.sortOrder = column
+                model.settings.sortAscending = first.order == .forward
+            })
     }
 
     /// A click on a row does not take the keyboard back from the sidebar,
@@ -479,6 +513,11 @@ struct GameContextMenu: View {
             Button(model.isDocumentItem(game) ? "Open" : "Play") { model.play(game) }
         }
         Button("Configure…") { model.configure(game) }
+        if let session = model.launchSession(for: game) {
+            Button(session.isRunning ? "Show Launch Log…" : "Show Last Launch Log…") {
+                model.showLaunchLog(for: session)
+            }
+        }
         Divider()
         Button("Open Game Page") { model.openedGameID = game.id }
         GameExtrasMenu(game: game)
@@ -544,4 +583,10 @@ struct GameExtrasMenu: View {
         }
         .onAppear { model.prefetchExtras(for: game) }
     }
+}
+
+extension Game {
+    /// Sort keys for the list's column headers; `KeyPathComparator` needs non-optional values.
+    var sortYear: Int { releaseYear ?? 0 }
+    var sortDeveloper: String { developer ?? "" }
 }

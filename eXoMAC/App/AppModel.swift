@@ -25,9 +25,12 @@ final class AppModel {
             if settings.musicEnabled != oldValue.musicEnabled { updateMusic() }
             if settings.appIcon != oldValue.appIcon { applyAppIcon() }
             if settings.appearance != oldValue.appearance { applyAppearance() }
-            if settings.sortOrder != oldValue.sortOrder || settings.showHiddenGames != oldValue.showHiddenGames {
+            if settings.sortOrder != oldValue.sortOrder || settings.sortAscending != oldValue.sortAscending
+                || settings.showHiddenGames != oldValue.showHiddenGames
+            {
                 refreshVisibleGames()
             }
+            if settings.showHiddenGames != oldValue.showHiddenGames { scheduleSidebarCounts() }
             if settings.localStorePath != oldValue.localStorePath {
                 applyDataRoot()
                 warnedMissingStore = false
@@ -39,7 +42,9 @@ final class AppModel {
     }
 
     private(set) var loadState: LoadState = .idle
-    private(set) var library: Library?
+    private(set) var library: Library? {
+        didSet { scheduleSidebarCounts() }
+    }
     private(set) var media: [UUID: MediaCatalog] = [:]
     private(set) var searchIndex: LibrarySearchIndex?
     /// Other versions of each game, for the context menu. Installing does
@@ -57,8 +62,21 @@ final class AppModel {
     }
 
     var userState: UserLibraryState {
-        didSet { scheduleUserStateSave() }
+        didSet {
+            scheduleUserStateSave()
+            scheduleSidebarCounts()
+        }
     }
+
+    /// Game counts for the sidebar's badges and the collections' subtitles,
+    /// recounted shortly after the library or the user's state changes.
+    nonisolated struct SidebarCounts {
+        var scopes: [LibraryScope: Int] = [:]
+        var nodes: [UUID: [LibraryEntityRef: Int]] = [:]
+        var collections: [UUID: String] = [:]
+    }
+    private(set) var sidebarCounts = SidebarCounts()
+    @ObservationIgnored private var sidebarCountsTask: Task<Void, Never>?
 
     var scope: LibraryScope = .all { didSet { refreshVisibleGames() } }
     var searchText = "" { didSet { scheduleSearchRefresh() } }
@@ -80,6 +98,12 @@ final class AppModel {
     var pendingUninstall: Game?
     var pendingInfoGame: Game?
     var pendingLaunch: PendingLaunch?
+    /// The launch log sheet: a running session, or the last one for a game.
+    var pendingLaunchLog: LaunchLogItem?
+    /// The last session per game id, so its log can be read after the emulator quit.
+    private(set) var lastSessions: [String: GameSession] = [:]
+    /// Installations under way or just finished, shown in the jobs bar.
+    private(set) var installRuns: [InstallRun] = []
     var alert: AppAlert?
 
     /// Columns in the game grid, reported by the grid view for arrow keys.
@@ -153,6 +177,11 @@ final class AppModel {
         let id = UUID()
         var title: String
         var message: String
+    }
+
+    struct LaunchLogItem: Identifiable {
+        let id = UUID()
+        let session: GameSession
     }
 
     init() {
@@ -452,7 +481,7 @@ final class AppModel {
         }
         games = query.filter(games, search: searchText, index: searchIndex)
         if scope != .recentlyPlayed {
-            games = query.sort(games, by: settings.sortOrder, overlay: userState)
+            games = query.sort(games, by: settings.sortOrder, ascending: settings.sortAscending, overlay: userState)
         }
         visibleGames = games
         if let title = pendingSelectTitle, let match = games.first(where: { $0.title == title }) {
@@ -828,13 +857,48 @@ final class AppModel {
     private func sessionEnded(_ session: GameSession) {
         let seconds = Int(Date().timeIntervalSince(session.startedAt))
         userState.recordPlay(session.game.launchBoxID, seconds: seconds)
-        if session.exitStatus != 0, let log = session.logURL {
-            alert = AppAlert(
-                title: "\(session.game.title) exited with code \(session.exitStatus)",
-                message: "The emulator log is at \(log.path)")
-        }
+        lastSessions[session.game.id] = session
+        // A crash shows its log right away; a normal exit keeps it for the context menu.
+        if session.exitStatus != 0 { pendingLaunchLog = LaunchLogItem(session: session) }
         updateMusic()
         if scope == .recentlyPlayed { refreshVisibleGames() }
+    }
+
+    /// The session whose log the game's "Show Launch Log" opens: the one
+    /// running now, else the last one.
+    func launchSession(for game: Game) -> GameSession? {
+        launcher.sessions.first { $0.game.id == game.id } ?? lastSessions[game.id]
+    }
+
+    func showLaunchLog(for session: GameSession) {
+        pendingLaunchLog = LaunchLogItem(session: session)
+    }
+
+    /// The emulator's output so far, capped so that a chatty emulator
+    /// cannot stall the sheet.
+    nonisolated static func logText(of session: GameSession) -> String {
+        guard let url = session.logURL, let handle = try? FileHandle(forReadingFrom: url) else { return "" }
+        defer { try? handle.close() }
+        let cap: UInt64 = 512 * 1024
+        let size = (try? handle.seekToEnd()) ?? 0
+        try? handle.seek(toOffset: size > cap ? size - cap : 0)
+        let data = (try? handle.readToEnd()) ?? Data()
+        let text = String(decoding: data, as: UTF8.self)
+        return size > cap ? "… (earlier output left out)\n" + text : text
+    }
+
+    func launchReport(for session: GameSession, log: String) -> LaunchReport {
+        let game = session.game
+        let launch = session.launch
+        return LaunchReport(
+            title: game.title, platform: game.platform, pack: game.eXoPack?.displayName,
+            emulatorName: launch.emulator.kind.displayName, executablePath: launch.emulator.executableURL.path,
+            commandLine: launch.commandLine, workingDirectory: launch.workingDirectory.path, notes: launch.notes,
+            startedAt: session.startedAt, duration: session.endedAt?.timeIntervalSince(session.startedAt),
+            exitStatus: session.endedAt == nil ? nil : session.exitStatus, configPath: launch.configURL?.path,
+            configText: launch.configURL.flatMap { try? String(contentsOf: $0, encoding: .utf8) },
+            logPath: session.logURL?.path, logExcerpt: LaunchReport.lastLines(of: log),
+            appVersion: AppInfo.versionLine)
     }
 
     // MARK: - Installing
@@ -844,14 +908,119 @@ final class AppModel {
         return GameInstaller(snapshot: snapshot, installLocation: settings.installLocation)
     }
 
-    func install(_ game: Game, playAfter: Bool, restoreSaves: Bool) async {
-        guard let installer = installer(for: game), let plan = installer.plan(for: game) else { return }
-        do {
-            try await installer.install(plan, restoreSaves: restoreSaves)
-            await refreshInstalledFolders(for: game)
-            if playAfter { play(game) }
-        } catch {
-            alert = AppAlert(title: "Could not install \(game.title)", message: error.localizedDescription)
+    /// Starts unpacking in the background. The run reports to the jobs bar
+    /// and the Dock; Cancel stops the unzip and removes the half-made folder.
+    @discardableResult
+    func startInstall(_ game: Game, playAfter: Bool, restoreSaves: Bool) -> InstallRun? {
+        guard let installer = installer(for: game), let plan = installer.plan(for: game) else { return nil }
+        guard !installRuns.contains(where: { $0.game.id == game.id && $0.isRunning }) else { return nil }
+        let run = InstallRun(game: game)
+        installRuns.append(run)
+        run.task = Task { [weak self] in
+            do {
+                try await installer.install(plan, restoreSaves: restoreSaves) { progress in
+                    // The main queue keeps the reports in order; a Task per report would not.
+                    DispatchQueue.main.async {
+                        MainActor.assumeIsolated {
+                            run.apply(progress)
+                            self?.updateDockProgress()
+                        }
+                    }
+                }
+                guard let self else { return }
+                run.apply(InstallProgress(stage: "Checking the game folder"))
+                await refreshInstalledFolders(for: game)
+                run.finish(.finished)
+                JobNotifier.notify(title: "\(game.title) installed", body: "The game is ready to play.")
+                if playAfter { play(game) }
+            } catch is CancellationError {
+                try? FileManager.default.removeItem(at: plan.installedFolderURL)
+                run.finish(.cancelled)
+            } catch {
+                run.finish(.failed(error.localizedDescription))
+            }
+            self?.updateDockProgress()
+            // A result stays readable for a moment; a failure stays until dismissed.
+            if case .failed = run.phase { return }
+            try? await Task.sleep(for: .seconds(6))
+            self?.dismissInstallRun(run)
+        }
+        updateDockProgress()
+        return run
+    }
+
+    func dismissInstallRun(_ run: InstallRun) {
+        installRuns.removeAll { $0.id == run.id }
+    }
+
+    // MARK: - Sidebar counts
+
+    /// Recounts a moment after the last change, so a burst of changes counts once.
+    private func scheduleSidebarCounts() {
+        sidebarCountsTask?.cancel()
+        sidebarCountsTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            await self?.refreshSidebarCounts()
+        }
+    }
+
+    private func refreshSidebarCounts() async {
+        guard let library else {
+            sidebarCounts = SidebarCounts()
+            return
+        }
+        let overlay = userState
+        let showHidden = settings.showHiddenGames
+        let counts = await Task.detached {
+            Self.sidebarCounts(for: library, overlay: overlay, showHidden: showHidden)
+        }.value
+        sidebarCounts = counts
+    }
+
+    nonisolated private static func sidebarCounts(for library: Library, overlay: UserLibraryState, showHidden: Bool)
+        -> SidebarCounts
+    {
+        let query = LibraryQuery(library: library)
+        func visible(_ games: [Game]) -> [Game] {
+            showHidden ? games : games.filter { !(overlay.state(for: $0.launchBoxID).hidden ?? $0.hidden) }
+        }
+        var counts = SidebarCounts()
+        var scopes: [LibraryScope] = [.all, .favorites, .eXoFavorites, .installed, .recentlyPlayed]
+        scopes += library.packs.map { LibraryScope.pack($0) }
+        for scope in scopes {
+            counts.scopes[scope] = visible(query.games(in: scope, overlay: overlay)).count
+        }
+        for snapshot in library.snapshots {
+            let games = visible(snapshot.games)
+            var byPlatform: [String: Int] = [:]
+            for game in games { byPlatform[game.platform, default: 0] += 1 }
+            var nodes: [LibraryEntityRef: Int] = [:]
+            func walk(_ node: LibraryNode) {
+                switch node.ref {
+                case .platform(let name): nodes[node.ref] = byPlatform[name] ?? 0
+                case .category: nodes[node.ref] = node.platformNames.reduce(0) { $0 + (byPlatform[$1] ?? 0) }
+                case .playlist: break  // Playlist filters cost too much to count on every change.
+                }
+                node.children.forEach(walk)
+            }
+            snapshot.tree.forEach(walk)
+            counts.nodes[snapshot.collection.id] = nodes
+            let writable = FileManager.default.isWritableFile(atPath: snapshot.root.url.path)
+            counts.collections[snapshot.collection.id] =
+                "\(games.count.formatted()) games" + (writable ? "" : " · read-only")
+        }
+        return counts
+    }
+
+    /// The Dock tile shows the mean progress of everything running, or nothing.
+    func updateDockProgress() {
+        var fractions = installRuns.filter(\.isRunning).compactMap(\.fraction)
+        if let setup = setupProgress { fractions.append(setup.fraction) }
+        if fractions.isEmpty {
+            DockProgress.clear()
+        } else {
+            DockProgress.update(fraction: fractions.reduce(0, +) / Double(fractions.count))
         }
     }
 

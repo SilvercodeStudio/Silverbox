@@ -17,11 +17,14 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
     public var fileCopies: [FileCopy]
     /// Differencing disks made fresh before each launch.
     public var differencingDisks: [DifferencingDisk]
+    /// Batch files rewritten for the emulator (see ``MIDIBatchPatcher``).
+    public var filePatches: [FilePatch]
 
     public init(
         game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, arguments: [String],
         workingDirectory: URL, configURL: URL, configText: String, sourceConfigURL: URL, notes: [String],
-        directoriesToCreate: [URL] = [], fileCopies: [FileCopy] = [], differencingDisks: [DifferencingDisk] = []
+        directoriesToCreate: [URL] = [], fileCopies: [FileCopy] = [], differencingDisks: [DifferencingDisk] = [],
+        filePatches: [FilePatch] = []
     ) {
         self.game = game
         self.variant = variant
@@ -35,6 +38,7 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
         self.directoriesToCreate = directoriesToCreate
         self.fileCopies = fileCopies
         self.differencingDisks = differencingDisks
+        self.filePatches = filePatches
     }
 
     /// Writes the generated config where the arguments point, creates any
@@ -53,6 +57,7 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
         for disk in differencingDisks {
             try VHDDifferencingDisk.create(at: disk.child, parent: disk.parent)
         }
+        for patch in filePatches { try patch.write() }
         try configText.write(to: configURL, atomically: true, encoding: .utf8)
     }
 
@@ -247,6 +252,30 @@ nonisolated public struct LaunchPlanner: Sendable {
             )
         }
 
+        // eXo's in-game menus set `mididevice=default`, which DOSBox Staging rejects.
+        var patches: [FilePatch] = []
+        if emulator.kind == .dosboxStaging {
+            let device = translator.generalMIDIDevice
+            switch location {
+            case .local:
+                patches = MIDIBatchPatcher.patches(gameFolder: location.url, overlay: nil, device: device)
+            case .library:
+                if let overlay {
+                    patches = MIDIBatchPatcher.patches(gameFolder: location.url, overlay: overlay, device: device)
+                } else if !MIDIBatchPatcher.patches(gameFolder: location.url, overlay: nil, device: device).isEmpty {
+                    translation.notes.append(
+                        "The game's menu sets mididevice=default, which DOSBox Staging does not know; General MIDI from that menu goes to CoreMIDI. The library is writable, so its files were left alone."
+                    )
+                }
+            }
+            if !patches.isEmpty {
+                let names = patches.map { $0.destination.lastPathComponent }.sorted()
+                translation.notes.append(
+                    "The game's menu sets mididevice=default, which DOSBox Staging does not know; rewritten to \(device) in \(ListFormatter.localizedString(byJoining: names))."
+                )
+            }
+        }
+
         if let build = eXoDOSBuild(for: game), build.recommendedEmulator != emulator.kind {
             translation.notes.insert(
                 "\(pack.displayName) runs this game with \(build.displayName); \(build.recommendedEmulator.displayName) is the closer match on the Mac.",
@@ -282,7 +311,8 @@ nonisolated public struct LaunchPlanner: Sendable {
             configText: translation.document.serialized(),
             sourceConfigURL: sourceURL,
             notes: translation.notes,
-            directoriesToCreate: translation.overlayFolders
+            directoriesToCreate: translation.overlayFolders,
+            filePatches: patches
         )
     }
 

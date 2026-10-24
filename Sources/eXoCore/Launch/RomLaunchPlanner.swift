@@ -8,15 +8,19 @@ nonisolated public struct EmulatorLaunch: Sendable, Hashable {
     public var arguments: [String]
     public var workingDirectory: URL
     public var notes: [String]
+    /// The config the emulator reads, for the launch report; ROM launches have none.
+    public var configURL: URL?
 
     public init(
-        game: Game, emulator: EmulatorInstallation, arguments: [String], workingDirectory: URL, notes: [String] = []
+        game: Game, emulator: EmulatorInstallation, arguments: [String], workingDirectory: URL, notes: [String] = [],
+        configURL: URL? = nil
     ) {
         self.game = game
         self.emulator = emulator
         self.arguments = arguments
         self.workingDirectory = workingDirectory
         self.notes = notes
+        self.configURL = configURL
     }
 
     /// A shell-style rendering for display and logs.
@@ -28,7 +32,8 @@ nonisolated public struct EmulatorLaunch: Sendable, Hashable {
 nonisolated extension LaunchPlan {
     public var launch: EmulatorLaunch {
         EmulatorLaunch(
-            game: game, emulator: emulator, arguments: arguments, workingDirectory: workingDirectory, notes: notes)
+            game: game, emulator: emulator, arguments: arguments, workingDirectory: workingDirectory, notes: notes,
+            configURL: configURL)
     }
 }
 

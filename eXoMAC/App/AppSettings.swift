@@ -95,6 +95,8 @@ struct AppSettings: Codable, Equatable {
     static let tileSizeRange: ClosedRange<Double> = 96...260
     var viewMode: LibraryViewMode = .grid
     var sortOrder: GameSortOrder = .title
+    /// False sorts the other way, set by a click on a list column header.
+    var sortAscending = true
     var showHiddenGames = false
     var inspectorShown = true
     /// Which of the two app icons the Dock and the About window show.
@@ -141,6 +143,7 @@ struct AppSettings: Codable, Equatable {
         tileSize = try c.decodeIfPresent(Double.self, forKey: .tileSize) ?? Self.defaultTileSize
         viewMode = try c.decodeIfPresent(LibraryViewMode.self, forKey: .viewMode) ?? .grid
         sortOrder = try c.decodeIfPresent(GameSortOrder.self, forKey: .sortOrder) ?? .title
+        sortAscending = try c.decodeIfPresent(Bool.self, forKey: .sortAscending) ?? true
         showHiddenGames = try c.decodeIfPresent(Bool.self, forKey: .showHiddenGames) ?? false
         inspectorShown = try c.decodeIfPresent(Bool.self, forKey: .inspectorShown) ?? true
         appIcon = try c.decodeIfPresent(AppIconVariant.self, forKey: .appIcon) ?? .amber
@@ -177,6 +180,13 @@ struct AppSettings: Codable, Equatable {
             }
             settings.transient = true
         }
+        // `-dataPath <folder>` sends installs, caches and logs to a scratch
+        // folder for this run only, so a test never touches the real data.
+        if let path = defaults.string(forKey: "dataPath"), !path.isEmpty {
+            settings.localStorePath = path
+            settings.installLocation = .localStore
+            settings.transient = true
+        }
         if defaults.object(forKey: "musicEnabled") != nil {
             settings.musicEnabled = defaults.bool(forKey: "musicEnabled")
         }
@@ -200,7 +210,7 @@ struct AppSettings: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case libraryPath, collections, localStorePath, installLocation, showLaunchOptions, stagingExecutablePath,
             dosboxXExecutablePath, emulatorPaths, retroArchCoresPath, platformEmulators, emulatorPolicy, launchOptions,
-            musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder,
+            musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder, sortAscending,
             showHiddenGames,
             inspectorShown,
             appIcon, appearance
@@ -225,6 +235,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(tileSize, forKey: .tileSize)
         try c.encode(viewMode, forKey: .viewMode)
         try c.encode(sortOrder, forKey: .sortOrder)
+        try c.encode(sortAscending, forKey: .sortAscending)
         try c.encode(showHiddenGames, forKey: .showHiddenGames)
         try c.encode(inspectorShown, forKey: .inspectorShown)
         try c.encode(appIcon, forKey: .appIcon)

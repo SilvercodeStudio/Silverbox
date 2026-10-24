@@ -2,7 +2,7 @@
 
 ## A game does not start, or quits at once
 
-Open the local data folder's `Logs` folder. Each game has a log with the exact command line and the emulator's output. The generated configuration is in the `Launch` folder next to it.
+Right-click the game and choose **Show Last Launch Log…**: the sheet shows the emulator's output and the command line that started it, with a **Show Log** button in the bar while the game runs. **Copy as Markdown** copies a report with the emulator, command line, config, notes and the end of the log, ready to paste into a bug report. A game that exits with an error opens this sheet by itself. The files are in the local data folder: each game has a log in `Logs`, and the generated configuration is in `Launch` next to it.
 
 ## Saves are not kept
 

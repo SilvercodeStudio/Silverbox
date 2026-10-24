@@ -326,6 +326,16 @@ nonisolated public struct ConfigTranslator: Sendable {
         }
     }
 
+    /// The `mididevice` the translation uses for General MIDI, which the
+    /// batch patcher writes where eXo's menus say `default`.
+    public var generalMIDIDevice: String {
+        var choice = options.generalMIDI
+        if choice == .automatic {
+            choice = fluidSynthAvailable ? .fluidSynthSoundCanvas : .coreAudio
+        }
+        return choice == .fluidSynthSoundCanvas ? "fluidsynth" : "coreaudio"
+    }
+
     private func generalMIDIOutcomes() -> [Outcome] {
         var choice = options.generalMIDI
         if choice == .automatic {

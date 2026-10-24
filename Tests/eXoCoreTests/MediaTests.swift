@@ -48,6 +48,26 @@ struct MediaCatalogTests {
         #expect(cover?.url.lastPathComponent == "Super Tetris-01.png")
     }
 
+    /// Media named after the ROM file, as Skraper writes it, counts when
+    /// nothing is named after the title.
+    @Test func findsImagesNamedAfterTheROMFile() async throws {
+        let snapshot = try FixtureLibrary.snapshot()
+        let catalog = MediaCatalog(snapshot: snapshot)
+        let tetris = try #require(snapshot.game(id: FixtureLibrary.tetrisID))
+        let title = await catalog.images(for: tetris, type: .screenshotGameTitle)
+        #expect(title.map(\.url.lastPathComponent) == ["Super Tetris (1991).png"])
+        // The title-named file still wins where there is one.
+        let front = await catalog.images(for: tetris, type: .boxFront)
+        #expect(front.map(\.url.lastPathComponent) == ["Super Tetris-01.png"])
+
+        let folder = snapshot.root.imagesDirectory.appendingPathComponent(
+            "MS-DOS/Screenshot - Game Title", isDirectory: true)
+        let index = MediaFolderIndex.scan(folder: folder)
+        #expect(index.files(forTitle: "Super Tetris", gameID: "x").isEmpty)
+        #expect(index.files(forTitle: "Super Tetris", gameID: "x", fileName: "Super Tetris (1991)").count == 1)
+        #expect(index.files(forTitle: "Super Tetris", gameID: "x", fileName: "Super Tetris (1991)-01").count == 1)
+    }
+
     @Test func findsVideoManualMusicAndExtras() async throws {
         let snapshot = try FixtureLibrary.snapshot()
         let catalog = MediaCatalog(snapshot: snapshot)

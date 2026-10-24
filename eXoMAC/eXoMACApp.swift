@@ -49,10 +49,20 @@ struct eXoMACApp: App {
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
         .defaultPosition(.center)
+        // About is opened from the menu each time; it has no place in the Window menu or in state restoration.
+        .restorationBehavior(.disabled)
+        .commandsRemoved()
     }
 }
 
 /// Names shown to the user. Internal names stay `eXoMAC`.
 enum AppInfo {
     static let displayName = "Autoexec.Mac"
+    /// "Autoexec.Mac 0.1 (2)", for reports.
+    static var versionLine: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(displayName) \(version) (\(build))"
+    }
 }

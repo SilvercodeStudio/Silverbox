@@ -8,7 +8,6 @@ struct InstallSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var playAfter = true
     @State private var restoreSaves = true
-    @State private var installing = false
 
     var body: some View {
         let plan = model.installer(for: game)?.plan(for: game)
@@ -42,7 +41,7 @@ struct InstallSheet: View {
                             "The archive is not present. This may be the Lite edition; downloading games is not supported yet.",
                             systemImage: "exclamationmark.triangle"
                         )
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.warning)
                         .font(.caption)
                     }
                     if plan.updateArchiveURL != nil {
@@ -57,27 +56,21 @@ struct InstallSheet: View {
                     isOn: $restoreSaves)
             }
             Toggle("Play when installation finishes", isOn: $playAfter)
+            Text("Unpacking runs in the background; the bar at the bottom of the window shows its progress.")
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
             HStack {
-                if installing {
-                    ProgressView().controlSize(.small)
-                    Text("Unpacking…").foregroundStyle(Theme.textSecondary)
-                }
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                    .disabled(installing)
                 Button("Install") {
-                    installing = true
-                    Task {
-                        await model.install(
-                            game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
-                        installing = false
-                        dismiss()
-                    }
+                    model.startInstall(
+                        game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
+                    dismiss()
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(installing || plan?.archiveExists != true)
+                .disabled(plan?.archiveExists != true)
             }
         }
         .padding(20)
@@ -197,7 +190,7 @@ struct GameInfoSheet: View {
                         LabeledContent("Mac emulator") {
                             HStack {
                                 Text(resolved.isReady ? resolved.summary : (resolved.problem ?? "Not ready"))
-                                    .foregroundStyle(resolved.isReady ? Theme.accent : .orange)
+                                    .foregroundStyle(resolved.isReady ? Theme.good : Theme.warning)
                                     .multilineTextAlignment(.trailing)
                                 Button("Emulator Settings…") {
                                     SettingsState.shared.show(tab: .emulators)

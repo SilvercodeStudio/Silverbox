@@ -111,7 +111,7 @@ struct SetupSheet: View {
                     LabeledContent("Space needed") { Text("About \(Self.bytes(neededBytes))") }
                     if let free = freeBytes {
                         LabeledContent("Space free") {
-                            Text(Self.bytes(free)).foregroundStyle(free < neededBytes ? .red : Theme.textSecondary)
+                            Text(Self.bytes(free)).foregroundStyle(free < neededBytes ? Theme.bad : Theme.textSecondary)
                         }
                     }
                 }

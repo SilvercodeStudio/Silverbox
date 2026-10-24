@@ -171,7 +171,7 @@ struct LibrarySettingsView: View {
                         "This folder is not available right now. Is the drive connected? Installs, soundtracks and caches wait until it is.",
                         systemImage: "exclamationmark.triangle"
                     )
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.warning)
                     .font(.caption)
                 }
                 Text(
@@ -225,7 +225,7 @@ struct CollectionEditor: View {
                     Button("Choose…") { pickingRoot = true }
                 }
                 if let error = model.loadErrors[collection.id] {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.caption)
+                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.bad).font(.caption)
                 }
                 if let report = model.rootReports[collection.id] {
                     LibraryRootReportView(report: report)
@@ -425,7 +425,7 @@ struct EmulatorPathRow: View {
                         systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle"
                     )
                     .font(.caption)
-                    .foregroundStyle(installation.exists ? Theme.accent : .red)
+                    .foregroundStyle(installation.exists ? Theme.good : Theme.bad)
                 } else if let url = URL(string: kind.website) {
                     Link("Download from \(url.host ?? kind.website)", destination: url).font(.caption)
                 }
@@ -498,7 +498,7 @@ struct PlatformAssignmentRow: View {
             }
             Label(status, systemImage: resolved.isReady ? "checkmark.circle.fill" : "exclamationmark.triangle")
                 .font(.caption)
-                .foregroundStyle(resolved.isReady ? Theme.accent : .orange)
+                .foregroundStyle(resolved.isReady ? Theme.good : Theme.warning)
         }
         .padding(.vertical, 2)
     }

@@ -212,11 +212,57 @@ Makefile).
   with the search index at load; `OtherVersionsMenu` in the context menu
   lists the matches and `AppModel.reveal(_:)` selects one, clearing the
   search or widening the scope to the game's pack when needed.
+- Media. `MediaCatalog` finds images by LaunchBox's naming
+  (`<sanitized title>[.<game id>]-<NN>.<ext>`, region sub-folders). When no
+  file is named after the title, one named after the ROM file
+  (`Game.launcherBaseName`) counts, as LaunchBox allows; Skraper and
+  EmuMovies name media that way. Videos, manuals and music already match by
+  launcher name first, then title.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the
   files, `AlbumBar` replaces the music bar while it does, and
   `AppModel+Soundtracks` holds the cache and the unpack-on-play flow.
+- MIDI menus. eXo's in-game batch menus run `CONFIG -set
+  "mididevice=default"` for General MIDI, which DOSBox Staging rejects (it
+  falls through to CoreMIDI). For Staging, `planDOSBox` has
+  `MIDIBatchPatcher` rewrite that line in the game's `.bat` files (two
+  levels deep) to `ConfigTranslator.generalMIDIDevice`, keeping the original
+  in a `rem Autoexec.Mac replaced:` line so a later choice rewrites it again.
+  The patched file goes in place for local installs and under the overlay
+  folder for read-only libraries (`LaunchPlan.filePatches`, written by
+  `writeConfig`); a writable library is left alone, with a note.
+- Launch logs. `GameLauncher` writes each emulator's output to `Logs/`;
+  `AppModel.lastSessions` keeps the last `GameSession` per game, so "Show
+  Last Launch Log…" (context menu) and "Show Log" (the now-playing bar)
+  open `LaunchLogSheet`. A non-zero exit opens it by itself. "Copy as
+  Markdown" builds a `LaunchReport` (core, `LaunchReport.swift`) from the
+  session, the config at `EmulatorLaunch.configURL` and the log's end.
+- Background jobs. `InstallRun` (observable) drives one installation:
+  `AppModel.startInstall` runs `GameInstaller.install` with its progress
+  closure, `JobsBar` shows the runs above the now-playing bar, Cancel stops
+  the unzip and removes the half-made folder, `DockProgress` draws the mean
+  progress on the Dock tile, and `JobNotifier` bounces and notifies when a
+  job finishes while the app is in the background. Setup reports through
+  the same two services.
+- Sidebar. Rows carry `.badge` counts from `AppModel.sidebarCounts`,
+  recounted off the main thread shortly after the library or the user's
+  state changes (playlists are not counted); each collection's header shows
+  its game count and "read-only", and `DataFolderFooter` shows the local
+  data folder. Empty states use `ContentUnavailableView`.
+- List view. Column headers for Title, Year and Developer sort through
+  `settings.sortOrder` and `settings.sortAscending`, the same settings as
+  the toolbar's Sort menu; `Game.sortYear` and `sortDeveloper` give
+  `KeyPathComparator` non-optional keys.
+- About. `AboutView` opens `AcknowledgmentsSheet` and `LicenseSheet`; the
+  texts come from `eXoMAC/Licenses/*.txt`, copies of the repository's
+  `LICENSE` and the vendored decoders' licenses that `ProjectFilesTests`
+  keeps identical. The license is MIT; the name and icon artwork are not.
+- Status chips. `Chip` and `ChipRow` (`Chips.swift`) state one fact each in
+  a tone: `Theme.good`, `.warning` or `.bad`, kept apart from the accent.
+  Use these tones for status, never `.red` or `.orange`. `GameStatusChips`
+  in the inspector header says whether the game is installed, which
+  emulator runs it and whether that emulator is present.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers
@@ -258,7 +304,8 @@ Makefile).
 ## Debugging aids
 
 - Launch arguments (debug builds): `-libraryPath "<folder>|<folder>"` (one or
-  more collections) and `-musicEnabled 0` and `-appearance light` (or `dark`, `system`) override saved settings for one run; `-searchText ultima` and
+  more collections), `-dataPath <folder>` (a scratch local data folder, so a
+  test install or setup never touches the real one) and `-musicEnabled 0` and `-appearance light` (or `dark`, `system`) override saved settings for one run; `-searchText ultima` and
   `-selectTitle "Ultima V: Warriors of Destiny"` preset the view;
   `-screenshotPath out.png [-screenshotDelay 10]` renders every visible window
   (main window, then sheets as `out.2.png`, …) from the view hierarchy and

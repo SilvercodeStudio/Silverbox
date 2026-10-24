@@ -117,14 +117,26 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
     }
 
     /// Files for a game, best first: exact game-ID matches win over plain
-    /// title matches, then preferred regions, then the lowest index.
-    public func files(forTitle title: String, gameID: String) -> [MediaFile] {
+    /// title matches, then preferred regions, then the lowest index. With no
+    /// file named after the title, files named after the ROM file
+    /// (`fileName`, the launcher's base name) count, as LaunchBox does;
+    /// scrapers such as Skraper name media that way.
+    public func files(forTitle title: String, gameID: String, fileName: String? = nil) -> [MediaFile] {
         let key = MediaFileName.sanitize(title).lowercased()
-        guard let candidates = filesByKey[key], !candidates.isEmpty else { return [] }
-        let id = gameID.lowercased()
-        let exact = candidates.filter { $0.gameID == id }
-        let chosen = exact.isEmpty ? candidates.filter { $0.gameID == nil } : exact
-        return chosen.sorted(by: Self.preferred)
+        if let candidates = filesByKey[key], !candidates.isEmpty {
+            let id = gameID.lowercased()
+            let exact = candidates.filter { $0.gameID == id }
+            let chosen = exact.isEmpty ? candidates.filter { $0.gameID == nil } : exact
+            return chosen.sorted(by: Self.preferred)
+        }
+        guard let fileName, !fileName.isEmpty else { return [] }
+        // A ROM name that ends in "-01" was indexed without that suffix.
+        for stem in [fileName.lowercased(), MediaFileName.parse(stem: fileName).key.lowercased()] {
+            if let candidates = filesByKey[stem], !candidates.isEmpty {
+                return candidates.filter { $0.gameID == nil }.sorted(by: Self.preferred)
+            }
+        }
+        return []
     }
 
     static func preferred(_ a: MediaFile, _ b: MediaFile) -> Bool {

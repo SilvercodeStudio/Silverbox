@@ -11,8 +11,11 @@ struct GameSession: Identifiable {
     let logURL: URL?
     let processIdentifier: Int32
     var exitStatus: Int32 = 0
+    /// Set when the emulator has quit.
+    var endedAt: Date?
 
     var game: Game { launch.game }
+    var isRunning: Bool { endedAt == nil }
 }
 
 /// Starts emulators and reports when they quit.
@@ -71,6 +74,7 @@ final class GameLauncher {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
         var session = sessions.remove(at: index)
         session.exitStatus = status
+        session.endedAt = Date()
         onSessionEnded?(session)
     }
 

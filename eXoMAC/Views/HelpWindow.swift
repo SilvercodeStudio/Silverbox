@@ -131,6 +131,8 @@ enum AboutPanel {
 /// under the text.
 struct AboutView: View {
     @Environment(AppModel.self) private var model
+    @State private var showingAcknowledgments = false
+    @State private var showingLicense = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 20) {
@@ -166,12 +168,16 @@ struct AboutView: View {
                     }
                 }
                 .padding(.top, 4)
-                Text(
-                    "Includes stb_vorbis by Sean Barrett and libxmp-lite by Claudio Matsuoka and Hipolito Carraro Jr, both MIT licensed."
-                )
-                .font(.caption)
-                .foregroundStyle(Theme.textTertiary)
-                .padding(.top, 4)
+                Text("MIT license. Includes stb_vorbis and libxmp-lite.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.top, 4)
+                HStack(spacing: 8) {
+                    Button("Acknowledgments…") { showingAcknowledgments = true }
+                    Button("License…") { showingLicense = true }
+                }
+                .controlSize(.small)
+                .padding(.top, 2)
             }
             .font(.callout)
             .frame(width: 330, alignment: .leading)
@@ -180,5 +186,7 @@ struct AboutView: View {
         .padding(24)
         .padding(.top, 12)
         .background(Theme.window)
+        .sheet(isPresented: $showingAcknowledgments) { AcknowledgmentsSheet() }
+        .sheet(isPresented: $showingLicense) { LicenseSheet() }
     }
 }

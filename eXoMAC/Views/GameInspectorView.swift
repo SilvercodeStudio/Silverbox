@@ -10,10 +10,10 @@ struct GameInspectorView: View {
             GameInspectorContent(game: game)
                 .id(game.id)
         } else {
-            VStack(spacing: 8) {
-                Image(systemName: "gamecontroller").font(.largeTitle).foregroundStyle(Theme.textTertiary)
-                Text("Select a game").foregroundStyle(Theme.textSecondary)
-            }
+            ContentUnavailableView(
+                "Select a Game", systemImage: "gamecontroller",
+                description: Text("Its box art, media and details show here.")
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.panel)
         }
@@ -51,6 +51,7 @@ struct GameInspectorContent: View {
                     Text(Formatters.releaseLine(game))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
+                    GameStatusChips(game: game)
                     PlayButtonRow(game: game)
                 }
                 .padding(16)

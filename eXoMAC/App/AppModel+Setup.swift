@@ -87,17 +87,25 @@ extension AppModel {
                     Task { @MainActor in
                         guard let self, self.setupTask != nil else { return }
                         self.setupProgress = progress
+                        self.updateDockProgress()
                     }
                 }
                 guard let self else { return }
                 self.setupTask = nil
                 self.setupProgress = nil
                 self.pendingSetup = nil
+                self.updateDockProgress()
+                JobNotifier.notify(
+                    title: "Setup finished",
+                    body:
+                        "\(ListFormatter.localizedString(byJoining: pending.download.packs.map(\.displayName))) is ready."
+                )
                 self.addSetUpCollection(download: pending.download, target: target)
             } catch {
                 guard let self else { return }
                 self.setupTask = nil
                 self.setupProgress = nil
+                self.updateDockProgress()
                 if !(error is CancellationError) {
                     self.alert = AppAlert(
                         title: "Setup did not finish",

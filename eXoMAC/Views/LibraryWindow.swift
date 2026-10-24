@@ -54,6 +54,9 @@ struct LibraryWindow: View {
         .sheet(item: $model.pendingInfoGame) { game in
             GameInfoSheet(game: game)
         }
+        .sheet(item: $model.pendingLaunchLog) { item in
+            LaunchLogSheet(session: item.session)
+        }
         .sheet(item: $model.pendingLaunch) { pending in
             LaunchOptionsSheet(pending: pending)
         }
@@ -117,6 +120,7 @@ struct ContentColumn: View {
         .quickLookPreview($model.quickLookURL, in: model.quickLookItems)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
+                JobsBar()
                 if model.launcher.isRunning { NowPlayingBar() }
                 if model.album.isActive || model.albumUnpackingID != nil {
                     AlbumBar()
@@ -265,7 +269,7 @@ struct LibraryRootReportView: View {
             ForEach(report.items) { item in
                 HStack(spacing: 10) {
                     Image(systemName: item.exists ? "checkmark" : (item.isRequired ? "xmark" : "minus"))
-                        .foregroundStyle(item.exists ? Theme.accent : (item.isRequired ? .red : Theme.textTertiary))
+                        .foregroundStyle(item.exists ? Theme.good : (item.isRequired ? Theme.bad : Theme.textTertiary))
                         .frame(width: 16)
                     Text(item.label)
                     Spacer()
@@ -360,6 +364,7 @@ struct NowPlayingBar: View {
                         }
                 }
                 Spacer()
+                Button("Show Log") { model.showLaunchLog(for: session) }
                 Button("Show Game Window") { model.launcher.bringToFront(session) }
                 Button("Quit Game") { model.launcher.terminate(session) }
             }
