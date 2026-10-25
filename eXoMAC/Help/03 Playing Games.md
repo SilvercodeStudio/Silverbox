@@ -4,7 +4,9 @@ Select a game and press Play, press Command-Return, or double-click its box.
 
 ## Installing
 
-The first time you play a game, Autoexec.Mac unpacks its archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress.
+An eXo game must be installed before it plays the first time. Press Install… in the inspector, or Play, and confirm. Autoexec.Mac unpacks the game's archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress.
+
+Installing runs in the background, so you can keep browsing and install other games at the same time. A bar at the bottom of the window shows each installation: its progress, the step under way and the time it has taken. **Cancel** stops the installation and removes the half-made game folder. The Dock icon shows the progress too. When an installation finishes while you work in another app, the Dock icon bounces and a notification says so; macOS asks once whether Autoexec.Mac may show notifications. With "Play when installation finishes" on, the game starts by itself. If an installation fails, its row stays in the bar with the reason until you dismiss it.
 
 ## The launch options dialog
 

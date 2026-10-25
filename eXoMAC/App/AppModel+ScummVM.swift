@@ -41,6 +41,7 @@ extension AppModel {
     /// The ScummVM that can run the game: the release build, else the daily
     /// build when one is set and has it. The release build when neither does.
     func scummVMInstallation(for game: Game, variant: LaunchVariant?) -> EmulatorInstallation? {
+        _ = emulatorCheck
         guard let release = settings.emulatorInstallation(.scummVM), release.exists else {
             return settings.emulatorInstallation(.scummVMDaily)
         }

@@ -19,6 +19,12 @@ What changed in each version of Autoexec.Mac.
   installed, which emulator runs it, and whether that emulator is on this
   Mac. The sidebar counts the games in each row, shows each collection's size
   and whether it is read-only, and names the local data folder.
+- **A welcome screen** until you add a collection: it explains the two kinds
+  of folder you can add (an eXo download as it came, or a collection that is
+  already set up) and lists the emulators each eXo pack needs, each found or
+  with a link to get it.
+- Settings, the welcome screen and the details panel notice an emulator you
+  install while the app is open.
 - Click a column header in the list to sort by it.
 - The About window shows the acknowledgments and the license.
 - Box art and screenshots named after the game's file, as Skraper names
@@ -27,6 +33,9 @@ What changed in each version of Autoexec.Mac.
 ### Changed
 
 - Views with nothing to show say why, in the system's style.
+- A warning in the details panel is a short label; rest the pointer on it
+  for the whole reason, which also shows under Mac emulator. Buttons and
+  versions that cannot be used say why in the same way.
 
 ### Fixed
 

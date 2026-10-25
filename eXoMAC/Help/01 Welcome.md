@@ -4,11 +4,13 @@ Autoexec.Mac is a front-end for the eXoDOS and eXoWin9x game preservation collec
 
 The games, media and emulators are not part of Autoexec.Mac. You need:
 
-- An eXoDOS collection (the full set, or the Lite set with games you have downloaded).
-- DOSBox Staging, and optionally DOSBox-X.
-- For eXoWin9x games: DOSBox-X, and 86Box for the games that need it.
+- An eXo collection: an eXoDOS download as it came (Autoexec.Mac sets it up, as eXo's setup does on Windows), or a collection already set up. The other eXo packs and LaunchBox libraries work too.
+- DOSBox Staging for eXoDOS games, and DOSBox-X for eXoWin9x games and the eXoDOS games made for it.
+- For the other packs: 86Box (about thirty eXoWin9x games), ScummVM (eXoScummVM), Spatterlight (eXoIF) and RetroArch (eXoIF's 8-bit versions, and consoles).
 
-This is version 0.1. Expect rough edges, and please report what you find.
+Until you add a collection, the window shows these two steps, with each emulator found or a link to get it. Emulators you install while Autoexec.Mac is open show up without a restart.
+
+This is an early version. Expect rough edges, and please report what you find.
 
 ## Credits
 

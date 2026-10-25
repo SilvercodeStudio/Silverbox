@@ -103,7 +103,7 @@ struct ContentColumn: View {
         Group {
             switch model.loadState {
             case .idle:
-                LibrarySetupView(error: nil)
+                WelcomeView()
             case .failed(let message):
                 LibrarySetupView(error: message)
             case .loading(let progress):
@@ -207,9 +207,9 @@ struct LoadingView: View {
     }
 }
 
-/// Shown until an eXoDOS folder is chosen, or when loading it fails.
+/// Shown when loading the collections fails: why, and what each one holds.
 struct LibrarySetupView: View {
-    let error: String?
+    let error: String
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
     @State private var showingPicker = false
@@ -219,15 +219,12 @@ struct LibrarySetupView: View {
             Image(systemName: "externaldrive.badge.questionmark")
                 .font(.system(size: 44))
                 .foregroundStyle(Theme.accent)
-            Text(error == nil ? "Add your first collection" : "The library could not be loaded")
+            Text("The library could not be loaded")
                 .font(.title2.weight(.semibold))
-            Text(
-                error
-                    ?? "Drop your eXoDOS folder here from the Finder, or pick it with the button. Any LaunchBox library folder that holds Data and Images works, and it can be read-only: games you install, saves and settings are kept in a local data folder on this Mac."
-            )
-            .multilineTextAlignment(.center)
-            .foregroundStyle(Theme.textSecondary)
-            .frame(maxWidth: 440)
+            Text(error)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: 440)
             ForEach(Array(model.rootReports.values), id: \.root.url) { report in
                 LibraryRootReportView(report: report)
                     .frame(maxWidth: 480)
@@ -242,15 +239,6 @@ struct LibrarySetupView: View {
                     SettingsState.shared.show(tab: .library)
                     openSettings()
                 }
-            }
-            if error == nil {
-                Text(
-                    "Installed games, soundtracks and caches go to the local data folder, \(model.localStore.directory.path). To keep them on another drive, choose that folder in Library Settings before you install anything."
-                )
-                .font(.caption)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Theme.textTertiary)
-                .frame(maxWidth: 440)
             }
         }
         .padding(40)

@@ -261,7 +261,18 @@ new entry after the version is tagged; the version is the app target's
   a tone: `Theme.good`, `.warning` or `.bad`, kept apart from the accent.
   Use these tones for status, never `.red` or `.orange`. `GameStatusChips`
   in the inspector header says whether the game is installed, which
-  emulator runs it and whether that emulator is present.
+  emulator runs it and whether that emulator is present. Keep chip text to
+  a few words and put the whole reason in its `help`; a control that is
+  disabled says why in `.help` too.
+- Emulator status. `AppModel.checkEmulators()` records what is installed
+  (`EmulatorCheck`) at start, when the app comes to the front and every two
+  seconds while Settings › Emulators or `WelcomeView` is open
+  (`.watchingForEmulators()`). Views ask `model.emulatorInstallation(_:)`,
+  `model.retroArchSetup` or `emulatorResolver()`, which read the check, not
+  `settings.emulatorInstallation(_:)`, so they redraw when it changes.
+- First start. With no collection, the content column shows `WelcomeView`:
+  Add Collection (`addFolder` takes an eXo download or a set-up
+  collection) and the emulators each pack needs.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers

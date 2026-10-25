@@ -143,7 +143,9 @@ Done:
 
 - Status chips, the launch log sheet, background jobs, sidebar counts,
   empty states, list header sorting, About with Acknowledgments and the
-  License (2026-10-23).
+  License (2026-10-23); the welcome view with emulator status, short
+  warning chips with help tags, help tags on disabled controls, and
+  emulators noticed while the app is open (2026-10-25).
 - `LICENSE` (MIT; the name and the icon artwork excluded), `CHANGELOG.md`,
   this file, `make lint`, `make install-app` (registers the app with Launch
   Services), the copyright and the Games category in the app's Info.plist,
@@ -157,8 +159,6 @@ Not yet:
 - A release script shared with Silverside: archive, Developer ID signing,
   notarization, stapling, a DMG.
 - A CI workflow for `swift test` and `make lint`.
-- Settings could watch for emulators that the user installs while it is
-  open, as Silverside does for `lame` (nice to have).
 
 ## Later
 

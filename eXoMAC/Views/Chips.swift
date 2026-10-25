@@ -11,6 +11,9 @@ struct Chip: View {
     var systemImage: String?
     /// A small spinner in place of the image, for work under way.
     var isWorking = false
+    /// The whole story, shown when the pointer rests on the chip: why
+    /// something is missing, and what to do.
+    var help: String?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -28,6 +31,7 @@ struct Chip: View {
         .padding(.horizontal, 9)
         .padding(.vertical, 3)
         .background(background, in: Capsule())
+        .help(help ?? "")
     }
 
     private var foreground: Color {
@@ -96,27 +100,38 @@ struct GameStatusChips: View {
                 resolved.isReady
                     ? Chip(text: resolved.summary, tone: .good, systemImage: "cpu")
                     : Chip(
-                        text: resolved.problem ?? "No emulator", tone: .warning, systemImage: "exclamationmark.triangle"
-                    ))
+                        text: problemLabel(resolved), tone: .warning, systemImage: "exclamationmark.triangle",
+                        help: resolved.problem))
         case .scummVM:
-            if let installation = model.scummVMInstallation(for: game, variant: nil) {
+            if let installation = model.scummVMInstallation(for: game, variant: nil), installation.exists {
                 chips.append(Chip(text: installation.kind.displayName, tone: .good, systemImage: "cpu"))
             } else {
-                chips.append(Chip(text: "ScummVM missing", tone: .warning, systemImage: "exclamationmark.triangle"))
+                chips.append(
+                    Chip(
+                        text: "ScummVM missing", tone: .warning, systemImage: "exclamationmark.triangle",
+                        help: Self.missingHelp(.scummVM)))
             }
         case .interactiveFiction:
             if installed {
                 let variants = model.launchVariants(for: game)
                 if let variant = model.preferredVariant(for: game, in: variants), let reason = variant.unsupportedReason
                 {
-                    chips.append(Chip(text: reason, tone: .warning, systemImage: "exclamationmark.triangle"))
+                    chips.append(
+                        Chip(
+                            text: "Cannot start yet", tone: .warning, systemImage: "exclamationmark.triangle",
+                            help: "\(variant.title): \(reason)."))
                 } else {
                     chips.append(emulatorChip(model.emulatorKind(for: game)))
                 }
             }
         case .windowsProgram:
             if game.eXoPack != nil {
-                chips.append(Chip(text: "Cannot start on the Mac yet", tone: .warning, systemImage: "pc"))
+                chips.append(
+                    Chip(
+                        text: "Cannot start on the Mac yet", tone: .warning, systemImage: "pc",
+                        help:
+                            "\(game.eXoPack?.displayName ?? "These") games need Windows programs that Autoexec.Mac cannot run yet."
+                    ))
             }
         default:
             if game.isDOSGame || game.launchKind == .windows9x {
@@ -131,9 +146,23 @@ struct GameStatusChips: View {
 
     /// The emulator by name, in good tone when its executable is present.
     private func emulatorChip(_ kind: EmulatorKind) -> Chip {
-        if model.settings.emulatorInstallation(kind)?.exists == true {
+        if model.emulatorInstallation(kind)?.exists == true {
             return Chip(text: kind.displayName, tone: .good, systemImage: "cpu")
         }
-        return Chip(text: "\(kind.displayName) missing", tone: .warning, systemImage: "exclamationmark.triangle")
+        return Chip(
+            text: "\(kind.displayName) missing", tone: .warning, systemImage: "exclamationmark.triangle",
+            help: Self.missingHelp(kind))
+    }
+
+    /// A few words for a platform whose emulator cannot start the game; the
+    /// chip's help has the whole reason.
+    private func problemLabel(_ resolved: ResolvedEmulatorAssignment) -> String {
+        guard let kind = resolved.assignment?.emulator else { return "No Mac emulator" }
+        if model.emulatorInstallation(kind)?.exists != true { return "\(kind.displayName) missing" }
+        return kind == .retroArch ? "RetroArch core missing" : "\(kind.displayName) not ready"
+    }
+
+    static func missingHelp(_ kind: EmulatorKind) -> String {
+        "\(kind.displayName) is not installed. Get it from \(kind.website), or choose it in Settings › Emulators."
     }
 }

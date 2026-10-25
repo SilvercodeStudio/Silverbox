@@ -143,6 +143,9 @@ struct LibrarySettingsView: View {
                     }
                     Button("Rescan All") { model.reloadLibrary(clearMediaCache: true) }
                         .disabled(model.collections.isEmpty)
+                        .help(
+                            model.collections.isEmpty
+                                ? "Add a collection first" : "Read every collection again, with its images and media")
                 }
                 Text(
                     "A collection is an eXoDOS install or any LaunchBox library folder; you can also drop one here from the Finder. Rescan after you add or update packs."
@@ -308,9 +311,9 @@ struct EmulatorSettingsView: View {
             ForEach(EmulatorKind.dosBox) { kind in
                 Section(kind.displayName) {
                     EmulatorPathRow(kind: kind, picking: $picking)
-                    if kind == .dosboxStaging, let installation = model.settings.emulatorInstallation(kind) {
+                    if kind == .dosboxStaging, model.emulatorInstallation(kind) != nil {
                         Text(
-                            EmulatorCapabilities.fluidSynthAvailable(for: installation)
+                            model.fluidSynthAvailable
                                 ? "FluidSynth is available for General MIDI with the eXoDOS Sound Canvas SoundFont."
                                 : "FluidSynth is not installed, so General MIDI games use the macOS synthesizer. Install it with Homebrew (brew install fluid-synth) for the eXoDOS SoundFont."
                         )
@@ -375,11 +378,12 @@ struct EmulatorSettingsView: View {
         .fileImporter(isPresented: $pickingCores, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { model.settings.retroArchCoresPath = url.path }
         }
+        .watchingForEmulators()
     }
 
     @ViewBuilder
     private var retroArchCoresRow: some View {
-        let setup = model.settings.retroArchSetup
+        let setup = model.retroArchSetup
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Cores folder").font(.subheadline)
@@ -412,7 +416,7 @@ struct EmulatorPathRow: View {
 
     var body: some View {
         @Bindable var model = model
-        let installation = model.settings.emulatorInstallation(kind)
+        let installation = model.emulatorInstallation(kind)
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(installation?.executableURL.path ?? "Not found")
@@ -445,7 +449,7 @@ struct PlatformAssignmentsView: View {
 
     var body: some View {
         let resolver = model.emulatorResolver()
-        let cores = model.settings.retroArchSetup?.installedCores() ?? []
+        let cores = model.retroArchSetup?.installedCores() ?? []
         if model.romPlatforms.isEmpty {
             Text("No console, computer or arcade platforms are loaded. Add a LaunchBox library in the Library tab.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -657,5 +661,26 @@ struct AppIconChoice: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+extension View {
+    /// Looks for the emulators every two seconds while the view is shown, so
+    /// one installed meanwhile shows up without a restart.
+    func watchingForEmulators() -> some View {
+        modifier(EmulatorWatcher())
+    }
+}
+
+private struct EmulatorWatcher: ViewModifier {
+    @Environment(AppModel.self) private var model
+
+    func body(content: Content) -> some View {
+        content.task {
+            while !Task.isCancelled {
+                model.checkEmulators()
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
     }
 }

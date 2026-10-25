@@ -71,6 +71,7 @@ struct InstallSheet: View {
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(plan?.archiveExists != true)
+                .help(plan?.archiveExists == true ? "" : "The game's archive is not in the collection")
             }
         }
         .padding(20)
@@ -297,6 +298,9 @@ struct UninstallSheet: View {
                     .truncationMode(.middle)
                 Toggle("Back up saved games and changed files first", isOn: $backup)
                     .disabled(!plan.archiveExists)
+                    .help(
+                        plan.archiveExists
+                            ? "" : "The game's archive is not in the collection, so changed files cannot be found")
                 Text(
                     backup && plan.archiveExists
                         ? "Only files that are new or changed since installation are saved, to \(plan.saveBackupURL.path)."
@@ -394,6 +398,11 @@ struct LaunchOptionsSheet: View {
                             }
                         }
                         .pickerStyle(.radioGroup)
+                        if let reason = selectedVariant?.unplayableReason {
+                            Label(reason, systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(Theme.warning)
+                        }
                         if isScummVM, let note = model.scummVMNote(for: game, variant: selectedVariant) {
                             Text(note).font(.caption).foregroundStyle(Theme.textSecondary)
                         }
@@ -478,6 +487,7 @@ struct LaunchOptionsSheet: View {
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(!pending.configureOnly && selectedVariant?.isPlayable == false)
+                .help(pending.configureOnly ? "" : selectedVariant?.unplayableReason ?? "")
             }
             .padding(16)
         }
@@ -528,6 +538,7 @@ struct LaunchOptionsSheet: View {
             ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
         }
         .disabled(options.fullscreen)
+        .help(options.fullscreen ? "Full screen fills the display. Turn it off to choose a window size." : "")
         Picker("Aspect ratio correction", selection: $options.aspect) {
             ForEach(LaunchOptions.AspectMode.allCases) { Text($0.displayName).tag($0) }
         }
@@ -572,5 +583,12 @@ extension LaunchVariant {
         if needsWindowsHelper { return title + " (needs a Windows helper)" }
         if unsupportedReason != nil { return title + " (not supported on the Mac)" }
         return title
+    }
+
+    /// Why the version cannot be played, or nil when it can.
+    var unplayableReason: String? {
+        if needsWindowsHelper { return "This version needs a Windows helper program, which does not run on the Mac." }
+        if let unsupportedReason { return "This version cannot start: \(unsupportedReason)." }
+        return nil
     }
 }

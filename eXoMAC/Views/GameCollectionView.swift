@@ -477,6 +477,7 @@ struct GameContextMenu: View {
                         ForEach(variants) { variant in
                             Button(variant.title) { model.play(game, variant: variant) }
                                 .disabled(variant.needsWindowsHelper)
+                                .help(variant.unplayableReason ?? "")
                         }
                     }
                 }

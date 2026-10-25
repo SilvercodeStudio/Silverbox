@@ -25,6 +25,11 @@ final class AppModel {
             if settings.musicEnabled != oldValue.musicEnabled { updateMusic() }
             if settings.appIcon != oldValue.appIcon { applyAppIcon() }
             if settings.appearance != oldValue.appearance { applyAppearance() }
+            if settings.emulatorPaths != oldValue.emulatorPaths
+                || settings.retroArchCoresPath != oldValue.retroArchCoresPath
+            {
+                checkEmulators()
+            }
             if settings.sortOrder != oldValue.sortOrder || settings.sortAscending != oldValue.sortAscending
                 || settings.showHiddenGames != oldValue.showHiddenGames
             {
@@ -54,6 +59,10 @@ final class AppModel {
     private(set) var loadErrors: [UUID: String] = [:]
     /// Platforms whose games start in a console or arcade emulator.
     private(set) var romPlatforms: [RomPlatformSummary] = []
+    /// The emulators found on this Mac, from `checkEmulators()`. Views read
+    /// it through `emulatorInstallation(_:)` and the other lookups that
+    /// follow it, so they show an emulator installed while the app is open.
+    var emulatorCheck = EmulatorCheck()
 
     struct RomPlatformSummary: Identifiable, Hashable {
         let name: String
@@ -213,6 +222,7 @@ final class AppModel {
             [weak self] _ in
             MainActor.assumeIsolated { self?.applicationActiveChanged(true) }
         }
+        checkEmulators()
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
         }
@@ -784,7 +794,8 @@ final class AppModel {
     /// Weighs the user's platform choices, the libraries' `Emulators.xml`
     /// and what is installed on this Mac.
     func emulatorResolver() -> EmulatorAssignmentResolver {
-        EmulatorAssignmentResolver(
+        _ = emulatorCheck
+        return EmulatorAssignmentResolver(
             userAssignments: settings.platformEmulators, snapshots: library?.snapshots ?? [],
             installedKinds: settings.installedRomEmulators, retroArch: settings.retroArchSetup)
     }
@@ -1090,6 +1101,7 @@ final class AppModel {
     /// user paused stays paused.
     func applicationActiveChanged(_ active: Bool) {
         if active {
+            checkEmulators()
             guard musicPausedForBackground else { return }
             musicPausedForBackground = false
             updateMusic()

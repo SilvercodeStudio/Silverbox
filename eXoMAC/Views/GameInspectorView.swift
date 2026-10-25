@@ -173,6 +173,7 @@ struct PlayButtonRow: View {
                         ForEach(variants) { variant in
                             Button(variant.title) { model.play(game, variant: variant) }
                                 .disabled(variant.needsWindowsHelper)
+                                .help(variant.unplayableReason ?? "")
                         }
                     } label: {
                         Image(systemName: "chevron.down")
@@ -291,7 +292,7 @@ struct MetadataGrid: View {
                 if let title = resolved.launchBoxEmulatorTitle {
                     row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? ""))
                 }
-                row("Mac emulator", resolved.isReady ? resolved.summary : "Not ready")
+                row("Mac emulator", resolved.isReady ? resolved.summary : resolved.problem ?? "None")
             } else if game.launchKind == .soundtrack {
                 row("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
             } else if game.launchKind == .video {
@@ -316,7 +317,7 @@ struct MetadataGrid: View {
         if let value, !value.isEmpty {
             GridRow(alignment: .top) {
                 Text(label).foregroundStyle(Theme.textTertiary)
-                Text(value).textSelection(.enabled)
+                Text(value).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
