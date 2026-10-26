@@ -185,9 +185,13 @@ struct LibrarySettingsView: View {
                     ForEach(InstallLocation.allCases) { Text($0.displayName).tag($0) }
                 }
             }
+            Section("Game downloads") {
+                DownloaderStatus()
+            }
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+        .watchingForEmulators()
         .dropDestination(for: URL.self) { urls, _ in
             model.addDroppedFolders(urls)
         }
@@ -651,6 +655,28 @@ struct FluidSynthStatus: View {
             }
             .font(.caption)
         }
+    }
+}
+
+/// Whether aria2 is there to download the games a Lite collection leaves out.
+struct DownloaderStatus: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let downloader = model.torrentDownloader
+        VStack(alignment: .leading, spacing: 4) {
+            Label(
+                downloader.map { "aria2 ready: \($0.executable.path)" } ?? "aria2 not found",
+                systemImage: downloader == nil ? "exclamationmark.triangle" : "checkmark.circle.fill"
+            )
+            .foregroundStyle(downloader == nil ? Theme.warning : Theme.good)
+            Text(
+                "eXo's Lite editions leave out the game archives. When you install such a game, \(AppInfo.displayName) downloads it from the eXo torrent with aria2, as eXo does on Windows, and stops sharing when the download ends."
+                    + (downloader == nil ? " Install aria2 with Homebrew: brew install aria2." : "")
+            )
+            .foregroundStyle(.secondary)
+        }
+        .font(.caption)
     }
 }
 

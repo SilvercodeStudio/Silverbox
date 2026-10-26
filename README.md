@@ -58,9 +58,12 @@ and grab the torrent file for the eXo collection that you're
 interested in. Note: some of these collections, particularly
 eXoDOS, are very large and may take a long time to download.
 
-Note: the eXoDOS "Lite" download, which downloads games on demand, is
-not supported yet; use the full download. Support for on-demand downloads
-is planned.
+eXoDOS also comes as "Lite": about 6 GB instead of about 700 GB, because
+it leaves out the games and downloads each one when you install it.
+Silverbox does the same with [aria2](https://aria2.github.io/)
+(`brew install aria2`), from the eXoDOS torrent that Lite includes. The
+first download can take a minute or so to find other computers sharing the
+torrent; later ones start in seconds.
 
 Currently, Silverbox supports the following collections:
 
@@ -125,9 +128,11 @@ my close supervision and direction.
 
 - macOS 15 or later, on Apple silicon or Intel.
   - Building the app from source needs Xcode 27 or higher.
-- One or more eXo downloads, such as eXoDOS v6 (the full set; Lite is not
-  supported yet), eXoWin3x and eXoWin9x. Silverbox runs their setup itself, so a
-  Windows PC is not needed; a folder set up on Windows works too.
+- One or more eXo downloads, such as eXoDOS v6, eXoWin3x and eXoWin9x.
+  Silverbox runs their setup itself, so a Windows PC is not needed; a folder
+  set up on Windows works too.
+- For eXoDOS Lite, [aria2](https://aria2.github.io/) (`brew install aria2`),
+  which downloads each game when you install it.
 - The emulators for the packs you play; see [Emulators](#emulators). Most are
   optional: a game whose emulator is missing still shows, with its box art,
   manual and extras.
@@ -241,7 +246,6 @@ What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
 milestones, with what is done and what is not, are in
 [docs/internal/Milestones.md](docs/internal/Milestones.md).
 
-- On-demand game download / support for Lite
 - Launch console, computer and arcade games for real with RetroArch, Dolphin,
   MAME and Mednafen. The planner and the emulator assignments exist; nothing
   has been played yet.

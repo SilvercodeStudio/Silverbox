@@ -10,7 +10,10 @@ struct InstallSheet: View {
     @State private var restoreSaves = true
 
     var body: some View {
-        let plan = model.installer(for: game)?.plan(for: game)
+        let installer = model.installer(for: game)
+        let plan = installer?.plan(for: game)
+        let download = plan.flatMap { installer?.downloadPlan(for: $0) }
+        let blocker = Self.blocker(plan: plan, download: download, downloader: model.torrentDownloader)
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
                 BoxArtView(game: game, width: 56, maxPixelSize: 160)
@@ -36,13 +39,14 @@ struct InstallSheet: View {
                     if plan.archiveExists, let size = plan.archiveSize {
                         Text("Archive size: \(Formatters.bytes(size))").font(.caption).foregroundStyle(
                             Theme.textTertiary)
-                    } else if !plan.archiveExists {
-                        Label(
-                            "The archive is not present. This may be the Lite edition; downloading games is not supported yet.",
-                            systemImage: "exclamationmark.triangle"
-                        )
-                        .foregroundStyle(Theme.warning)
-                        .font(.caption)
+                    } else if let download {
+                        downloadSummary(download)
+                    }
+                    if let blocker {
+                        Label(blocker, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(Theme.warning)
+                            .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     if plan.updateArchiveURL != nil {
                         Text("An eXoDOS update for this game will be applied after unpacking.").font(.caption)
@@ -56,26 +60,65 @@ struct InstallSheet: View {
                     isOn: $restoreSaves)
             }
             Toggle("Play when installation finishes", isOn: $playAfter)
-            Text("Unpacking runs in the background; the bar at the bottom of the window shows its progress.")
-                .font(.caption)
-                .foregroundStyle(Theme.textTertiary)
+            Text(
+                download == nil
+                    ? "Unpacking runs in the background; the bar at the bottom of the window shows its progress."
+                    : "Downloading and unpacking run in the background; the bar at the bottom of the window shows their progress."
+            )
+            .font(.caption)
+            .foregroundStyle(Theme.textTertiary)
             HStack {
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Install") {
+                Button(download == nil ? "Install" : "Download and Install") {
                     model.startInstall(
                         game, playAfter: playAfter, restoreSaves: restoreSaves && plan?.saveArchiveURL != nil)
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(plan?.archiveExists != true)
-                .help(plan?.archiveExists == true ? "" : "The game's archive is not in the collection")
+                .disabled(blocker != nil)
+                .help(blocker ?? "")
             }
         }
         .padding(20)
         .frame(width: 460)
+        // aria2 installed while the sheet is open turns the button on.
+        .watchingForEmulators()
+    }
+
+    private func downloadSummary(_ download: DownloadPlan) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(
+                download.extrasBytes > 0
+                    ? "Download: \(Formatters.bytes(download.totalBytes)) (the game \(Formatters.bytes(download.gameBytes)), its manual, music and extras \(Formatters.bytes(download.extrasBytes)))"
+                    : "Download: \(Formatters.bytes(download.totalBytes))"
+            )
+            .font(.caption)
+            Text(
+                "The collection does not hold this game's archive, as in eXo's Lite editions. \(AppInfo.displayName) downloads it from the eXo torrent with aria2, as eXo does on Windows, and stops sharing when the download ends."
+            )
+            .font(.caption)
+            .foregroundStyle(Theme.textTertiary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Why the game cannot be installed now, or nil when it can.
+    static func blocker(plan: InstallPlan?, download: DownloadPlan?, downloader: TorrentDownloader?) -> String? {
+        guard let plan else { return "This item does not install from an archive." }
+        if plan.archiveExists { return nil }
+        guard let download else {
+            return "The game's archive is not in the collection, and no eXo torrent in it lists the archive."
+        }
+        if !download.isWritable {
+            return "The collection is read-only, so the download has nowhere to go."
+        }
+        if downloader == nil {
+            return "Downloading needs aria2. Install it with Homebrew: brew install aria2."
+        }
+        return nil
     }
 }
 

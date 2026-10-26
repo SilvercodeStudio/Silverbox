@@ -24,8 +24,8 @@ the app as a collection of classic Mac games.
 
 - `Sources/SilverboxCore/` — the portable core: Foundation only, no AppKit/SwiftUI.
   LaunchBox XML parsing, library snapshot and queries, media lookup, DOSBox
-  config translation, launch planning, installing, user state, music
-  decoders. Every type here is marked `nonisolated` because the app target
+  config translation, launch planning, installing, Lite game downloads,
+  user state, music decoders. Every type here is marked `nonisolated` because the app target
   uses MainActor as the default isolation; the package build enforces the
   same rule. Anything the app uses must be `public`.
 - `Sources/CStbVorbis/`, `Sources/CXmpLite/` — vendored C decoders (Ogg
@@ -113,7 +113,9 @@ new entry after the version is tagged; the version is the app target's
   for games unpacked inside a read-only library, copies of eXoWin9x game disks,
   and the Windows 98 differencing disks under `emulators/`), `Soundtracks/`
   (albums unpacked from the library's zips), `Launch/`, `Logs/`, `MediaIndex/`,
-  `user-library.json`. "Install in place" (into `eXo/eXoDOS`) is an option.
+  `BitTorrent/` (aria2's DHT table), `user-library.json`. "Install in place"
+  (into `eXo/eXoDOS`) is an option. Game downloads are the one exception:
+  they go into the collection, as on Windows (see Lite downloads).
 - Emulators. `EmulatorKind` covers DOSBox Staging and DOSBox-X for eXoDOS
   games, 86Box (`.box86`) for some eXoWin9x games, plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
   arcade platforms (`Game.launchKind` tells them apart). Each platform's
@@ -247,10 +249,36 @@ new entry after the version is tagged; the version is the app target's
   open `LaunchLogSheet`. A non-zero exit opens it by itself. "Copy as
   Markdown" builds a `LaunchReport` (core, `LaunchReport.swift`) from the
   session, the config at `EmulatorLaunch.configURL` and the log's end.
+- Lite downloads. eXoDOS Lite has no game zips or GameData zips; it ships
+  the full collection's torrent in `eXo/util/aria/` (`LibraryRoot.torrentURLs`),
+  which setup unpacks from `OPTDOS.zip` inside `util.zip`; a full download
+  has it too. `TorrentFileList` (core,
+  `Download/Torrent.swift`, with a small bencode reader) numbers the files
+  as aria2's `--select-file` does. `GameInstaller.downloadPlan(for:)` finds
+  the missing `eXo/<pack>/<name>.zip` and its
+  `Content/GameData/<pack>/<name>.zip` in it, by the same paths the
+  installer looks for; the files go to those paths in the collection, so
+  the collection must be writable. `TorrentDownloader` runs aria2c (an
+  external program from Homebrew, found by `discover()`, never bundled)
+  with eXo's flags (`--seed-time=0`), each file written as `<number>.zip`
+  in `eXo/DOWNLOAD/<torrent>-<numbers>/` and moved into place when done;
+  a stopped download keeps that folder and its `.aria2` control file and
+  resumes. Progress comes from the console readout
+  (`--human-readable=false`), whose totals count 8 MB pieces, so the app
+  shows only its fraction of the plan's size. Many of the torrent's
+  trackers are dead and aria2 announces to one at a time, so the first
+  download can take a minute to find peers; the DHT table in
+  `BitTorrent/dht.dat` (with `dht.transmissionbt.com` as the entry point)
+  makes later ones start in seconds. `plan(afterDownloading:for:)` unpacks
+  a downloaded GameData zip that the plan would not otherwise unpack.
+  `AppModel+Downloads` runs one download at a time (`DownloadGate`); the
+  install sheet says why a download cannot start.
 - Background jobs. `InstallRun` (observable) drives one installation:
-  `AppModel.startInstall` runs `GameInstaller.install` with its progress
+  `AppModel.startInstall` downloads a missing archive first (see Lite
+  downloads), then runs `GameInstaller.install` with its progress
   closure, `JobsBar` shows the runs above the now-playing bar, Cancel stops
-  the unzip and removes the half-made folder, `DockProgress` draws the mean
+  the download (which resumes on the next try) or the unzip (and removes
+  the half-made folder), `DockProgress` draws the mean
   progress on the Dock tile, and `JobNotifier` bounces and notifies when a
   job finishes while the app is in the background. Setup reports through
   the same two services.
@@ -281,9 +309,10 @@ new entry after the version is tagged; the version is the app target's
   disabled says why in `.help` too.
 - Emulator status. `AppModel.checkEmulators()` records what is installed
   (`EmulatorCheck`) at start, when the app comes to the front and every two
-  seconds while Settings › Emulators, Settings › Display & Sound or
-  `WelcomeView` is open (`.watchingForEmulators()`). The check includes
-  FluidSynth for DOSBox Staging (`EmulatorCapabilities`): built into the
+  seconds while Settings › Library, › Emulators, › Display & Sound,
+  `WelcomeView` or the install sheet is open (`.watchingForEmulators()`).
+  It also finds aria2 (`model.torrentDownloader`, shown by
+  `DownloaderStatus`). The check includes FluidSynth for DOSBox Staging (`EmulatorCapabilities`): built into the
   executable since 0.83 (found by scanning it, cached until the file
   changes), else a `libfluidsynth` library in the usual folders;
   `FluidSynthStatus` shows it. Views ask `model.emulatorInstallation(_:)`,
@@ -292,7 +321,7 @@ new entry after the version is tagged; the version is the app target's
 - First start. With no collection, the content column shows `WelcomeView`,
   under the same `CRTHero` band as the About window:
   Add Collection (`addFolder` takes an eXo download or a set-up
-  collection) and the emulators each pack needs.
+  collection), the emulators each pack needs, and aria2 for eXoDOS Lite.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers
@@ -343,9 +372,14 @@ new entry after the version is tagged; the version is the app target's
   `LaunchSmoke` tests start eXoDOS games in DOSBox Staging and boot Windows 98
   in DOSBox-X and 86Box. Games confirmed by the user: Marathon 2 (eXoWin9x,
   DOSBox-X) and Locus (eXoWin9x, 86Box); eXoWin3x games boot to Windows 3.1.
+  `downloadsFromTheEXoDOSTorrent` downloads a game from the eXoDOS torrent
+  with aria2, and `eXoDOSTorrentListsEveryGameArchive` checks the
+  torrent's paths against the installer's. eXoDOS 6.04 Lite (the user's
+  download): set up on the Mac, then ZZT's Revenge downloaded, installed and
+  played in the app (2026-10-26); its torrent lists all 7,666 games.
 - **Not yet verified:** launches of console, computer and arcade games
-  (RetroArch, Dolphin, MAME, Mednafen), eXoIF's RetroArch versions, and
-  eXoDOS Lite downloads. Say so when a change touches
+  (RetroArch, Dolphin, MAME, Mednafen) and eXoIF's RetroArch versions.
+  Say so when a change touches
   these, and do not describe them as working in the README or the help.
 - The real-library tests check values read from eXo's own files. Do not
   change them to make a test pass.
@@ -376,9 +410,12 @@ new entry after the version is tagged; the version is the app target's
   Both require macOS 15 Sequoia. Do not use APIs from later releases without
   `if #available` (as `MenuMusicPlayer` does for macOS 27). The tests run
   only on the current macOS here, so read the availability of each new API.
-- **Network:** the app makes no network requests. Ask before adding any (an
-  update check, downloads for eXoDOS Lite, scraping), and keep them polite:
-  a descriptive User-Agent, a cache, and the service's rate limit.
+- **Network:** the app's only network use is the Lite game download, which
+  aria2 does over BitTorrent when the user installs such a game, sharing
+  nothing once the files are complete. Ask before adding any other (an
+  update check, scraping), and keep it polite: a descriptive User-Agent, a
+  cache, and the service's rate limit. The website's privacy page and FAQ
+  describe what the app sends; keep them in step.
 
 ## Debugging aids
 
@@ -396,7 +433,9 @@ new entry after the version is tagged; the version is the app target's
   in its Configure (save only) mode; `-openWindow about` (or `help`, or
   `settings` with `-settingsTab emulators`) opens that window at start.
   `-keyPresses "right down space"` presses keys (names like `up`, `return`,
-  `opt-right`, `cmd-y`) before the screenshot, to test navigation;
+  `opt-right`, `cmd-y`) before the screenshot, to test navigation, and
+  `-screenshotSettle 20` waits that many seconds after them (1.5 by
+  default), for a job they start, such as Return on the install sheet;
   `-helpPage 07` opens that help page. If the last session closed the main
   window, macOS restores no window and the screenshot never comes; add
   `-ApplePersistenceIgnoreState YES`. Example:
@@ -421,5 +460,8 @@ new entry after the version is tagged; the version is the app target's
   games in DOSBox Staging for a few seconds and checks the emulator log, then
   boots Windows 98 for an eXoWin9x game in DOSBox-X and one in 86Box
   (`SILVERBOX_86BOX=<executable>` when 86Box is not in /Applications).
+- `SILVERBOX_DOWNLOAD_SMOKE=1 swift test --filter DownloadTests` downloads
+  ZZT's Revenge (2 MB) from the mounted library's eXoDOS torrent with aria2
+  into a temporary folder: a real BitTorrent download.
 - Saved media indexes live in `MediaIndex/` under the local data folder;
   "Rescan Library" deletes them.

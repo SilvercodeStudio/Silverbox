@@ -24,6 +24,10 @@ Set the emulator's location in Settings › Emulators: DOSBox Staging, DOSBox-X,
 
 If a General MIDI game sounds thin or different from Windows, check the line under General MIDI in Settings › Display & Sound. When it says DOSBox Staging has no FluidSynth, the game plays through the macOS synthesizer. Update to DOSBox Staging 0.83 or later, which has FluidSynth built in, or install FluidSynth with Homebrew (`brew install fluid-synth`). A game set up for Sound Blaster or AdLib music does not use MIDI at all; choose General MIDI in the game's setup if it offers it. See Playing Games › Music in games.
 
+## A game download stays at "Looking for peers"
+
+aria2 asks the torrent's trackers for other computers that share the game, one tracker at a time. Some of them no longer answer, so the first download can wait a minute or more before it starts; aria2 keeps a list of peers in the local data folder's `BitTorrent` folder, and later downloads start sooner. If a download does not start after several minutes, Cancel it and install the game again: what was downloaded is kept. A firewall that blocks aria2 can also stop it; allow incoming connections for aria2c if macOS asks.
+
 ## A console game says its core is not installed
 
 RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder Silverbox reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.

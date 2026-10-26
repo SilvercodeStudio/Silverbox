@@ -4,7 +4,7 @@ Silverbox is a Mac front-end for the eXo game preservation collections: eXoDOS, 
 
 The games, media and emulators are not part of Silverbox. You need:
 
-- An eXo collection: a download as it came (Silverbox sets it up, as eXo's setup does on Windows), or a collection already set up. eXoDOS Lite, which downloads games on demand, is not supported yet.
+- An eXo collection: a download as it came (Silverbox sets it up, as eXo's setup does on Windows), or a collection already set up. eXoDOS Lite leaves out the games; Silverbox downloads each one when you install it, with aria2 (`brew install aria2`).
 - DOSBox Staging for eXoDOS, eXoWin3x and eXoDemoScene games, and DOSBox-X for eXoWin9x games and the DOS games that eXo runs in DOSBox-X.
 - For the other packs: 86Box (about thirty eXoWin9x games), ScummVM (eXoScummVM), Spatterlight (eXoIF) and RetroArch (eXoIF's 8-bit versions, and consoles). eXoAppleIIGS games can be browsed and installed, but not played yet.
 

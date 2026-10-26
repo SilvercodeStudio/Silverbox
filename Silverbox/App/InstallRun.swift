@@ -23,6 +23,9 @@ final class InstallRun: Identifiable {
     private(set) var fraction: Double?
     private(set) var detail: String?
     private(set) var log: [String] = []
+    /// True while the run downloads the game's archive, and after a
+    /// download that stopped; a stopped download resumes on the next try.
+    var isDownloading = false
     @ObservationIgnored var task: Task<Void, Never>?
 
     init(game: Game) {
@@ -41,6 +44,30 @@ final class InstallRun: Identifiable {
         detail =
             progress.filesTotal.map { "\(progress.filesDone.formatted()) of \($0.formatted()) files" }
             ?? (progress.filesDone > 0 ? "\(progress.filesDone.formatted()) files" : nil)
+    }
+
+    /// Reports a download of `totalBytes`: how much is done, the speed
+    /// and the peers. aria2 counts whole torrent pieces, which can be far
+    /// more than a small game's files, so only its fraction is used.
+    func apply(_ progress: DownloadProgress, totalBytes: Int64) {
+        let looking = progress.connections == 0 && progress.bytesDone == 0
+        let stage = looking ? "Looking for peers" : "Downloading"
+        if stage != self.stage {
+            self.stage = stage
+            add(stage)
+        }
+        fraction = progress.fraction
+        guard !looking, let fraction = progress.fraction else {
+            detail = nil
+            return
+        }
+        let done = Int64(Double(totalBytes) * fraction)
+        var parts = ["\(Formatters.bytes(done)) of \(Formatters.bytes(totalBytes))"]
+        if progress.bytesPerSecond > 0 { parts.append("\(Formatters.bytes(progress.bytesPerSecond))/s") }
+        if progress.connections > 0 {
+            parts.append("\(progress.connections) peer\(progress.connections == 1 ? "" : "s")")
+        }
+        detail = parts.joined(separator: " · ")
     }
 
     func finish(_ phase: Phase) {

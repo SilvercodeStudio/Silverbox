@@ -44,7 +44,10 @@ private struct JobRow: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Button("Cancel") { run.cancel() }
-                    .help("Stop unpacking; the game folder is removed")
+                    .help(
+                        run.isDownloading
+                            ? "Stop the download; it resumes where it stopped when you install the game again"
+                            : "Stop unpacking; the game folder is removed")
             } else {
                 Button("Dismiss") { model.dismissInstallRun(run) }
             }
@@ -85,7 +88,7 @@ private struct JobRow: View {
         switch run.phase {
         case .running: [run.stage, run.detail].compactMap { $0 }.joined(separator: " · ")
         case .finished: "Ready to play"
-        case .cancelled: "Nothing was kept"
+        case .cancelled: run.isDownloading ? "The download resumes on the next try" : "Nothing was kept"
         case .failed(let message): message
         }
     }

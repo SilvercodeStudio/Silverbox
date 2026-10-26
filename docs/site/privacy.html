@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy — Silverbox</title>
-  <meta name="description" content="What Silverbox and getsilverbox.app send, and what they keep. No account, no analytics, no network requests from the app.">
+  <meta name="description" content="What Silverbox and getsilverbox.app send, and what they keep. No account, no analytics, and no network use except the game downloads you ask for.">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#14100b" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#e6dccb" media="(prefers-color-scheme: light)">
@@ -46,8 +46,8 @@
     <section class="page-band" aria-labelledby="page-title">
       <div class="wrap">
         <span class="sb-eyebrow">Privacy</span>
-        <h1 id="page-title" class="sb-display sb-crt-ink page-title">No account. No analytics. No network.</h1>
-        <p class="lead">Silverbox works with the files on your Mac, and sends nothing anywhere.</p>
+        <h1 id="page-title" class="sb-display sb-crt-ink page-title">No account. No analytics.</h1>
+        <p class="lead">Silverbox works with the files on your Mac, and sends nothing about you anywhere.</p>
       </div>
     </section>
   </div>
@@ -55,7 +55,9 @@
   <main id="main" class="gutter">
     <div class="prose">
       <h2>The app</h2>
-      <p>Silverbox has no account, no sign-in, and no analytics. It makes no network requests: it does not send reports about how you use it, it does not check for updates on its own, and it does not fetch metadata or artwork. Everything it shows comes from the collections you add.</p>
+      <p>Silverbox has no account, no sign-in, and no analytics. It does not send reports about how you use it, it does not check for updates on its own, and it does not fetch metadata or artwork. Everything it shows comes from the collections you add.</p>
+      <h2>Game downloads</h2>
+      <p>The eXoDOS Lite collection leaves out the games. When you install one of them, Silverbox starts <a href="https://aria2.github.io/">aria2</a>, a separate program you install, to download that game from eXo's torrent over BitTorrent. This is the only time the app uses the network, and only when you ask. As with any BitTorrent program, the torrent's trackers and the other computers sharing it see your IP address and which files you download. aria2 stops sharing as soon as your download is complete, and keeps a list of peers on your Mac so the next download starts sooner.</p>
       <p>Everything it writes stays on your Mac: the settings, your favorites and play history, and the local data folder with installed games, save backups, edited configs, launch logs and caches. A launch report (Copy as Markdown in the launch log) goes to the clipboard, for you to paste into a bug report if you choose.</p>
       <p>Some things open other programs: the emulators, which Silverbox starts to play a game, and your web browser, when you click a link such as a game's Wikipedia article or an emulator's website. What those programs do is up to them and their own privacy policies.</p>
 

@@ -115,10 +115,10 @@
           <h2 id="how-title" class="sb-display section-title">Set up once, then play.</h2>
           <p>Silverbox runs eXo's setup itself, so you don't need a Windows PC. A collection already set up on Windows works too.</p>
           <ol class="sb-steps">
-            <li class="sb-step"><span class="sb-step__num">1</span><h3 class="sb-step__title">Download an eXo collection</h3><p class="sb-step__text">Get the torrent for eXoDOS or another pack from <a href="https://www.retro-exo.com/index2.html">retro-exo.com</a>, and open it in a BitTorrent client such as qBittorrent or Transmission. Use the full download for now; the larger packs take a while.</p></li>
+            <li class="sb-step"><span class="sb-step__num">1</span><h3 class="sb-step__title">Download an eXo collection</h3><p class="sb-step__text">Get the torrent for eXoDOS or another pack from <a href="https://www.retro-exo.com/index2.html">retro-exo.com</a>, and open it in a BitTorrent client such as qBittorrent or Transmission. The larger packs take a while: the full eXoDOS is about 700 GB. eXoDOS Lite is about 6 GB, because it leaves out the games; Silverbox downloads each one when you install it.</p></li>
             <li class="sb-step"><span class="sb-step__num">2</span><h3 class="sb-step__title">Add it to Silverbox</h3><p class="sb-step__text">Drag the folder onto the window. Silverbox asks whether to unpack into the download itself, as on Windows, or into a separate local folder that leaves the download as it came.</p></li>
             <li class="sb-step"><span class="sb-step__num">3</span><h3 class="sb-step__title">Install the emulators</h3><p class="sb-step__text">DOSBox Staging for most eXoDOS games, and the others for the packs you have. Silverbox shows which ones it found, and notices one you install while it is open.</p></li>
-            <li class="sb-step"><span class="sb-step__num">4</span><h3 class="sb-step__title">Pick a game</h3><p class="sb-step__text">Press Play. The first time, Silverbox installs the game from its archive in the background. Then it starts the emulator eXo chose for that game, with a config translated from eXo's launch script.</p></li>
+            <li class="sb-step"><span class="sb-step__num">4</span><h3 class="sb-step__title">Pick a game</h3><p class="sb-step__text">Press Play. The first time, Silverbox installs the game from its archive in the background, downloading it first from a Lite collection. Then it starts the emulator eXo chose for that game, with a config translated from eXo's launch script.</p></li>
           </ol>
         </div>
         <div class="spotlight-media">
@@ -356,7 +356,7 @@
           </details>
           <details>
             <summary>What about eXoDOS Lite?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>Not yet. Use the full download for now; downloading games on demand is planned.</p>
+            <p>Lite leaves out the games and downloads each one when you install it. Silverbox does the same, from the eXoDOS torrent that Lite includes, with <a href="https://aria2.github.io/">aria2</a> (<code>brew install aria2</code>). The first download can take a minute or so to find other computers sharing the torrent; later ones start in seconds.</p>
           </details>
           <details>
             <summary>Can I share a collection with a Windows PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
@@ -376,7 +376,7 @@
           </details>
           <details>
             <summary>Does it need an account, or send anything about me?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>No account, and nothing is sent. Silverbox makes no network requests: it reads your collections and starts the emulators on your Mac. See <a href="privacy.html">Privacy</a>.</p>
+            <p>No account, and nothing about you is sent. Silverbox reads your collections and starts the emulators on your Mac. Its only network use is downloading a game that an eXoDOS Lite collection leaves out, over BitTorrent, when you ask. See <a href="privacy.html">Privacy</a>.</p>
           </details>
           <details>
             <summary>Who makes it?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>

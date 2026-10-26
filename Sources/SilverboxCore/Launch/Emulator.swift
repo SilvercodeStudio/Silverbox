@@ -280,21 +280,21 @@ nonisolated public enum EmulatorCapabilities {
         }
     }
 
-    private static let builtInFluidSynth = FileAnswerCache()
+    private static let builtInFluidSynth = FileAnswerCache<Bool>()
 }
 
 /// Answers about files, kept until a file's size or date changes.
-nonisolated final class FileAnswerCache: @unchecked Sendable {
+nonisolated final class FileAnswerCache<Answer: Sendable>: @unchecked Sendable {
     private struct Entry {
         var size: Int
         var date: Date
-        var answer: Bool
+        var answer: Answer
     }
 
     private let lock = NSLock()
     private var entries: [String: Entry] = [:]
 
-    func value(for url: URL, compute: (URL) -> Bool) -> Bool {
+    func value(for url: URL, compute: (URL) -> Answer) -> Answer {
         let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
         let size = (attributes?[.size] as? NSNumber)?.intValue ?? -1
         let date = attributes?[.modificationDate] as? Date ?? .distantPast

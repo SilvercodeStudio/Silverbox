@@ -80,6 +80,14 @@ Not planned:
 
 Done:
 
+- eXoDOS Lite game downloads (2026-10-26): a game whose archive the
+  collection lacks downloads from the torrent in `eXo/util/aria/` with
+  aria2 from Homebrew, as eXo's `install.bat` does, then installs. Tested
+  against the real eXoDOS torrent (`downloadsFromTheEXoDOSTorrent`), and
+  with the eXoDOS 6.04 Lite download: set up on the Mac (21 s), then ZZT's
+  Revenge downloaded (about a minute, cold), installed with its video and
+  played in DOSBox Staging, confirmed by the user. A stopped download
+  resumes. The website's privacy page and FAQ describe it.
 - `EXoDownload` and `EXoSetup`: what eXo's `Setup <pack>.bat` does, in place
   or into `Collections/<name>`; nested zips, XML merges, add-on platforms,
   CP437 file names.
@@ -88,10 +96,6 @@ Done:
 
 Not yet:
 
-- eXoDOS Lite: download a game on demand when it is not in the download.
-  This is the app's first network request: revise the website's privacy
-  page and its "send anything about me?" answer, and follow AGENTS.md's
-  network rules.
 - BitTorrent downloads of the packs (later).
 
 ## 8. eXoWin9x and eXoWin3x — done

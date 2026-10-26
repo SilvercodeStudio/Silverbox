@@ -113,6 +113,8 @@ final class AppModel {
     private(set) var lastSessions: [String: GameSession] = [:]
     /// Installations under way or just finished, shown in the jobs bar.
     private(set) var installRuns: [InstallRun] = []
+    /// Lets one game download run at a time.
+    @ObservationIgnored let downloadGate = DownloadGate()
     var alert: AppAlert?
 
     /// Columns in the game grid, reported by the grid view for arrow keys.
@@ -932,16 +934,24 @@ final class AppModel {
         return GameInstaller(snapshot: snapshot, installLocation: settings.installLocation)
     }
 
-    /// Starts unpacking in the background. The run reports to the jobs bar
-    /// and the Dock; Cancel stops the unzip and removes the half-made folder.
+    /// Starts unpacking in the background, after downloading the archive
+    /// when the collection lacks it. The run reports to the jobs bar and the
+    /// Dock; Cancel stops the download, which resumes on the next try, or
+    /// the unzip, and removes the half-made folder.
     @discardableResult
     func startInstall(_ game: Game, playAfter: Bool, restoreSaves: Bool) -> InstallRun? {
-        guard let installer = installer(for: game), let plan = installer.plan(for: game) else { return nil }
+        guard let installer = installer(for: game), let firstPlan = installer.plan(for: game) else { return nil }
         guard !installRuns.contains(where: { $0.game.id == game.id && $0.isRunning }) else { return nil }
+        let download = firstPlan.archiveExists ? nil : installer.downloadPlan(for: firstPlan)
         let run = InstallRun(game: game)
         installRuns.append(run)
         run.task = Task { [weak self] in
+            var plan = firstPlan
             do {
+                if let download, let self {
+                    try await self.download(download, for: run)
+                    plan = installer.plan(afterDownloading: download, for: game) ?? plan
+                }
                 try await installer.install(plan, restoreSaves: restoreSaves) { progress in
                     // The main queue keeps the reports in order; a Task per report would not.
                     DispatchQueue.main.async {

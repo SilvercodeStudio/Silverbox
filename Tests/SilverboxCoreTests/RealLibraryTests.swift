@@ -25,6 +25,28 @@ struct RealLibraryTests {
         #expect(!snapshot.tree.isEmpty)
     }
 
+    /// eXo's Lite script finds a game in the torrent by its archive's name;
+    /// Silverbox finds it by the path the installer looks for. The two must
+    /// agree for the eXoDOS games the torrent has.
+    @Test func eXoDOSTorrentListsEveryGameArchive() throws {
+        let torrent = try #require(RealLibrary.root.torrentURLs.first { $0.lastPathComponent == "eXoDOS.torrent" })
+        let list = try TorrentFileList(contentsOf: torrent)
+        let snapshot = try LibraryLoader(root: RealLibrary.root).load()
+        let installer = GameInstaller(snapshot: snapshot)
+        let games = snapshot.games.filter { $0.eXoPack == .dos && !$0.isEXoSetupScript }
+        var missing: [String] = []
+        for game in games {
+            guard let plan = installer.plan(for: game) else { continue }
+            let path = "eXo/eXoDOS/\(plan.archiveURL.lastPathComponent)"
+            if list.file(at: path) == nil { missing.append(game.title) }
+        }
+        print("\(list.files.count) files in the torrent; \(missing.count) of \(games.count) eXoDOS games not in it")
+        #expect(games.count > 7000)
+        // eXo's updates add games after the torrent was made (Quake II
+        // (Q2DOS) and Sigil II in 6.04); those come with the update instead.
+        #expect(missing.count * 100 < games.count, Comment(rawValue: missing.joined(separator: " | ")))
+    }
+
     /// Decodes the first file of each bundled-decoder format in the Music folder.
     @Test func decodesRealMusicFiles() throws {
         let folder = RealLibrary.root.url.appendingPathComponent("Music/MS-DOS")

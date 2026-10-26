@@ -4,6 +4,14 @@ What changed in each version of Silverbox.
 
 ## 0.3
 
+### Added
+
+- eXoDOS Lite: installing a game that the collection leaves out downloads
+  it first, from the eXoDOS torrent that Lite includes, as eXo does on
+  Windows. Downloads need aria2 (`brew install aria2`); the welcome screen
+  and Settings › Library say whether it is found. A stopped download
+  resumes on the next try.
+
 ### Changed
 
 - A new app icon: a floppy disk, in amber or green. The highlight colours

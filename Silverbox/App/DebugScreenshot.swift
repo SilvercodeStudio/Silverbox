@@ -33,7 +33,11 @@
                         KeyPress.send(press.0, modifiers: press.1, force: true)
                     }
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 * Double(presses.count) + 1.5) {
+                // `-screenshotSettle 90` waits longer after the keys, for a job they start.
+                let settle = UserDefaults.standard.double(forKey: "screenshotSettle")
+                DispatchQueue.main.asyncAfter(
+                    deadline: .now() + 0.25 * Double(presses.count) + (settle > 0 ? settle : 1.5)
+                ) {
                     capture(to: URL(fileURLWithPath: path))
                     NSApp.terminate(nil)
                 }

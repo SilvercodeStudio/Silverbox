@@ -50,7 +50,7 @@ struct WelcomeView: View {
                     Text("Choose a folder, or drop it on this window. Either kind works:")
                     bullet(
                         "shippingbox",
-                        "**An eXo download, as it came**, such as eXoDOS from its torrent. \(AppInfo.displayName) sets it up as eXo's setup does on Windows."
+                        "**An eXo download, as it came**, such as eXoDOS or eXoDOS Lite from its torrent. \(AppInfo.displayName) sets it up as eXo's setup does on Windows."
                     )
                     bullet(
                         "folder",
@@ -71,13 +71,16 @@ struct WelcomeView: View {
             step(2, "Install the emulators") {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(
-                        "Games run in Mac emulators that you install yourself. eXoDOS needs DOSBox Staging; the others are for the other packs."
+                        "Games run in Mac emulators that you install yourself. eXoDOS needs DOSBox Staging; the others are for the other packs. aria2 is not an emulator: it downloads the games that eXoDOS Lite leaves out."
                     )
                     VStack(spacing: 0) {
                         ForEach(Self.emulators, id: \.kind) { item in
                             emulatorRow(item.kind, use: item.use, needed: item.needed)
-                            if item.kind != Self.emulators.last?.kind { Divider() }
+                            Divider()
                         }
+                        row(
+                            "aria2", use: "Downloads each game of eXoDOS Lite (brew install aria2)", needed: false,
+                            found: model.torrentDownloader != nil, website: "https://aria2.github.io")
                     }
                     .background(Theme.panel, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border))
@@ -129,20 +132,25 @@ struct WelcomeView: View {
 
     /// One emulator: found, or a link to its website.
     private func emulatorRow(_ kind: EmulatorKind, use: String, needed: Bool) -> some View {
-        let found = model.emulatorInstallation(kind)?.exists == true
-        return HStack(spacing: 10) {
+        row(
+            kind.displayName, use: use, needed: needed, found: model.emulatorInstallation(kind)?.exists == true,
+            website: kind.website)
+    }
+
+    private func row(_ name: String, use: String, needed: Bool, found: Bool, website: String) -> some View {
+        HStack(spacing: 10) {
             Image(systemName: found ? "checkmark.circle.fill" : needed ? "exclamationmark.circle" : "circle")
                 .foregroundStyle(found ? Theme.good : needed ? Theme.warning : Theme.textTertiary)
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
-                Text(kind.displayName).font(.body.weight(.medium))
+                Text(name).font(.body.weight(.medium))
                 Text(use).font(.caption).foregroundStyle(Theme.textSecondary)
             }
             Spacer()
             if found {
                 Text("Found").font(.callout).foregroundStyle(Theme.good)
-            } else if let url = URL(string: kind.website) {
-                Link("Get \(kind.displayName)", destination: url).font(.callout)
+            } else if let url = URL(string: website) {
+                Link("Get \(name)", destination: url).font(.callout)
             }
         }
         .padding(.vertical, 7)

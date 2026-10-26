@@ -285,6 +285,8 @@ enum AppPaths {
     static var logs: URL { dataRoot.appendingPathComponent("Logs", isDirectory: true) }
     static var mediaIndexes: URL { dataRoot.appendingPathComponent("MediaIndex", isDirectory: true) }
     static var libraryCache: URL { dataRoot.appendingPathComponent("LibraryCache", isDirectory: true) }
+    /// aria2's DHT table, which lets game downloads find peers quickly.
+    static var torrentState: URL { dataRoot.appendingPathComponent("BitTorrent", isDirectory: true) }
     static var userLibraryState: URL {
         (scratchData ?? applicationSupport).appendingPathComponent("user-library.json")
     }

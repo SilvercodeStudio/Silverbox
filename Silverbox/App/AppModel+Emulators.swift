@@ -2,12 +2,13 @@ import Foundation
 import SilverboxCore
 
 /// What `AppModel.checkEmulators()` found on this Mac: each emulator that is
-/// present with its executable, the files in RetroArch's cores folder, and
-/// whether DOSBox Staging has FluidSynth.
+/// present with its executable, the files in RetroArch's cores folder,
+/// whether DOSBox Staging has FluidSynth, and aria2 for game downloads.
 struct EmulatorCheck: Equatable {
     var executables: [EmulatorKind: String] = [:]
     var retroArchCores: [String] = []
     var fluidSynth = false
+    var downloader: TorrentDownloader?
 
     init() {}
 
@@ -22,6 +23,7 @@ struct EmulatorCheck: Equatable {
         }
         fluidSynth =
             settings.emulatorInstallation(.dosboxStaging).map(EmulatorCapabilities.fluidSynthAvailable) ?? false
+        downloader = TorrentDownloader.discover(dhtFile: AppPaths.torrentState.appendingPathComponent("dht.dat"))
     }
 }
 
@@ -50,4 +52,7 @@ extension AppModel {
 
     /// Whether DOSBox Staging can play General MIDI through FluidSynth.
     var fluidSynthAvailable: Bool { emulatorCheck.fluidSynth }
+
+    /// aria2, which downloads the games a Lite collection leaves out.
+    var torrentDownloader: TorrentDownloader? { emulatorCheck.downloader }
 }

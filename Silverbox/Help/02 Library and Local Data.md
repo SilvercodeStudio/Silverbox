@@ -28,6 +28,14 @@ Setup asks:
 
 Setup can write into the download folder, as on Windows, or into `Collections` in the local data folder, which leaves the download as it came; the game archives are then still read from the download. If the download cannot be written, for example on a read-only network share, setup always writes to the local data folder. Adding the download again later finds the earlier setup in either place. Setup needs about as much free space as the archives it unpacks; the sheet shows the space needed and the space free. Display choices from eXo's setup are left out: the launch options take their place.
 
+## eXoDOS Lite: downloading games
+
+The eXoDOS Lite download leaves out every game archive and its manuals, music and extras, and includes the full collection's torrent in `eXo/util/aria`. When you install a game that the collection lacks, the install sheet shows its download size, and Download and Install fetches it from that torrent, as eXo's script does on Windows. A full collection with some archives deleted works the same way.
+
+Downloads need [aria2](https://aria2.github.io/), a free download program: install it with Homebrew (`brew install aria2`). Settings › Library › Game downloads says whether it is found. Silverbox starts aria2 for each game, one game at a time, and aria2 stops sharing as soon as the files are complete. The first download can wait a minute or so at "Looking for peers" while aria2 finds other computers sharing the torrent. aria2 then keeps a list of them, so later downloads start in seconds. As with any BitTorrent program, the other computers in the swarm see your IP address.
+
+The archives go into the collection, as on Windows, so the collection must be writable: the game's zip into `eXo/eXoDOS` and its manuals, music and extras into `Content/GameData/eXoDOS`, which are then unpacked into the collection. Unfinished downloads wait in `eXo/DOWNLOAD`; Cancel stops a download, and installing the game again resumes it. A game that eXo added after the torrent was made is not in it; it comes with the update that added it.
+
 ## The local data folder
 
 Everything bulky that Silverbox writes goes to one folder. By default it is `~/Library/Application Support/Silverbox`; Settings › Library can point it at another folder, for example on an external drive. Choosing a drive or your home folder puts a `Silverbox` folder there; Use Default goes back to the standard location. What is already in the old folder is not moved. If you move or rename the folder in the Finder, choose it again in Settings: the collections set up in its `Collections` folder follow it. The folder holds:
@@ -40,6 +48,7 @@ Everything bulky that Silverbox writes goes to one folder. By default it is `~/L
 - `Overlay` — writable folders and disk copies for games that are already unpacked inside a read-only library, and the Windows 98 disks that eXoWin9x games write to.
 - `Launch` and `Logs` — the configurations Silverbox generates for each launch, and the emulator's output.
 - `MediaIndex` and `LibraryCache` — caches that Rescan Library rebuilds.
+- `BitTorrent` — aria2's list of peers to ask, which lets the next game download start sooner.
 
 Favorites, play history and the settings stay in `~/Library/Application Support/Silverbox` on this Mac, so they are there even when the drive is not. If the chosen folder is missing when the app starts, it says so; installed games and caches on it wait until the drive is back.
 

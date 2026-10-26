@@ -14,7 +14,7 @@ Open Settings with Command-Comma.
 
 ## Library
 
-Each collection, with its name, its folder, whether it is on, what was found in it and its path substitutions; Add Collection…, Remove and Rescan All. Then the local data folder and where new games are installed. See Collections and the local data folder.
+Each collection, with its name, its folder, whether it is on, what was found in it and its path substitutions; Add Collection…, Remove and Rescan All. Then the local data folder and where new games are installed, and whether aria2 is there to download the games an eXoDOS Lite collection leaves out (it notices aria2 installed while the tab is open). See Collections and the local data folder.
 
 ## Emulators
 
