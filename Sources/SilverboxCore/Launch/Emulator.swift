@@ -240,9 +240,10 @@ nonisolated public enum EmulatorLocator {
 
 /// What an installed emulator can do on this machine.
 nonisolated public enum EmulatorCapabilities {
-    /// DOSBox Staging loads FluidSynth dynamically, so General MIDI through
-    /// FluidSynth only works when the library is installed (for example with
-    /// Homebrew). DOSBox-X builds it in.
+    /// Whether the emulator can play General MIDI through FluidSynth.
+    /// DOSBox-X builds it in. DOSBox Staging's Mac build has it built in
+    /// since 0.83; earlier builds load it at run time, so it works only when
+    /// the library is installed (for example with Homebrew).
     public static func fluidSynthAvailable(for installation: EmulatorInstallation) -> Bool {
         switch installation.kind {
         case .dosboxX:
@@ -250,6 +251,7 @@ nonisolated public enum EmulatorCapabilities {
         case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight:
             return false
         case .dosboxStaging:
+            if hasBuiltInFluidSynth(installation.executableURL) { return true }
             let fm = FileManager.default
             var folders = [
                 "/opt/homebrew/lib", "/usr/local/lib", "/usr/lib", "/usr/lib/x86_64-linux-gnu",
@@ -264,6 +266,57 @@ nonisolated public enum EmulatorCapabilities {
                 if entries.contains(where: { $0.lowercased().hasPrefix("libfluidsynth") }) { return true }
             }
             return false
+        }
+    }
+
+    /// True when the executable holds FluidSynth's code instead of loading
+    /// the library at run time: its FluidSynth messages are there and the
+    /// library's file name is not. The answer is kept until the file changes,
+    /// as the app asks every few seconds while Settings is open.
+    public static func hasBuiltInFluidSynth(_ executable: URL) -> Bool {
+        builtInFluidSynth.value(for: executable) { url in
+            guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { return false }
+            return data.contains(bytes: "FSYNTH: ") && !data.contains(bytes: "libfluidsynth")
+        }
+    }
+
+    private static let builtInFluidSynth = FileAnswerCache()
+}
+
+/// Answers about files, kept until a file's size or date changes.
+nonisolated final class FileAnswerCache: @unchecked Sendable {
+    private struct Entry {
+        var size: Int
+        var date: Date
+        var answer: Bool
+    }
+
+    private let lock = NSLock()
+    private var entries: [String: Entry] = [:]
+
+    func value(for url: URL, compute: (URL) -> Bool) -> Bool {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        let size = (attributes?[.size] as? NSNumber)?.intValue ?? -1
+        let date = attributes?[.modificationDate] as? Date ?? .distantPast
+        lock.lock()
+        let cached = entries[url.path]
+        lock.unlock()
+        if let cached, cached.size == size, cached.date == date { return cached.answer }
+        let answer = compute(url)
+        lock.lock()
+        entries[url.path] = Entry(size: size, date: date, answer: answer)
+        lock.unlock()
+        return answer
+    }
+}
+
+nonisolated extension Data {
+    /// Whether the data holds the UTF-8 bytes of `text`.
+    func contains(bytes text: String) -> Bool {
+        let needle = Array(text.utf8)
+        return withUnsafeBytes { haystack in
+            guard let base = haystack.baseAddress, !needle.isEmpty else { return false }
+            return needle.withUnsafeBytes { memmem(base, haystack.count, $0.baseAddress, needle.count) != nil }
         }
     }
 }

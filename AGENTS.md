@@ -271,8 +271,12 @@ new entry after the version is tagged; the version is the app target's
   disabled says why in `.help` too.
 - Emulator status. `AppModel.checkEmulators()` records what is installed
   (`EmulatorCheck`) at start, when the app comes to the front and every two
-  seconds while Settings › Emulators or `WelcomeView` is open
-  (`.watchingForEmulators()`). Views ask `model.emulatorInstallation(_:)`,
+  seconds while Settings › Emulators, Settings › Display & Sound or
+  `WelcomeView` is open (`.watchingForEmulators()`). The check includes
+  FluidSynth for DOSBox Staging (`EmulatorCapabilities`): built into the
+  executable since 0.83 (found by scanning it, cached until the file
+  changes), else a `libfluidsynth` library in the usual folders;
+  `FluidSynthStatus` shows it. Views ask `model.emulatorInstallation(_:)`,
   `model.retroArchSetup` or `emulatorResolver()`, which read the check, not
   `settings.emulatorInstallation(_:)`, so they redraw when it changes.
 - First start. With no collection, the content column shows `WelcomeView`:

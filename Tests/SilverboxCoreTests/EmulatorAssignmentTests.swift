@@ -337,3 +337,39 @@ struct RomLaunchPlannerTests {
         }
     }
 }
+
+@Suite("Emulator capabilities")
+struct EmulatorCapabilityTests {
+    @Test func findsFluidSynthBuiltIntoDOSBoxStaging() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let builtIn = scratch.appendingPathComponent("dosbox-built-in")
+        let loaded = scratch.appendingPathComponent("dosbox-loaded")
+        let without = scratch.appendingPathComponent("dosbox-without")
+        try Data("code FSYNTH: Using SoundFont '%s' code".utf8).write(to: builtIn)
+        try Data("code FSYNTH: Using SoundFont '%s' libfluidsynth.3.dylib code".utf8).write(to: loaded)
+        try Data("code MIDI: Opened device code".utf8).write(to: without)
+        #expect(EmulatorCapabilities.hasBuiltInFluidSynth(builtIn))
+        #expect(!EmulatorCapabilities.hasBuiltInFluidSynth(loaded))
+        #expect(!EmulatorCapabilities.hasBuiltInFluidSynth(without))
+        #expect(
+            EmulatorCapabilities.fluidSynthAvailable(
+                for: EmulatorInstallation(kind: .dosboxStaging, executableURL: builtIn)))
+
+        // The answer follows the file when it changes.
+        try Data("code MIDI: Opened device, a longer build".utf8).write(to: builtIn)
+        #expect(!EmulatorCapabilities.hasBuiltInFluidSynth(builtIn))
+    }
+
+    @Test(
+        .enabled(if: FileManager.default.fileExists(atPath: "/Applications/DOSBox Staging.app/Contents/MacOS/dosbox")))
+    func readsTheInstalledDOSBoxStaging() {
+        let executable = URL(fileURLWithPath: "/Applications/DOSBox Staging.app/Contents/MacOS/dosbox")
+        let version =
+            Bundle(url: URL(fileURLWithPath: "/Applications/DOSBox Staging.app"))?
+            .infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        // 0.83 and later have FluidSynth built in.
+        if version.compare("0.83", options: .numeric) != .orderedAscending {
+            #expect(EmulatorCapabilities.hasBuiltInFluidSynth(executable))
+        }
+    }
+}

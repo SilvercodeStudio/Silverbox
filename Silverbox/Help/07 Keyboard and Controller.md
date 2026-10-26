@@ -23,6 +23,8 @@ The library can be browsed without the mouse. Click a game once, or press Tab un
 | Command-D | Add to or remove from Favorites |
 | Command-I | Edit game info |
 | Command-Delete | Uninstall… (asks first) |
+| Command-Shift-R | Show the game in the Finder |
+| Command-R | Rescan the library |
 | Command-Plus, Command-Minus, Command-0 | Larger, smaller or default tiles |
 | Command-1, Command-2 | Show as grid or list |
 | Command-Option-I | Show or hide the inspector |

@@ -1,8 +1,8 @@
 # Emulators
 
-## DOSBox for eXoDOS games
+## DOSBox for eXoDOS, eXoWin3x and eXoDemoScene
 
-eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to the two emulators it supports:
+eXo runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to the two emulators it supports:
 
 - **DOSBox Staging** for games set up for DOSBox 0.74, ECE and Staging. This is the default.
 - **DOSBox-X** for games set up for SVN Daum and DOSBox-X.
@@ -37,7 +37,7 @@ eXo's launcher for interactive fiction picks an emulator by the name of each ver
 | Atari 8-bit | atari800 | Uses the OS and BASIC ROMs eXo ships with Altirra, copied to `RetroArch/system` in the local data folder; RetroArch's own system folder is not changed. |
 | Amiga | PUAE | Needs the Kickstart 1.3 ROM, `kick34005.A500`, in RetroArch's system folder. Versions that use FS-UAE configurations are not supported. |
 
-A version whose core is not installed says so; install it from RetroArch's Online Updater › Core Downloader. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
+A version whose core is not installed says so; install it from RetroArch's Online Updater › Core Downloader. These RetroArch versions are not yet tested with many games. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
 
 ## How a game is configured
 
@@ -47,11 +47,11 @@ Silverbox reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) f
 
 Games set up for the Roland MT-32 use the emulated MT-32 with the ROM files in the collection's `eXo/mt32` folder.
 
-General MIDI games use the collection's Sound Canvas SoundFont through FluidSynth when it is available. DOSBox Staging loads FluidSynth from a separately installed library; install it with Homebrew (`brew install fluid-synth`). Without it, General MIDI plays through the macOS synthesizer.
+General MIDI games use the collection's Sound Canvas SoundFont through FluidSynth when it is available. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Older versions of DOSBox Staging load it from a separately installed library; install it with Homebrew (`brew install fluid-synth`). Without FluidSynth, General MIDI plays through the macOS synthesizer. Settings › Display & Sound and Settings › Emulators say which one your DOSBox Staging uses. Playing Games › Music in games says which games this affects.
 
 ## Consoles, computers and arcade
 
-Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform:
+Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform. This part is new and not yet tested with real games; please report what you find.
 
 - **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); Silverbox finds them in RetroArch's cores folder.
 - **Dolphin** runs Nintendo GameCube and Wii games.

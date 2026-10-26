@@ -4,7 +4,7 @@ Silverbox reads from one or more collections and writes only to a local data fol
 
 ## Collections
 
-A collection is an eXoDOS or eXoWin9x install, or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for eXoDOS also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. Silverbox only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
+A collection is a set-up eXo pack (or several packs merged into one folder), or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for the eXo packs also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. Silverbox only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
 
 Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
 
@@ -12,7 +12,7 @@ Favorites holds the games you mark with the heart (Command-D). Each copy of a ga
 
 The same game is often in several packs or collections: many Infocom games are in eXoDOS, eXoScummVM and eXoIF, and some eXoDOS games also have a CD-ROM or Windows 95 release. **Other Versions** in a game's context menu lists them, with the pack or platform of each. Choosing one selects it, and clears the search or changes the sidebar section when the game is not on show. Games count as versions of each other when their titles match (ignoring case, punctuation, a leading "The" or "A", and a note in brackets at the end) and they share a developer or publisher, so different games with a common title, such as Deadline, stay apart.
 
-Add collections on first launch, in Settings › Library, or by dropping the folder onto the window from the Finder. A folder set up on Windows, or one you set up here, can be added as it is. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
+Add a collection with Add Collection… on the welcome screen or in Settings › Library, or drop the folder onto the window from the Finder. A folder set up on Windows, or one you set up here, can be added as it is. Settings › Library lists each collection with what was found in it, and lets you rename it, turn it off or choose its folder again. If a collection's folder is missing, it says so; choose the folder again if you moved or renamed it. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
 
 ## Setting up an eXo download
 
@@ -45,8 +45,8 @@ Favorites, play history and the settings stay in `~/Library/Application Support/
 
 ## Installing in place
 
-If your eXoDOS folder is writable and you prefer the Windows layout, set Settings › Library › "Install games to" to the eXoDOS folder. Games then unpack into `eXo/eXoDOS` (eXoWin9x games into `eXo/eXoWin9x/<year>`), where LaunchBox on Windows would also find them.
+If your eXoDOS folder is writable and you prefer the Windows layout, set Settings › Library › "Install games to" to "Inside the eXoDOS folder, as on Windows". Games then unpack into `eXo/eXoDOS` (eXoWin9x games into `eXo/eXoWin9x/<year>`), where LaunchBox on Windows would also find them.
 
 ## Rescanning
 
-After you add or update eXoDOS packs, choose Library › Rescan Library. This re-reads the metadata and rebuilds the artwork index.
+After you add or update packs, or add artwork to a collection, choose Library › Rescan Library (or Rescan All in Settings › Library). This re-reads the metadata and rebuilds the artwork index.

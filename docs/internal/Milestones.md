@@ -13,7 +13,7 @@ release work before the app goes to the eXo team.
 | 2   | Launch eXoDOS games in DOSBox               | Done        |
 | 3   | Local data folder and installing            | Done        |
 | 4   | Several collections                         | Done        |
-| 5   | Music, soundtracks, videos and extras       | Mostly done |
+| 5   | Music, soundtracks, videos and extras       | Done        |
 | 6   | Keyboard and game controller                | Done        |
 | 7   | Set up an eXo download on the Mac           | Mostly done |
 | 8   | eXoWin9x and eXoWin3x                       | Done        |
@@ -55,7 +55,7 @@ release work before the app goes to the eXo team.
   path substitutions for relocated `Games` folders and drive letters.
 - Add a collection by dropping a folder on the window.
 
-## 5. Music, soundtracks, videos and extras — mostly done
+## 5. Music, soundtracks, videos and extras — done
 
 Done:
 
@@ -64,12 +64,12 @@ Done:
 - The eXoDOS soundtracks as albums, unpacked on play.
 - Videos in a Mac video player; manuals, images and extras in Quick Look.
 
-Not yet:
+Not planned:
 
 - The full libxmp (without its depackers) in place of libxmp-lite, for the
   two AMF variants and Epic MegaGames PSM: ten more eXoDOS titles (Crusader,
-  The Civil War, Jazz Jackrabbit). DSM (four titles) would need libmodplug;
-  probably not worth it.
+  The Civil War, Jazz Jackrabbit). DSM (four titles) would need libmodplug.
+  Left out by choice (2026-10-24): the gain is small.
 
 ## 6. Keyboard and game controller — done
 

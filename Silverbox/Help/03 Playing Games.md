@@ -21,6 +21,10 @@ Before a game starts, Silverbox shows its launch options. On Windows, eXoDOS ask
 
 Turn on "Remember these choices for this game" to keep them for next time. **Configure…** in a game's context menu or the inspector opens the same dialog to save choices without starting the game, also before the game is installed. "Use Defaults" removes the saved choices. To skip the dialog, turn off "Show launch options before each game" in Settings › General.
 
+## Windows 3.x games and demos
+
+eXoWin3x games run in DOSBox, as eXoDOS games do: each game's archive holds its own Windows 3.1, which starts the game. eXoDemoScene demos also run in DOSBox, most of them in DOSBox-X, following the build eXo picks for each one. The launch options are the same as for eXoDOS games.
+
 ## Windows 9x games
 
 eXoWin9x games run in Windows 98. eXo keeps Windows 98 on one shared disk image and each game on a disk of its own. Play installs the game the first time, as for eXoDOS games. Then DOSBox-X starts Windows 98 with the game's disk and CD attached, and Windows starts the game when its desktop is ready. To stop, close the emulator window.
@@ -41,9 +45,23 @@ The games use eXo's ScummVM settings, kept in the local data folder (`ScummVM/sc
 
 ## Interactive fiction
 
-eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for the Commodore 64 and 128, ZX Spectrum and ZX81, Apple II and Atari 8-bit run in RetroArch, with its cores installed from RetroArch's Online Updater; a C64 game on several disks gets a playlist, so the other disks are in RetroArch's Disk Control menu. Versions for other computers are marked "not supported on the Mac", with the reason. Unless you pick one, Play starts a Spatterlight version, else a DOS version, else a RetroArch one.
+eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for the Commodore 64 and 128, ZX Spectrum and ZX81, Apple II and Atari 8-bit run in RetroArch, with its cores installed from RetroArch's Online Updater; a C64 game on several disks gets a playlist, so the other disks are in RetroArch's Disk Control menu. Versions for other computers are marked "not supported on the Mac", with the reason. The RetroArch versions are new and not yet tested with many games; please report what you find. Unless you pick one, Play starts a Spatterlight version, else a DOS version, else a RetroArch one.
 
 Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight ends the game for Silverbox.
+
+## Apple IIGS games
+
+eXoAppleIIGS games can be browsed and installed, but they do not start yet. Support for GSplus, the emulator eXo uses for most of them, is planned.
+
+## Music in games
+
+DOS games make their music in one of a few ways, chosen in the game's setup program or in eXo's sound menu for the game:
+
+- **Sound Blaster or AdLib** music is synthesized by DOSBox itself. Most DOS games use it.
+- **Roland MT-32** music plays through DOSBox's MT-32 emulation, with the ROM files in the collection's `eXo/mt32` folder.
+- **General MIDI** (also called Sound Canvas) plays through FluidSynth with the eXoDOS Sound Canvas SoundFont, as on Windows. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Without it, General MIDI plays through the macOS synthesizer, which sounds different. Settings › Display & Sound says which one your DOSBox Staging uses, and lets you choose.
+
+This applies to every game that runs in DOSBox: eXoDOS, eXoWin3x, eXoDemoScene, eXoWin9x in DOSBox-X, and the MS-DOS versions of eXoIF games. When eXo's sound menu for a game sets General MIDI, DOSBox Staging would not accept the setting it writes, so Silverbox changes that line in the game's files to the General MIDI device you chose. ScummVM games use ScummVM's own music settings. The menu music you hear while browsing is not MIDI and does not use the SoundFont.
 
 ## Uninstalling
 

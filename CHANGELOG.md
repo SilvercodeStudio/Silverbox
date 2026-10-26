@@ -8,12 +8,22 @@ What changed in each version of Silverbox.
 
 - A new app icon: a floppy disk, in amber or green. The highlight colours
   match it.
+- The help covers every eXo pack, explains how music plays in games, and
+  has more troubleshooting. The Keyboard Shortcuts window now lists Play,
+  Rescan Library and Show in Finder.
 
 ### Fixed
 
 - Collections set up inside the local data folder follow it when you move
   or rename that folder and choose it again in Settings. Before, they could
   not be found.
+- General MIDI music in DOSBox Staging 0.83 and later now plays with the
+  eXoDOS Sound Canvas SoundFont. These versions have FluidSynth built in,
+  but Silverbox looked only for a separate FluidSynth and fell back to the
+  macOS synthesizer. Settings › Display & Sound now shows which one plays,
+  and notices a change while it is open.
+- A collection whose folder is missing, or is not a library, says so in
+  plain words in Settings.
 
 ## 0.2
 

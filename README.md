@@ -6,10 +6,11 @@ Welcome to Silverbox!
 
 Silverbox is an emulation front-end for the Mac, built for eXoDOS,
 eXoWin3x, eXoWin9x and the other game preservation projects by the eXo team
-(https://www.retro-exo.com). It reads an existing eXoDOS collection (the
-LaunchBox XML metadata, box art, screenshots, manuals, music and videos) in
-place and launches games in DOSBox Staging or DOSBox-X with a config
-translated from eXoDOS's Windows launch scripts.
+(https://www.retro-exo.com). It sets up an eXo download without Windows,
+reads the collection in place (the LaunchBox XML metadata, box art,
+screenshots, manuals, music and videos), and starts each game in a Mac
+emulator such as DOSBox Staging, DOSBox-X, 86Box, ScummVM or Spatterlight,
+with the settings eXo uses on Windows.
 
 The games, media and emulators are not part of this project.
 
@@ -57,9 +58,9 @@ and grab the torrent file for the eXo collection that you're
 interested in. Note: some of these collections, particularly
 eXoDOS, are very large and may take a long time to download.
 
-TODO: Currently the "Lite" version (downloading games on demand)
-is not supported; you must use the "Full" download. Support for
-on-demand downloads is coming soon.
+Note: the eXoDOS "Lite" download, which downloads games on demand, is
+not supported yet; use the full download. Support for on-demand downloads
+is planned.
 
 Currently, Silverbox supports the following collections:
 
@@ -77,7 +78,8 @@ Currently, Silverbox supports the following collections:
    - [eXoDemoScene](https://www.retro-exo.com/demoscene.html) primarily
      MS-DOS based "demos" (graphics / multimedia demonstrations)
    - [eXoAppleIIGS](https://www.retro-exo.com/appleIIGS.html) - Apple IIgs
-     games and educational software.
+     games and educational software. These can be browsed and installed;
+     playing them is planned.
    - (Coming soon) - eXoDREAMM - Loom and similar adventure games
 
 3. Emulators for Mac: All you need to browse the collections are Silverbox
@@ -88,11 +90,11 @@ depending on which titles you want to play.
 See the [Emulators](#emulators) section below for exactly what Mac emulators
 you need to play which titles.
 
-4. Launch Silverbox and drag one of your eXo folders from Finder to the app,
-or click (TODO: missing menu item for adding new collections/libraries.)
-You will be prompted whether you want to unpack required files directly
-within the download directory, or in a separate local library folder.
-If you choose the latter, your eXo folder download won't be touched.
+4. Launch Silverbox and drag one of your eXo folders from the Finder to the
+app, or click Add Collection… on the welcome screen (later, in Settings ›
+Library). For a download that is not set up yet, Silverbox asks whether to
+unpack the required files inside the download folder, or in a separate local
+folder. If you choose the latter, your eXo download is not changed.
 
 ### Can I share eXo files with a Windows install?
 
@@ -105,7 +107,7 @@ separate folder for unpacked files.
 ### Can I use this for other consoles (SNES, etc.)?
 
 Yes, but currently Silverbox depends on an existing LaunchBox
-library for the moment. You can set up individual games manually, but it does
+library, and launching these games is not tested yet. You can set up individual games manually, but it does
 not include any "discovery" or "scraping" functionality. However, if you
 have a LaunchBox installation from Windows, Silverbox can recognize 
 and use that folder and take advantage of the metadata, media, etc. already
@@ -123,8 +125,8 @@ my close supervision and direction.
 
 - macOS 15 or later, on Apple silicon or Intel.
   - Building the app from source needs Xcode 27 or higher.
-- One or more eXo downloads, such as eXoDOS v6 (the full set, or Lite with
-  games downloaded), eXoWin3x and eXoWin9x. Silverbox runs their setup itself, so a
+- One or more eXo downloads, such as eXoDOS v6 (the full set; Lite is not
+  supported yet), eXoWin3x and eXoWin9x. Silverbox runs their setup itself, so a
   Windows PC is not needed; a folder set up on Windows works too.
 - The emulators for the packs you play; see [Emulators](#emulators). Most are
   optional: a game whose emulator is missing still shows, with its box art,
@@ -136,6 +138,10 @@ Silverbox starts games in Mac emulators that you install yourself. Put them
 in `/Applications` (or `~/Applications`), or choose them in Settings ›
 Emulators. eXo ships Windows builds of the same emulators; the app does not
 use them.
+
+General MIDI music plays through FluidSynth with the eXoDOS Sound Canvas
+SoundFont. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in;
+for an older DOSBox Staging, install it with `brew install fluid-synth`.
 
 | Collection          | Emulator                                                                                      | What for                                                                                                                                                                                                                                                                            |
 | ------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -175,6 +181,16 @@ Many eXoIF games come in versions for several computers, and a game counts
 when any of its versions can start. Where a version needs a RetroArch core or
 ROM that is not installed, the launch options say which.
 
+## Where your data goes
+
+A collection can be read-only (an external drive or a network share):
+Silverbox never changes it. Installed games, save backups, edited configs,
+unpacked soundtracks and caches are kept in a local data folder, by default
+`~/Library/Application Support/Silverbox`, which Settings can point at
+another drive; favorites, play history and settings stay in Application
+Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS does on
+Windows, is available in Settings.
+
 ## Build
 
 Open `Silverbox.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
@@ -186,6 +202,8 @@ make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
 make sweep                # translate every eXoDOS config in the mounted library
 make format               # reformat the Swift sources with swift-format
+make lint                 # report formatting problems without changing files
+make install-app          # universal Release build copied to ~/Applications
 make reset                # delete the app's settings and local data folder, to test a first start
 ```
 
@@ -216,14 +234,6 @@ and a note on its origin:
 
 macOS plays the other music formats itself.
 
-On first launch, choose your eXoDOS folder. It can be read-only (an external
-drive or a network share): the app never modifies it. Installed games, save
-backups, edited configs, unpacked soundtracks and caches are kept in a local
-data folder, by default `~/Library/Application Support/Silverbox`, which Settings
-can point at another drive; favorites, play history and settings stay in
-Application Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS
-does on Windows, is available in Settings.
-
 ## To do
 
 What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
@@ -231,10 +241,6 @@ milestones, with what is done and what is not, are in
 [docs/internal/Milestones.md](docs/internal/Milestones.md).
 
 - On-demand game download / support for Lite
-- Menu music: replace the vendored libxmp-lite with the full libxmp (without
-  its depackers). That adds the two AMF variants and Epic MegaGames PSM, which
-  covers ten more eXoDOS titles (Crusader, The Civil War, Jazz Jackrabbit).
-  DSM (four titles) would need libmodplug as well; probably not worth it.
 - Launch console, computer and arcade games for real with RetroArch, Dolphin,
   MAME and Mednafen. The planner and the emulator assignments exist; nothing
   has been played yet.

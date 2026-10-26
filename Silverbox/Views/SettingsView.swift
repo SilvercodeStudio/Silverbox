@@ -311,14 +311,7 @@ struct EmulatorSettingsView: View {
             ForEach(EmulatorKind.dosBox) { kind in
                 Section(kind.displayName) {
                     EmulatorPathRow(kind: kind, picking: $picking)
-                    if kind == .dosboxStaging, model.emulatorInstallation(kind) != nil {
-                        Text(
-                            model.fluidSynthAvailable
-                                ? "FluidSynth is available for General MIDI with the eXoDOS Sound Canvas SoundFont."
-                                : "FluidSynth is not installed, so General MIDI games use the macOS synthesizer. Install it with Homebrew (brew install fluid-synth) for the eXoDOS SoundFont."
-                        )
-                        .font(.caption).foregroundStyle(.secondary)
-                    }
+                    if kind == .dosboxStaging { FluidSynthStatus() }
                 }
             }
             Section("eXoWin9x games") {
@@ -342,7 +335,7 @@ struct EmulatorSettingsView: View {
             }
             Section("eXoIF games") {
                 Text(
-                    "Each eXoIF game comes in versions for several systems. Text-adventure story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; MS-DOS versions run in DOSBox. Other systems are not supported yet."
+                    "Each eXoIF game comes in versions for several systems. Text-adventure story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; MS-DOS versions run in DOSBox; Commodore, ZX Spectrum, Apple II, Atari 8-bit, Amstrad CPC and Amiga versions run in RetroArch (below). Other systems are not supported yet."
                 )
                 .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .spatterlight, picking: $picking)
@@ -623,12 +616,41 @@ struct DisplaySettingsView: View {
                 Picker("Render General MIDI with", selection: $model.settings.launchOptions.generalMIDI) {
                     ForEach(LaunchOptions.GeneralMIDI.allCases) { Text($0.displayName).tag($0) }
                 }
+                FluidSynthStatus()
                 Text("Games set up for the Roland MT-32 always use the MT-32 emulation with the ROMs in eXo/mt32.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+        .watchingForEmulators()
+    }
+}
+
+/// Whether DOSBox Staging can play General MIDI through FluidSynth, and
+/// what to do when it cannot. The emulator check follows an update or a
+/// Homebrew install while Settings is open.
+struct FluidSynthStatus: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.emulatorInstallation(.dosboxStaging)?.exists == true {
+            let available = model.fluidSynthAvailable
+            VStack(alignment: .leading, spacing: 4) {
+                Label(
+                    available ? "FluidSynth ready in DOSBox Staging" : "No FluidSynth in DOSBox Staging",
+                    systemImage: available ? "checkmark.circle.fill" : "exclamationmark.triangle"
+                )
+                .foregroundStyle(available ? Theme.good : Theme.warning)
+                Text(
+                    available
+                        ? "General MIDI games play with the eXoDOS Sound Canvas SoundFont."
+                        : "General MIDI games use the macOS synthesizer instead. DOSBox Staging 0.83 and later have FluidSynth built in; for an older version, install FluidSynth with Homebrew (brew install fluid-synth)."
+                )
+                .foregroundStyle(.secondary)
+            }
+            .font(.caption)
+        }
     }
 }
 

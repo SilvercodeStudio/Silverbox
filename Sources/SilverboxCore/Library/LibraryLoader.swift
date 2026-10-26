@@ -16,6 +16,21 @@ nonisolated public enum LibraryLoadError: Error, Sendable {
     case missingPlatformList(URL)
 }
 
+nonisolated extension LibraryLoadError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .missingPlatformList(let file):
+            let folder = file.deletingLastPathComponent().deletingLastPathComponent()
+            if !FileManager.default.fileExists(atPath: folder.path) {
+                return
+                    "This folder is not there. If you moved or renamed it, choose it again; if it is on another drive, connect the drive."
+            }
+            return
+                "This folder has no Data/Platforms.xml, so it is not a LaunchBox library or a set-up eXo collection. Choose the folder that holds Data and Images."
+        }
+    }
+}
+
 /// Reads a whole LaunchBox `Data` folder into a ``LibrarySnapshot``.
 ///
 /// Loading is synchronous and can take a few seconds for the 7,600-game

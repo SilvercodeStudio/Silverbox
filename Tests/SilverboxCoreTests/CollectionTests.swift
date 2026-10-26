@@ -38,6 +38,17 @@ struct PathSubstitutionTests {
         #expect(minimal.isEnabled && minimal.kind == .launchBox && minimal.substitutions.isEmpty)
     }
 
+    @Test func explainsAMissingLibrary() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let gone = LibraryCollection(name: "Gone", rootPath: scratch.appendingPathComponent("Gone").path)
+        let error = try #require(throws: LibraryLoadError.self) { try LibraryLoader(collection: gone).load() }
+        #expect(error.localizedDescription.hasPrefix("This folder is not there."))
+        let empty = LibraryCollection(name: "Empty", rootPath: scratch.path)
+        #expect(
+            LibraryLoadError.missingPlatformList(empty.root.platformsFile).localizedDescription
+                .hasPrefix("This folder has no Data/Platforms.xml"))
+    }
+
     @Test func followsTheDataFolderWhenTheCollectionIsThere() throws {
         let scratch = try FixtureLibrary.scratchDirectory()
         let oldFolder = scratch.appendingPathComponent("Old Library", isDirectory: true)
