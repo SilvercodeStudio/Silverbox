@@ -4,13 +4,13 @@ Select a game and press Play, press Command-Return, or double-click its box.
 
 ## Installing
 
-An eXo game must be installed before it plays the first time. Press Install… in the inspector, or Play, and confirm. Autoexec.Mac unpacks the game's archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress.
+An eXo game must be installed before it plays the first time. Press Install… in the inspector, or Play, and confirm. Silverbox unpacks the game's archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress.
 
-Installing runs in the background, so you can keep browsing and install other games at the same time. A bar at the bottom of the window shows each installation: its progress, the step under way and the time it has taken. **Cancel** stops the installation and removes the half-made game folder. The Dock icon shows the progress too. When an installation finishes while you work in another app, the Dock icon bounces and a notification says so; macOS asks once whether Autoexec.Mac may show notifications. With "Play when installation finishes" on, the game starts by itself. If an installation fails, its row stays in the bar with the reason until you dismiss it.
+Installing runs in the background, so you can keep browsing and install other games at the same time. A bar at the bottom of the window shows each installation: its progress, the step under way and the time it has taken. **Cancel** stops the installation and removes the half-made game folder. The Dock icon shows the progress too. When an installation finishes while you work in another app, the Dock icon bounces and a notification says so; macOS asks once whether Silverbox may show notifications. With "Play when installation finishes" on, the game starts by itself. If an installation fails, its row stays in the bar with the reason until you dismiss it.
 
 ## The launch options dialog
 
-Before a game starts, Autoexec.Mac shows its launch options. On Windows, eXoDOS asks the same questions in a console window when you play or configure a game. The dialog starts from the defaults in Settings › Display & Sound.
+Before a game starts, Silverbox shows its launch options. On Windows, eXoDOS asks the same questions in a console window when you play or configure a game. The dialog starts from the defaults in Settings › Display & Sound.
 
 - **Version** — some games come in several editions, for example CGA, EGA and VGA releases, or original and patched versions. Games that show their version menu inside DOSBox, such as A-10 Tank Killer, still do so.
 - **Full screen** or a window. In full screen the emulator scales the picture to your display.
@@ -25,7 +25,7 @@ Turn on "Remember these choices for this game" to keep them for next time. **Con
 
 eXoWin9x games run in Windows 98. eXo keeps Windows 98 on one shared disk image and each game on a disk of its own. Play installs the game the first time, as for eXoDOS games. Then DOSBox-X starts Windows 98 with the game's disk and CD attached, and Windows starts the game when its desktop is ready. To stop, close the emulator window.
 
-Windows starts clean every time. Before each start, Autoexec.Mac makes a new, empty disk on top of the shared image, and Windows writes its changes there. Saved games go to the game's own disk and stay. If the game is already unpacked in a read-only collection, Autoexec.Mac copies the game's disk to the `Overlay` folder in the local data folder the first time, so that Windows can write to it.
+Windows starts clean every time. Before each start, Silverbox makes a new, empty disk on top of the shared image, and Windows writes its changes there. Saved games go to the game's own disk and stay. If the game is already unpacked in a read-only collection, Silverbox copies the game's disk to the `Overlay` folder in the local data folder the first time, so that Windows can write to it.
 
 About thirty games, such as Quake and Die Hard Trilogy, need a faster PC with a 3dfx Voodoo card. eXo runs these in 86Box. To play them, get 86Box from https://86box.net and put 86Box.app in the Applications folder. For these games, the launch options have only Full screen.
 
@@ -43,11 +43,11 @@ The games use eXo's ScummVM settings, kept in the local data folder (`ScummVM/sc
 
 eXoIF games come in versions for many computers: a game can have Commodore 64, ZX Spectrum, MS-DOS and story-file versions. The launch options list them all under Version. Story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; get it from https://ccxvii.net/spatterlight/ and put it in the Applications folder. MS-DOS versions run in DOSBox. Versions for the Commodore 64 and 128, ZX Spectrum and ZX81, Apple II and Atari 8-bit run in RetroArch, with its cores installed from RetroArch's Online Updater; a C64 game on several disks gets a playlist, so the other disks are in RetroArch's Disk Control menu. Versions for other computers are marked "not supported on the Mac", with the reason. Unless you pick one, Play starts a Spatterlight version, else a DOS version, else a RetroArch one.
 
-Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight ends the game for Autoexec.Mac.
+Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight ends the game for Silverbox.
 
 ## Uninstalling
 
-Choose Uninstall from the game's context menu. Autoexec.Mac offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.
+Choose Uninstall from the game's context menu. Silverbox offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.
 
 ## Extras and manuals
 
@@ -65,4 +65,4 @@ When an entry has several videos (episodes or discs), a list opens first; choose
 
 ## Menu music
 
-Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Autoexec.Mac. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General. The music pauses when another app comes to the front and resumes when you come back, unless Music › Play in Background is on.
+Many games have a music track that plays while you browse. MP3 and the other formats macOS plays work directly; Ogg Vorbis tracks and MOD, S3M, XM and IT tracker modules play through decoders built into Silverbox. AMF modules and VOC files are listed but skipped. Use the bar at the bottom of the window to pause the music or change the volume, or turn it off in Settings › General. The music pauses when another app comes to the front and resumes when you come back, unless Music › Play in Background is on.

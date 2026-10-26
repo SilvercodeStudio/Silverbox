@@ -228,6 +228,19 @@ final class AppModel {
         }
     }
 
+    /// Uses another local data folder (`nil` for the default). Nothing is
+    /// moved; collections inside the old folder point into the new one when
+    /// they are there, so a folder moved or renamed in the Finder and then
+    /// chosen again keeps its collections.
+    func setDataFolder(_ path: String?) {
+        var changed = settings
+        let oldFolder = settings.localStore.directory
+        changed.localStorePath = path
+        let newFolder = changed.localStore.directory
+        changed.collections = changed.collections.map { $0.following(dataFolderFrom: oldFolder, to: newFolder) }
+        settings = changed
+    }
+
     /// Points the caches, launch configs and logs at the chosen local data
     /// folder. While its drive is unplugged they fall back to Application
     /// Support, so nothing is created under an empty /Volumes mount point.

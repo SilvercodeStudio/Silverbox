@@ -107,7 +107,7 @@ struct LicenseSheet: View {
             Text("License").font(.headline).padding(20)
             Divider()
             ScrollView {
-                Text(BundledLicense.text(named: "Autoexec.Mac"))
+                Text(BundledLicense.text(named: "Silverbox"))
                     .font(.callout)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)

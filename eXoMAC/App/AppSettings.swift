@@ -37,7 +37,7 @@ enum AppAppearance: String, CaseIterable, Codable, Identifiable {
     }
 }
 
-/// The two app icons from the design: amber or green phosphor on a dark CRT.
+/// The two app icons: an amber or a green floppy disk.
 enum AppIconVariant: String, CaseIterable, Codable, Identifiable {
     case amber, green
 
@@ -266,13 +266,13 @@ struct AppSettings: Codable, Equatable {
 /// user can move to another drive; the small, important `user-library.json`
 /// (favorites, play history) stays in Application Support with the settings.
 enum AppPaths {
-    /// `~/Library/Application Support/Autoexec.Mac`.
+    /// `~/Library/Application Support/Silverbox`.
     static let applicationSupport: URL = {
         let fm = FileManager.default
         let base =
             fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
-        return base.appendingPathComponent("Autoexec.Mac", isDirectory: true)
+        return base.appendingPathComponent("Silverbox", isDirectory: true)
     }()
 
     /// The local data folder chosen in Settings, when there is one. Set by
@@ -297,7 +297,7 @@ enum AppPaths {
             return URL(fileURLWithPath: path, isDirectory: true)
         }
         guard demoLibraryPaths != nil else { return nil }
-        return FileManager.default.temporaryDirectory.appendingPathComponent("Autoexec.Mac Demo", isDirectory: true)
+        return FileManager.default.temporaryDirectory.appendingPathComponent("Silverbox Demo", isDirectory: true)
     }()
 
     /// The test fixtures' eXoDOS-style and console libraries, for

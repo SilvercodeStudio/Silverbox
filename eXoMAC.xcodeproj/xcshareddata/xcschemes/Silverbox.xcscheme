@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "04788C54307BEF960061AE3E"
-               BuildableName = "Autoexec.Mac.app"
+               BuildableName = "Silverbox.app"
                BlueprintName = "eXoMAC"
                ReferencedContainer = "container:eXoMAC.xcodeproj">
             </BuildableReference>
@@ -47,7 +47,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04788C54307BEF960061AE3E"
-            BuildableName = "Autoexec.Mac.app"
+            BuildableName = "Silverbox.app"
             BlueprintName = "eXoMAC"
             ReferencedContainer = "container:eXoMAC.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04788C54307BEF960061AE3E"
-            BuildableName = "Autoexec.Mac.app"
+            BuildableName = "Silverbox.app"
             BlueprintName = "eXoMAC"
             ReferencedContainer = "container:eXoMAC.xcodeproj">
          </BuildableReference>

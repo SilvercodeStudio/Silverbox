@@ -2,7 +2,7 @@
 
 ## DOSBox for eXoDOS games
 
-eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Autoexec.Mac maps these to the two emulators it supports:
+eXoDOS runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to the two emulators it supports:
 
 - **DOSBox Staging** for games set up for DOSBox 0.74, ECE and Staging. This is the default.
 - **DOSBox-X** for games set up for SVN Daum and DOSBox-X.
@@ -20,13 +20,13 @@ You cannot choose another emulator for these games. Get 86Box from https://86box
 
 ## ScummVM for eXoScummVM games
 
-eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for every game and version (`eXo/util/scummvm.txt`) and small files in each version's folder for its platform, picture and sound options; Autoexec.Mac reads them as eXo's launcher does. eXo ships several Windows builds of ScummVM because some games broke in newer releases; the Mac uses the one ScummVM you have.
+eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for every game and version (`eXo/util/scummvm.txt`) and small files in each version's folder for its platform, picture and sound options; Silverbox reads them as eXo's launcher does. eXo ships several Windows builds of ScummVM because some games broke in newer releases; the Mac uses the one ScummVM you have.
 
 Five games need engines that ScummVM's release builds leave out until they are finished: In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden and Ultima I. Choose a daily build from https://buildbot.scummvm.org as "ScummVM daily build" in Settings › Emulators; it is used only for games the release build cannot run.
 
 ## Spatterlight and DOSBox for eXoIF games
 
-eXo's launcher for interactive fiction picks an emulator by the name of each version's folder (`eXo/util/launch_if.bat` holds the table) and the file to run in it: the only file in the folder, else its `dosbox.conf`, else the name in `launch.file`. Autoexec.Mac reads the same table. Versions eXo plays in WinFrotz, Lectrote, Gargoyle, Glulxe, Hugor, QTads, Level9, Magnetic or Adrift open in **Spatterlight** instead; when two of them hold the same story file, the list shows it once. MS-DOS versions run in **DOSBox Staging**, or in **DOSBox-X** when eXo's config is a `dosbox-x.conf`. Versions for 8-bit computers run in **RetroArch** cores:
+eXo's launcher for interactive fiction picks an emulator by the name of each version's folder (`eXo/util/launch_if.bat` holds the table) and the file to run in it: the only file in the folder, else its `dosbox.conf`, else the name in `launch.file`. Silverbox reads the same table. Versions eXo plays in WinFrotz, Lectrote, Gargoyle, Glulxe, Hugor, QTads, Level9, Magnetic or Adrift open in **Spatterlight** instead; when two of them hold the same story file, the list shows it once. MS-DOS versions run in **DOSBox Staging**, or in **DOSBox-X** when eXo's config is a `dosbox-x.conf`. Versions for 8-bit computers run in **RetroArch** cores:
 
 | eXo system | RetroArch core | Notes |
 |---|---|---|
@@ -41,7 +41,7 @@ A version whose core is not installed says so; install it from RetroArch's Onlin
 
 ## How a game is configured
 
-Autoexec.Mac reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
+Silverbox reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
 
 ## Music and MIDI
 
@@ -53,7 +53,7 @@ General MIDI games use the collection's Sound Canvas SoundFont through FluidSynt
 
 Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform:
 
-- **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); Autoexec.Mac finds them in RetroArch's cores folder.
+- **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); Silverbox finds them in RetroArch's cores folder.
 - **Dolphin** runs Nintendo GameCube and Wii games.
 - **MAME** runs arcade ROM sets.
 - **Mednafen** covers a few more consoles from the command line.

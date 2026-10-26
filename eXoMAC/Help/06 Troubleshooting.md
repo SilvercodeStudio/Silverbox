@@ -6,7 +6,7 @@ Right-click the game and choose **Show Last Launch Log…**: the sheet shows the
 
 ## Saves are not kept
 
-If the game is unpacked inside a read-only eXoDOS folder, Autoexec.Mac mounts a writable overlay from the local data folder's `Overlay` folder. Saves go there. Games installed by Autoexec.Mac are unpacked into the local data folder and can be written to directly.
+If the game is unpacked inside a read-only eXoDOS folder, Silverbox mounts a writable overlay from the local data folder's `Overlay` folder. Saves go there. Games installed by Silverbox are unpacked into the local data folder and can be written to directly.
 
 ## Box art is missing
 
@@ -18,8 +18,8 @@ Set the location of DOSBox Staging, DOSBox-X or 86Box in Settings › Emulators.
 
 ## A console game says its core is not installed
 
-RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder Autoexec.Mac reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
+RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder Silverbox reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
 
 ## Menu music does not play
 
-Ogg Vorbis tracks and MOD, S3M, XM and IT modules play through decoders built into Autoexec.Mac. AMF modules and VOC sound files are listed but skipped, and the music bar says so. Tracks in other formats (PSM, DSM) are not listed at all. If a track in a supported format stays silent, check the volume in the music bar and that menu music is on in Settings › General.
+Ogg Vorbis tracks and MOD, S3M, XM and IT modules play through decoders built into Silverbox. AMF modules and VOC sound files are listed but skipped, and the music bar says so. Tracks in other formats (PSM, DSM) are not listed at all. If a track in a supported format stays silent, check the volume in the music bar and that menu music is on in Settings › General.

@@ -37,6 +37,27 @@ struct PathSubstitutionTests {
         let minimal = try JSONDecoder().decode(LibraryCollection.self, from: Data(#"{"rootPath":"/x"}"#.utf8))
         #expect(minimal.isEnabled && minimal.kind == .launchBox && minimal.substitutions.isEmpty)
     }
+
+    @Test func followsTheDataFolderWhenTheCollectionIsThere() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let oldFolder = scratch.appendingPathComponent("Old Library", isDirectory: true)
+        let newFolder = scratch.appendingPathComponent("New Library", isDirectory: true)
+        let empty = scratch.appendingPathComponent("Empty", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: newFolder.appendingPathComponent("Collections/eXoIF"), withIntermediateDirectories: true)
+
+        let inside = LibraryCollection(name: "eXoIF", rootPath: oldFolder.path + "/Collections/eXoIF")
+        #expect(
+            inside.following(dataFolderFrom: oldFolder, to: newFolder).rootURL.standardizedFileURL
+                == newFolder.appendingPathComponent("Collections/eXoIF").standardizedFileURL)
+        // Not in the new folder: the collection keeps its path.
+        #expect(inside.following(dataFolderFrom: oldFolder, to: empty) == inside)
+        // Outside the data folder, or a folder whose name only starts the same.
+        let outside = LibraryCollection(name: "eXoDOS", rootPath: "/Volumes/eXoDOS_ro")
+        #expect(outside.following(dataFolderFrom: oldFolder, to: newFolder) == outside)
+        let lookalike = LibraryCollection(name: "X", rootPath: oldFolder.path + " 2/Collections/eXoIF")
+        #expect(lookalike.following(dataFolderFrom: oldFolder, to: newFolder) == lookalike)
+    }
 }
 
 @Suite("Library aggregate")

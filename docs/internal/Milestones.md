@@ -151,10 +151,15 @@ Done:
   Services), the copyright and the Games category in the app's Info.plist,
   Swift 6 language mode for the app, `-dataPath` and `-demoLibrary`; the
   template test targets removed from the Xcode project.
+- The name Silverbox (bundle ID `app.getsilverbox.Silverbox`) and the
+  floppy disk icon in amber and green, for version 0.3 (2026-10-25). The
+  internal `eXoMAC` names are still to change.
 
 Not yet:
 
-- The website for autoexecmac.app (later): `docs/site`, a GitHub Pages
+- Rename the internal `eXoMAC` names (project, module, folders, the
+  settings key) to Silverbox.
+- The website for getsilverbox.app (later): `docs/site`, a GitHub Pages
   workflow, `make site`, screenshots in both appearances.
 - A release script shared with Silverside: archive, Developer ID signing,
   notarization, stapling, a DMG.

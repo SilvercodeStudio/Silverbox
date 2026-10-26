@@ -32,7 +32,7 @@ nonisolated public struct FilePatch: Hashable, Sendable {
 /// the translation uses, and keeps a note of the original so a later launch
 /// with another choice can rewrite it again.
 nonisolated public enum MIDIBatchPatcher {
-    static let marker = "rem Autoexec.Mac replaced: "
+    static let marker = "rem Silverbox replaced: "
 
     /// The patched batch files under `gameFolder`, two levels deep, with
     /// each one's destination: in place, or the same relative path under

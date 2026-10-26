@@ -87,6 +87,24 @@ nonisolated public struct LibraryCollection: Identifiable, Hashable, Sendable, C
             downloadURL: downloadPath.map { URL(fileURLWithPath: $0, isDirectory: true) })
     }
 
+    /// This collection after the local data folder changed from `oldFolder`
+    /// to `newFolder`. A collection inside the old folder, such as one that
+    /// setup made in `Collections`, points to the same place in the new
+    /// folder when it is there, so a data folder that was moved or renamed
+    /// takes its collections along. Other collections do not change.
+    public func following(dataFolderFrom oldFolder: URL, to newFolder: URL) -> LibraryCollection {
+        let old = oldFolder.standardizedFileURL.pathComponents
+        let path = rootURL.standardizedFileURL.pathComponents
+        guard path.count > old.count, Array(path.prefix(old.count)) == old else { return self }
+        let moved = path.dropFirst(old.count).reduce(newFolder.standardizedFileURL) {
+            $0.appendingPathComponent($1, isDirectory: true)
+        }
+        guard FileManager.default.fileExists(atPath: moved.path) else { return self }
+        var collection = self
+        collection.rootPath = moved.path
+        return collection
+    }
+
     /// A sensible name for a folder: "eXoDOS" or "eXoWin9x" when the folder
     /// is named after them, else the folder name. A general LaunchBox install
     /// may contain an `eXo` folder too, so the contents are not used.

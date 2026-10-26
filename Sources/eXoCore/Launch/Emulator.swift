@@ -1,6 +1,6 @@
 import Foundation
 
-/// An emulator program Autoexec.Mac can start. DOSBox Staging and DOSBox-X run
+/// An emulator program Silverbox can start. DOSBox Staging and DOSBox-X run
 /// eXoDOS games, DOSBox-X and 86Box run eXoWin9x games, and the others run
 /// console, computer and arcade platforms from a LaunchBox library.
 nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, Hashable, Identifiable {

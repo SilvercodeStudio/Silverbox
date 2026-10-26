@@ -1,16 +1,15 @@
-# Autoexec.Mac (eXoMAC)
+# Silverbox
 
-Welcome to Autoexec.Mac!
+Welcome to Silverbox!
 
-<img src="./eXoMAC/Assets.xcassets/AppIconAmber.imageset/autoexec-mac-amber-1024.png" width="400" alt="A.M. logo">
+<img src="./eXoMAC/Assets.xcassets/AppIconAmber.imageset/silverbox-amber-1024.png" width="400" alt="Silverbox icon">
 
-Autoexec.Mac is an emulation front-end for the Mac, built for eXoDOS,
+Silverbox is an emulation front-end for the Mac, built for eXoDOS,
 eXoWin3x, eXoWin9x and the other game preservation projects by the eXo team
 (https://www.retro-exo.com). It reads an existing eXoDOS collection (the
 LaunchBox XML metadata, box art, screenshots, manuals, music and videos) in
 place and launches games in DOSBox Staging or DOSBox-X with a config
-translated from eXoDOS's Windows launch scripts. `eXoMAC` is the project's
-internal name.
+translated from eXoDOS's Windows launch scripts.
 
 The games, media and emulators are not part of this project.
 
@@ -18,19 +17,19 @@ The games, media and emulators are not part of this project.
 
 ### What is this?
 
-Autoexec.Mac is an emulator front-end (launcher) for Apple Mac computers that 
+Silverbox is an emulator front-end (launcher) for Apple Mac computers that 
 is designed to allow you to enjoy the [eXo projects](https://www.retro-exo.com)
 (retro game collections such as eXoDOS and eXoWin9x) directly on your Mac 
 without needing a Windows PC.
 
-Autoexec.Mac provides an experience on Mac similar to what Windows users get with 
+Silverbox provides an experience on Mac similar to what Windows users get with 
 LaunchBox: an integrated game and media browser that lets you view game collections,
 see game descriptions and details, view images, read game manuals, magazines, and
 books, and listen to music and game soundtracks. However, to actually play the games,
 you will need to download additional Mac versions of game emulators like DOSBox
-that are not provided with Autoexec.Mac. 
+that are not provided with Silverbox. 
 
-(Note: Autoexec.Mac is not affiliated with or endorsed by the eXo Project.)
+(Note: Silverbox is not affiliated with or endorsed by the eXo Project.)
 
 ### What is the eXo project?
 
@@ -40,14 +39,14 @@ Apple IIgs, and others including the ScummVM (adventure game) project.
 They offer various [collections](https://www.retro-exo.com/index2.html)
 that you can download that include games, manuals, hint books and other
 literature, box art, screenshots, music, and other goodies. eXo's collections
-come set up for LaunchBox, a Windows front-end; Autoexec.Mac provides
+come set up for LaunchBox, a Windows front-end; Silverbox provides
 an alternative front-end for Mac users.
 
 See the [eXo FAQ](https://www.retro-exo.com/FAQ.html) for more details.
 
 ### What do I need to do to use this?
 
-Autoexec.Mac does **not** include the actual eXo project downloads, or any Mac emulators. To get started:
+Silverbox does **not** include the actual eXo project downloads, or any Mac emulators. To get started:
 
 1. Get a BitTorrent client such as 
 [qBittorrent](https://www.qbittorrent.org/download) or 
@@ -62,7 +61,7 @@ TODO: Currently the "Lite" version (downloading games on demand)
 is not supported; you must use the "Full" download. Support for
 on-demand downloads is coming soon.
 
-Currently, Autoexec.Mac supports the following collections:
+Currently, Silverbox supports the following collections:
 
    - [eXoDOS](https://www.retro-exo.com/exodos.html) MS-DOS games from 
      the 1980s and 1990s.
@@ -81,7 +80,7 @@ Currently, Autoexec.Mac supports the following collections:
      games and educational software.
    - (Coming soon) - eXoDREAMM - Loom and similar adventure games
 
-3. Emulators for Mac: All you need to browse the collections are Autoexec.Mac
+3. Emulators for Mac: All you need to browse the collections are Silverbox
 itself and one or more eXo collection downloads. However, to actually play
 the games, you will need to download one or more additional emulators for Mac
 depending on which titles you want to play.
@@ -89,7 +88,7 @@ depending on which titles you want to play.
 See the [Emulators](#emulators) section below for exactly what Mac emulators
 you need to play which titles.
 
-4. Launch Autoexec.Mac and drag one of your eXo folders from Finder to the app,
+4. Launch Silverbox and drag one of your eXo folders from Finder to the app,
 or click (TODO: missing menu item for adding new collections/libraries.)
 You will be prompted whether you want to unpack required files directly
 within the download directory, or in a separate local library folder.
@@ -105,10 +104,10 @@ separate folder for unpacked files.
 
 ### Can I use this for other consoles (SNES, etc.)?
 
-Yes, but currently Autoexec.Mac depends on an existing LaunchBox
+Yes, but currently Silverbox depends on an existing LaunchBox
 library for the moment. You can set up individual games manually, but it does
 not include any "discovery" or "scraping" functionality. However, if you
-have a LaunchBox installation from Windows, Autoexec.Mac can recognize 
+have a LaunchBox installation from Windows, Silverbox can recognize 
 and use that folder and take advantage of the metadata, media, etc. already
 registered by LaunchBox.
 
@@ -125,7 +124,7 @@ my close supervision and direction.
 - macOS 15 or later, on Apple silicon or Intel.
   - Building the app from source needs Xcode 27 or higher.
 - One or more eXo downloads, such as eXoDOS v6 (the full set, or Lite with
-  games downloaded), eXoWin3x and eXoWin9x. Autoexec.Mac runs their setup itself, so a
+  games downloaded), eXoWin3x and eXoWin9x. Silverbox runs their setup itself, so a
   Windows PC is not needed; a folder set up on Windows works too.
 - The emulators for the packs you play; see [Emulators](#emulators). Most are
   optional: a game whose emulator is missing still shows, with its box art,
@@ -133,7 +132,7 @@ my close supervision and direction.
 
 ## Emulators
 
-Autoexec.Mac starts games in Mac emulators that you install yourself. Put them
+Silverbox starts games in Mac emulators that you install yourself. Put them
 in `/Applications` (or `~/Applications`), or choose them in Settings ›
 Emulators. eXo ships Windows builds of the same emulators; the app does not
 use them.
@@ -178,7 +177,7 @@ ROM that is not installed, the launch options say which.
 
 ## Build
 
-Open `eXoMAC.xcodeproj` and run the "Autoexec.Mac" scheme, or use the Makefile:
+Open `eXoMAC.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
 
 ```
 make run                  # build with xcodebuild, then start the app
@@ -220,7 +219,7 @@ macOS plays the other music formats itself.
 On first launch, choose your eXoDOS folder. It can be read-only (an external
 drive or a network share): the app never modifies it. Installed games, save
 backups, edited configs, unpacked soundtracks and caches are kept in a local
-data folder, by default `~/Library/Application Support/Autoexec.Mac`, which Settings
+data folder, by default `~/Library/Application Support/Silverbox`, which Settings
 can point at another drive; favorites, play history and settings stay in
 Application Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS
 does on Windows, is available in Settings.

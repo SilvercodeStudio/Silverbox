@@ -13,7 +13,7 @@ struct LaunchReportTests {
             workingDirectory: "/Volumes/eXoDOS_ro/eXo/eXoDOS/ultima5", notes: ["Used the MT-32 ROMs from eXo"],
             startedAt: Date(timeIntervalSince1970: 1_760_000_000), duration: duration, exitStatus: exitStatus,
             configPath: "/tmp/ultima5.conf", configText: "[sdl]\nfullscreen = false\n", logPath: "/tmp/u5.log",
-            logExcerpt: "MIDI: Opened device\nExit", appVersion: "Autoexec.Mac 0.1 (2)")
+            logExcerpt: "MIDI: Opened device\nExit", appVersion: "Silverbox 0.1 (2)")
     }
 
     @Test func describesTheOutcome() {
@@ -25,7 +25,7 @@ struct LaunchReportTests {
 
     @Test func writesMarkdownForABugReport() {
         let markdown = Self.report(exitStatus: 1).markdown
-        #expect(markdown.hasPrefix("# Launch report: Ultima V: Warriors of Destiny\n\nAutoexec.Mac 0.1 (2), 2025-"))
+        #expect(markdown.hasPrefix("# Launch report: Ultima V: Warriors of Destiny\n\nSilverbox 0.1 (2), 2025-"))
         #expect(markdown.contains("## Result\n\nExited with code 1 after 1:23.\n"))
         #expect(markdown.contains("| eXo pack | eXoDOS |"))
         #expect(

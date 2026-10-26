@@ -62,7 +62,7 @@ struct GeneralSettingsView: View {
                     }
                 }
                 Text(
-                    "The Dock and the About window show the chosen icon, and the app takes its colour for highlights. The Finder shows the amber icon built into the app."
+                    "The Dock and the About window show the chosen icon, and the app takes its colour for highlights. The Finder shows the amber icon built into the app, and only that icon follows the icon style chosen in System Settings › Appearance."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
@@ -115,14 +115,14 @@ struct LibrarySettingsView: View {
     @State private var showingPicker = false
     @State private var showingLocalPicker = false
 
-    /// A whole drive or the home folder gets an "Autoexec.Mac" folder of its
+    /// A whole drive or the home folder gets a "Silverbox" folder of its
     /// own, so the app's folders do not land at the root.
     static func dataFolder(for chosen: URL) -> URL {
         let url = chosen.standardizedFileURL
         let isVolumeRoot = url.pathComponents.count == 3 && url.pathComponents[1] == "Volumes"
         let isHome = url == FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
         return isVolumeRoot || isHome || url.path == "/"
-            ? url.appendingPathComponent("Autoexec.Mac", isDirectory: true) : url
+            ? url.appendingPathComponent("Silverbox", isDirectory: true) : url
     }
 
     var body: some View {
@@ -161,7 +161,7 @@ struct LibrarySettingsView: View {
                     Spacer()
                     Button("Choose…") { showingLocalPicker = true }
                     if model.settings.localStorePath != nil {
-                        Button("Use Default") { model.settings.localStorePath = nil }
+                        Button("Use Default") { model.setDataFolder(nil) }
                     }
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([model.localStore.directory])
@@ -178,7 +178,7 @@ struct LibrarySettingsView: View {
                     .font(.caption)
                 }
                 Text(
-                    "Installed games, save backups, edited configs, unpacked soundtracks, caches, launch configs and logs are kept here, so the collections can stay read-only; an external drive works. Favorites, play history and settings stay on this Mac. Choosing another folder does not move what is already there."
+                    "Installed games, save backups, edited configs, unpacked soundtracks, caches, launch configs and logs are kept here, so the collections can stay read-only; an external drive works. Favorites, play history and settings stay on this Mac. Choosing another folder does not move what is already there. If you moved or renamed this folder, choose it again: the collections set up inside it follow."
                 )
                 .font(.caption).foregroundStyle(.secondary)
                 Picker("Install games to", selection: $model.settings.installLocation) {
@@ -198,7 +198,7 @@ struct LibrarySettingsView: View {
             if case .success(let url) = result {
                 let folder = Self.dataFolder(for: url)
                 try? LocalStore(directory: folder).ensureDirectories()
-                model.settings.localStorePath = folder.path
+                model.setDataFolder(folder.path)
             }
         }
     }

@@ -1,6 +1,19 @@
 # Changelog
 
-What changed in each version of Autoexec.Mac.
+What changed in each version of Silverbox.
+
+## 0.3
+
+### Changed
+
+- A new app icon: a floppy disk, in amber or green. The highlight colours
+  match it.
+
+### Fixed
+
+- Collections set up inside the local data folder follow it when you move
+  or rename that folder and choose it again in Settings. Before, they could
+  not be found.
 
 ## 0.2
 
@@ -41,7 +54,7 @@ What changed in each version of Autoexec.Mac.
 
 - General MIDI chosen in eXo's in-game setup menus now plays in DOSBox
   Staging. The menus set a MIDI device that Staging does not accept, so the
-  game had no MIDI music; Autoexec.Mac now changes that line to the General
+  game had no MIDI music; Silverbox now changes that line to the General
   MIDI device you chose in the launch options.
 
 ## 0.1

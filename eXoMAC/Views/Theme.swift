@@ -63,13 +63,12 @@ final class ThemeAccent {
 }
 
 extension AppIconVariant {
-    /// A softer take on the icon's phosphor (amber #FFB000, green #33FF00),
-    /// dark enough for dark text on it, and darker again on a light
+    /// The icon's amber or green plastic, dark enough for dark text on it, and darker again on a light
     /// background so that it reads as text and outlines.
     var accentHex: (light: UInt32, dark: UInt32) {
         switch self {
-        case .amber: return (0xC0820F, 0xF2B544)
-        case .green: return (0x2E8B42, 0x3FA453)
+        case .amber: return (0xB46E12, 0xE99A3A)
+        case .green: return (0x37842C, 0x46A03A)
         }
     }
 

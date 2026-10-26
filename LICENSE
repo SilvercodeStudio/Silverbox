@@ -6,6 +6,6 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-The name "Autoexec.Mac" and the icon and logo artwork (eXoMAC/AppIcon.icon, eXoMAC/AppIcon-Green.icon, the AppIconAmber and AppIconGreen image sets, and AM_icons/) are not covered by this license. All rights reserved. If you distribute a modified version, give it a different name and icon.
+The name "Silverbox" and the icon and logo artwork (eXoMAC/AppIcon.icon, eXoMAC/AppIcon-Green.icon, and the AppIconAmber and AppIconGreen image sets) are not covered by this license. All rights reserved. If you distribute a modified version, give it a different name and icon.
 
 The vendored decoders under Sources/CStbVorbis and Sources/CXmpLite keep their own licenses, in the LICENSE file beside each. The eXoDOS, eXoWin9x and other eXo collections are the work of the eXo team and are not part of this software.

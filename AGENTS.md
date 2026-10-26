@@ -1,4 +1,4 @@
-# eXoMAC
+# Silverbox
 
 A SwiftUI front-end for the eXoDOS / eXoWin9x game preservation collections on
 macOS. It reads an eXoDOS installation (LaunchBox XML, images, manuals, music,
@@ -10,13 +10,13 @@ Windows: it reads the eXoDOS / LaunchBox configuration files so that an
 eXoDOS installation or download is usable on the Mac. The actual emulators
 (DOSBox and related) are external to this front-end project.
 
-Names: `eXoMAC` is the internal name (project, module, folders). The local
-data folder is `~/Library/Application Support/Autoexec.Mac`. The bundle
-identifier is `app.autoexecmac.AutoexecMac`.
-The display name is "Autoexec.Mac"; it is set once in `AppInfo`
+Names: the project, module and folders use the internal name `eXoMAC`. The local
+data folder is `~/Library/Application Support/Silverbox`. The bundle
+identifier is `app.getsilverbox.Silverbox`.
+The display name is "Silverbox"; it is set once in `AppInfo`
 (`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
 `INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
-`Autoexec.Mac.app`. Credit the eXo project in the About box. Do not describe
+`Silverbox.app`. Credit the eXo project in the About box. Do not describe
 the app as a collection of classic Mac games.
 
 ## Layout
@@ -98,7 +98,7 @@ new entry after the version is tagged; the version is the app target's
 - Two roots. Every library (collection folder) is read-only as far as the app is
   concerned; it may live on a read-only volume. Everything bulky the app writes
   goes to the local data folder (`LocalStore` plus `AppPaths.dataRoot`, default
-  `~/Library/Application Support/Autoexec.Mac/`, movable to another drive in
+  `~/Library/Application Support/Silverbox/`, movable to another drive in
   Settings; `user-library.json` and the settings always stay in Application
   Support): `Games/` (unpacked games; mirrors `eXo/`, so `Games/eXoDOS/<folder>`
   and `Games/eXoWin9x/<year>/<folder>`),
@@ -150,10 +150,14 @@ new entry after the version is tagged; the version is the app target's
   `Setup <pack>.bat` does without Windows: unpacks them (nested `EXT*.zip`
   into `eXo`, `OPT*.zip` into `eXo/util`), merges the XML fragments by
   reading the `xml/merge_*.bat` scripts, registers add-on platforms as
-  `eXoLBpm.exe` would, and writes `Data/Autoexec.Mac Setup.json`. It sets up
+  `eXoLBpm.exe` would, and writes `Data/Silverbox Setup.json`. It sets up
   in place or, by choice or when the download is read-only, into
-  `Collections/<name>` in the local data folder with `LibraryCollection.downloadPath` pointing back
-  (`LibraryRoot.downloadFile` finds game zips and extras there). A game's
+  `Collections/<name>` in the local data folder with
+  `LibraryCollection.downloadPath` pointing back (`LibraryRoot.downloadFile`
+  finds game zips and extras there). Settings stores absolute paths, so
+  `AppModel.setDataFolder` moves the collections inside the old data folder
+  to the new one when they are there
+  (`LibraryCollection.following(dataFolderFrom:to:)`). A game's
   GameData zip is unpacked at install when setup left it packed.
   `ZipArchive` extracts with `unzip`, or `bsdtar` when the entries to
   extract have names in the DOS code page (CP437) without the UTF-8 flag,
@@ -227,7 +231,7 @@ new entry after the version is tagged; the version is the app target's
   falls through to CoreMIDI). For Staging, `planDOSBox` has
   `MIDIBatchPatcher` rewrite that line in the game's `.bat` files (two
   levels deep) to `ConfigTranslator.generalMIDIDevice`, keeping the original
-  in a `rem Autoexec.Mac replaced:` line so a later choice rewrites it again.
+  in a `rem Silverbox replaced:` line so a later choice rewrites it again.
   The patched file goes in place for local installs and under the overlay
   folder for read-only libraries (`LaunchPlan.filePatches`, written by
   `writeConfig`); a writable library is left alone, with a note.
@@ -292,21 +296,24 @@ new entry after the version is tagged; the version is the app target's
   Keyboard Shortcuts window) and help page 07. Context menus are AppKit
   menus and do not change once open, so anything loaded for them (the Extras
   submenu) comes from `AppModel.extrasCache`, filled on hover and selection.
-- App icon. `eXoMAC/AppIcon.icon` (amber) is the Icon Composer file Xcode
-  compiles into the bundle icon; `eXoMAC/AppIcon-Green.icon` is the alternate,
-  compiled only when the target's "Include all app icon assets" is on. The app
-  icon setting shows the chosen one in the Dock and the About window through
+- App icon. A floppy disk: `eXoMAC/AppIcon.icon` (amber) is the Icon
+  Composer file Xcode compiles into the bundle icon;
+  `eXoMAC/AppIcon-Green.icon` is the alternate, compiled only when the
+  target's "Include all app icon assets" is on. The app icon setting shows
+  the chosen one in the Dock and the About window through
   `AppIconVariant.image`, which falls back to the flat 1024 px PNGs in the
-  `AppIconAmber` and `AppIconGreen` image sets. The chosen icon also sets the
-  accent: `Theme.accent` and `Theme.accentText` read `ThemeAccent.shared`
-  (observable, set by `AppModel.applyAppIcon`), and each scene applies
+  `AppIconAmber` and `AppIconGreen` image sets. Icon Composer's `ictool
+  --export-image` makes them; make them again when an icon changes. A
+  Dock icon set at run time is a flat image, so only the bundle icon
+  (amber) follows the system's icon style (dark, clear, tinted). The
+  chosen icon also sets the accent: `Theme.accent` and `Theme.accentText`
+  read `ThemeAccent.shared` (observable, set by `AppModel.applyAppIcon`), and each scene applies
   `.tint(Theme.accent)` for controls. Use `Theme.accent`, not
   `Color.accentColor` (the asset catalog's fixed amber). Every `Theme`
   colour has a light and a dark value (`Color(light:dark:)`, a dynamic
   `NSColor`), and the Appearance setting sets `NSApp.appearance`
   (`AppModel.applyAppearance`); do not force a colour scheme on a view. The
-  Help page's CSS follows with `prefers-color-scheme`. The design sources
-  (SVG masters, Icon Composer layers, classic PNG sets) live in `AM_icons/`.
+  Help page's CSS follows with `prefers-color-scheme`.
 - Reference material: a read-only eXoDOS v6 copy at `/Volumes/eXoDOS_ro`,
   LaunchBox screenshots in `Launchbox Screenshots/`, and the design prototypes
   linked from `prompt.md`.
@@ -379,7 +386,7 @@ new entry after the version is tagged; the version is the app target's
   `-ApplePersistenceIgnoreState YES`. Example:
 
   ```
-  "$BUILT_PRODUCTS_DIR/Autoexec.Mac.app/Contents/MacOS/Autoexec.Mac" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
+  "$BUILT_PRODUCTS_DIR/Silverbox.app/Contents/MacOS/Silverbox" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
       -searchText ultima -selectTitle "Ultima V: Warriors of Destiny" -screenshotPath /tmp/shot.png
   ```
 - `EXOMAC_LOG=1` prints media folder scan timings to stderr.

@@ -130,7 +130,7 @@ struct GameStatusChips: View {
                     Chip(
                         text: "Cannot start on the Mac yet", tone: .warning, systemImage: "pc",
                         help:
-                            "\(game.eXoPack?.displayName ?? "These") games need Windows programs that Autoexec.Mac cannot run yet."
+                            "\(game.eXoPack?.displayName ?? "These") games need Windows programs that Silverbox cannot run yet."
                     ))
             }
         default:

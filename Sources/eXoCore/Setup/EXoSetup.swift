@@ -1,7 +1,7 @@
 import Foundation
 
 /// The choices eXo's setup asks about that matter on the Mac. Display
-/// choices are left out: Autoexec.Mac has its own launch options.
+/// choices are left out: Silverbox has its own launch options.
 nonisolated public struct EXoSetupOptions: Hashable, Sendable, Codable {
     /// eXo asks whether to remove adult games (nudity) from the front end.
     /// They stay on disk either way; only the game list changes.
@@ -28,7 +28,7 @@ nonisolated public struct EXoSetupOptions: Hashable, Sendable, Codable {
 
 /// What a setup did, kept in the set-up folder's `Data` folder.
 nonisolated public struct EXoSetupRecord: Hashable, Sendable, Codable {
-    public static let fileName = "Autoexec.Mac Setup.json"
+    public static let fileName = "Silverbox Setup.json"
 
     public var date: Date
     public var packs: [String]

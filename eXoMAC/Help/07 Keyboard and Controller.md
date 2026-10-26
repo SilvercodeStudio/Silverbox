@@ -36,7 +36,7 @@ The Quick Look panel pages through everything the game has: its images and video
 
 ## Game controller
 
-Pair a controller in System Settings › Bluetooth. PlayStation, Xbox and MFi controllers work, and Settings › General lists the controllers Autoexec.Mac sees. The controller drives Autoexec.Mac only while it is the front app; once a game is running, the emulator has the controller.
+Pair a controller in System Settings › Bluetooth. PlayStation, Xbox and MFi controllers work, and Settings › General lists the controllers Silverbox sees. The controller drives Silverbox only while it is the front app; once a game is running, the emulator has the controller.
 
 | Control (PlayStation / Xbox) | Action |
 |---|---|

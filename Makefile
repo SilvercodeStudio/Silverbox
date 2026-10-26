@@ -1,4 +1,4 @@
-# Shortcuts for building, running and testing Autoexec.Mac.
+# Shortcuts for building, running and testing Silverbox.
 #
 #   make run ARGS='-libraryPath /Volumes/eXoDOS_ro -musicEnabled 0'
 #
@@ -6,7 +6,7 @@
 # Xcode and from here share the same incremental state.
 
 PROJECT = eXoMAC.xcodeproj
-SCHEME = "Autoexec.Mac"
+SCHEME = "Silverbox"
 CONFIG ?= Debug
 ARGS ?=
 
@@ -104,12 +104,12 @@ typecheck: core
 # app's defaults domain, which also holds the window positions). The libraries
 # themselves are never touched. Set DATA= to the local data folder when
 # Settings points it at another drive; YES=1 skips the question.
-APPDATA = $(HOME)/Library/Application Support/Autoexec.Mac
+APPDATA = $(HOME)/Library/Application Support/Silverbox
 DATA ?=
-DOMAIN ?= app.autoexecmac.AutoexecMac
+DOMAIN ?= app.getsilverbox.Silverbox
 
 reset:
-	@if pgrep -xq "Autoexec.Mac"; then echo "Quit Autoexec.Mac first."; exit 1; fi
+	@if pgrep -xq "Silverbox"; then echo "Quit Silverbox first."; exit 1; fi
 	@echo "This deletes:"; \
 	size=$$([ -e "$(APPDATA)" ] && du -sh "$(APPDATA)" | cut -f1 || echo missing); echo "  app data     $(APPDATA) ($$size)"; \
 	if [ -n "$(DATA)" ]; then size=$$([ -e "$(DATA)" ] && du -sh "$(DATA)" | cut -f1 || echo missing); echo "  data folder  $(DATA) ($$size)"; fi; \

@@ -9,7 +9,7 @@ struct ProjectFilesTests {
 
     @Test func bundledLicensesMatchTheirSources() throws {
         let pairs = [
-            ("LICENSE", "eXoMAC/Licenses/Autoexec.Mac.txt"),
+            ("LICENSE", "eXoMAC/Licenses/Silverbox.txt"),
             ("Sources/CStbVorbis/LICENSE", "eXoMAC/Licenses/stb_vorbis.txt"),
             ("Sources/CXmpLite/LICENSE", "eXoMAC/Licenses/libxmp-lite.txt"),
         ]
@@ -23,6 +23,6 @@ struct ProjectFilesTests {
     @Test func licenseKeepsTheNameAndIcons() throws {
         let license = try String(contentsOf: Self.root.appendingPathComponent("LICENSE"), encoding: .utf8)
         #expect(license.contains("Permission is hereby granted, free of charge"))
-        #expect(license.contains("The name \"Autoexec.Mac\" and the icon and logo artwork"))
+        #expect(license.contains("The name \"Silverbox\" and the icon and logo artwork"))
     }
 }

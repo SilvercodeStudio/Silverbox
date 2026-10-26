@@ -57,8 +57,8 @@ struct eXoMACApp: App {
 
 /// Names shown to the user. Internal names stay `eXoMAC`.
 enum AppInfo {
-    static let displayName = "Autoexec.Mac"
-    /// "Autoexec.Mac 0.1 (2)", for reports.
+    static let displayName = "Silverbox"
+    /// "Silverbox 0.1 (2)", for reports.
     static var versionLine: String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"

@@ -12,7 +12,7 @@ struct MIDIBatchPatcherTests {
         let rewritten = try #require(MIDIBatchPatcher.rewrite(Self.batch, device: "coreaudio"))
         #expect(
             rewritten.contains(
-                "rem Autoexec.Mac replaced: CONFIG -set \"mididevice=default\"\r\nCONFIG -set \"mididevice=coreaudio\"\r\n"
+                "rem Silverbox replaced: CONFIG -set \"mididevice=default\"\r\nCONFIG -set \"mididevice=coreaudio\"\r\n"
             ))
         #expect(rewritten.contains("CONFIG -set \"mididevice=mt32\"\r\n"))
         #expect(rewritten.hasPrefix("@echo off\r\n"))
