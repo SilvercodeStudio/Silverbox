@@ -1,12 +1,12 @@
 // swift-tools-version: 6.2
 //
-// This manifest builds the portable, Foundation-only core of eXoMAC as the
-// eXoCore library, plus the two vendored C decoders it uses for menu music.
-// The Xcode app target links the eXoCore product of this package (added as a
+// This manifest builds the portable, Foundation-only core of Silverbox as the
+// SilverboxCore library, plus the two vendored C decoders it uses for menu music.
+// The Xcode app target links the SilverboxCore product of this package (added as a
 // local package dependency), and the tests run from the command line:
 //
-//   swift build          # eXoCore and the vendored C targets
-//   swift test           # runs Tests/eXoCoreTests
+//   swift build          # SilverboxCore and the vendored C targets
+//   swift test           # runs Tests/SilverboxCoreTests
 //
 // Vendored C code lives in its own target under Sources/ with the upstream
 // LICENSE and a VENDOR.md note; see AGENTS.md for the rules.
@@ -23,10 +23,10 @@ let coreSettings: [SwiftSetting] = [
 ]
 
 let package = Package(
-    name: "eXoMAC",
+    name: "Silverbox",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "eXoCore", targets: ["eXoCore"])
+        .library(name: "SilverboxCore", targets: ["SilverboxCore"])
     ],
     targets: [
         // stb_vorbis: Ogg Vorbis decoder (public domain / MIT), one C file.
@@ -37,14 +37,14 @@ let package = Package(
             cSettings: [.define("LIBXMP_CORE_PLAYER"), .define("LIBXMP_STATIC")]
         ),
         .target(
-            name: "eXoCore",
+            name: "SilverboxCore",
             dependencies: ["CStbVorbis", "CXmpLite"],
             swiftSettings: coreSettings
         ),
         .testTarget(
-            name: "eXoCoreTests",
-            dependencies: ["eXoCore"],
-            path: "Tests/eXoCoreTests",
+            name: "SilverboxCoreTests",
+            dependencies: ["SilverboxCore"],
+            path: "Tests/SilverboxCoreTests",
             resources: [.copy("Fixtures")],
             swiftSettings: coreSettings
         ),

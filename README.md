@@ -2,7 +2,7 @@
 
 Welcome to Silverbox!
 
-<img src="./eXoMAC/Assets.xcassets/AppIconAmber.imageset/silverbox-amber-1024.png" width="400" alt="Silverbox icon">
+<img src="./Silverbox/Assets.xcassets/AppIconAmber.imageset/silverbox-amber-1024.png" width="400" alt="Silverbox icon">
 
 Silverbox is an emulation front-end for the Mac, built for eXoDOS,
 eXoWin3x, eXoWin9x and the other game preservation projects by the eXo team
@@ -177,7 +177,7 @@ ROM that is not installed, the launch options say which.
 
 ## Build
 
-Open `eXoMAC.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
+Open `Silverbox.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
 
 ```
 make run                  # build with xcodebuild, then start the app
@@ -192,7 +192,7 @@ make reset                # delete the app's settings and local data folder, to 
 The core library (XML parsing, media lookup, config translation, music
 decoders) is a Swift package at the repo root, so `swift build` and
 `swift test` work without Xcode's project. The app links the package's
-`eXoCore` product as a local package dependency.
+`SilverboxCore` product as a local package dependency.
 
 Instructions for coding agents are in `AGENTS.md`. To let Claude Code build
 and read diagnostics through the open Xcode, enable MCP under Xcode ›

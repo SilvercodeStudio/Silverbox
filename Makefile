@@ -5,7 +5,7 @@
 # The app is built with xcodebuild into Xcode's DerivedData, so builds from
 # Xcode and from here share the same incremental state.
 
-PROJECT = eXoMAC.xcodeproj
+PROJECT = Silverbox.xcodeproj
 SCHEME = "Silverbox"
 CONFIG ?= Debug
 ARGS ?=
@@ -20,7 +20,7 @@ DESTINATION = $(if $(filter Release,$(CONFIG)),generic/platform=macOS,platform=m
 XCODEBUILD = xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)'
 
 # The Swift sources that swift-format checks; the vendored C targets are untouched.
-SWIFT_SOURCES = Package.swift Sources/eXoCore eXoMAC Tests
+SWIFT_SOURCES = Package.swift Sources/SilverboxCore Silverbox Tests
 # Where make install-app puts the app.
 APP_DIR ?= $(HOME)/Applications
 # Registers a copied app with Launch Services, so that the Dock and Finder show its new icon.
@@ -59,10 +59,10 @@ test:
 core:
 	swift build
 
-# Walks the real library (/Volumes/eXoDOS_ro or $$EXOMAC_TEST_LIBRARY) and
+# Walks the real library (/Volumes/eXoDOS_ro or $$SILVERBOX_TEST_LIBRARY) and
 # reports configs, builds and translation notes without starting anything.
 sweep:
-	EXOMAC_SWEEP=1 swift test --filter LaunchSweep 2>&1 | grep -v '^\[' 
+	SILVERBOX_SWEEP=1 swift test --filter LaunchSweep 2>&1 | grep -v '^\[' 
 
 # Reformats the Swift sources; .swift-format at the repo root holds the
 # settings (4-space indent, 120 columns).
@@ -92,9 +92,9 @@ typecheck: core
 	swiftc -typecheck -sdk "$$(xcrun --show-sdk-path)" -target arm64-apple-macos15.0 -swift-version 5 \
 	    -default-isolation MainActor -enable-upcoming-feature MemberImportVisibility \
 	    -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-upcoming-feature InferIsolatedConformances \
-	    -module-name eXoMAC -I .build/out/Products/Debug \
+	    -module-name Silverbox -I .build/out/Products/Debug \
 	    -Xcc -fmodule-map-file=$$tmp/stb.modulemap -Xcc -fmodule-map-file=$$tmp/xmp.modulemap \
-	    eXoMAC/App/*.swift eXoMAC/Views/*.swift eXoMAC/Services/*.swift eXoMAC/eXoMACApp.swift; \
+	    Silverbox/App/*.swift Silverbox/Views/*.swift Silverbox/Services/*.swift Silverbox/SilverboxApp.swift; \
 	status=$$?; rm -rf $$tmp; exit $$status
 
 # Deletes everything the app has written, so the next start is a first start:

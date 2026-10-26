@@ -10,18 +10,19 @@ Windows: it reads the eXoDOS / LaunchBox configuration files so that an
 eXoDOS installation or download is usable on the Mac. The actual emulators
 (DOSBox and related) are external to this front-end project.
 
-Names: the project, module and folders use the internal name `eXoMAC`. The local
-data folder is `~/Library/Application Support/Silverbox`. The bundle
-identifier is `app.getsilverbox.Silverbox`.
+Names: the project, app target, app module and source folder are all
+`Silverbox`; the core library is `SilverboxCore`. The local data folder is
+`~/Library/Application Support/Silverbox`. The bundle identifier is
+`app.getsilverbox.Silverbox`.
 The display name is "Silverbox"; it is set once in `AppInfo`
-(`eXoMACApp.swift`) and in the `PRODUCT_NAME` and
+(`SilverboxApp.swift`) and in the `PRODUCT_NAME` and
 `INFOPLIST_KEY_CFBundleDisplayName` build settings, so the built app is
 `Silverbox.app`. Credit the eXo project in the About box. Do not describe
 the app as a collection of classic Mac games.
 
 ## Layout
 
-- `Sources/eXoCore/` — the portable core: Foundation only, no AppKit/SwiftUI.
+- `Sources/SilverboxCore/` — the portable core: Foundation only, no AppKit/SwiftUI.
   LaunchBox XML parsing, library snapshot and queries, media lookup, DOSBox
   config translation, launch planning, installing, user state, music
   decoders. Every type here is marked `nonisolated` because the app target
@@ -30,14 +31,14 @@ the app as a collection of classic Mac games.
 - `Sources/CStbVorbis/`, `Sources/CXmpLite/` — vendored C decoders (Ogg
   Vorbis; MOD/S3M/XM/IT modules), each its own package target with the
   upstream `LICENSE` and a `VENDOR.md` note.
-- `eXoMAC/App/`, `eXoMAC/Views/`, `eXoMAC/Services/` — the Mac app. Every
-  file imports `eXoCore`.
-- `Tests/eXoCoreTests/` — Swift Testing suites for the core, with a small
+- `Silverbox/App/`, `Silverbox/Views/`, `Silverbox/Services/` — the Mac app. Every
+  file imports `SilverboxCore`.
+- `Tests/SilverboxCoreTests/` — Swift Testing suites for the core, with a small
   LaunchBox-style library and audio samples under `Fixtures/`. Tests in
   `RealLibraryTests.swift` run only when `/Volumes/eXoDOS_ro` (or
-  `$EXOMAC_TEST_LIBRARY`) exists.
-- `Package.swift` at the repo root defines the `eXoCore` library and the
-  vendored C targets. The Xcode app target links the `eXoCore` product as a
+  `$SILVERBOX_TEST_LIBRARY`) exists.
+- `Package.swift` at the repo root defines the `SilverboxCore` library and the
+  vendored C targets. The Xcode app target links the `SilverboxCore` product as a
   local package dependency (the repo root added through File › Add Package
   Dependencies › Add Local), so the core is compiled once, by the package.
 
@@ -60,7 +61,7 @@ so it shares Xcode's DerivedData.
 
 If an Xcode MCP server is connected, use it to build, read diagnostics and
 change build settings; otherwise build with `make build`. Do not edit
-`project.pbxproj` by hand. New files under `eXoMAC/` are picked up
+`project.pbxproj` by hand. New files under `Silverbox/` are picked up
 automatically; files under `Sources/` and `Tests/` belong to the package.
 The Xcode project has only the app target: all tests are in the package.
 
@@ -258,7 +259,7 @@ new entry after the version is tagged; the version is the app target's
   the toolbar's Sort menu; `Game.sortYear` and `sortDeveloper` give
   `KeyPathComparator` non-optional keys.
 - About. `AboutView` opens `AcknowledgmentsSheet` and `LicenseSheet`; the
-  texts come from `eXoMAC/Licenses/*.txt`, copies of the repository's
+  texts come from `Silverbox/Licenses/*.txt`, copies of the repository's
   `LICENSE` and the vendored decoders' licenses that `ProjectFilesTests`
   keeps identical. The license is MIT; the name and icon artwork are not.
 - Status chips. `Chip` and `ChipRow` (`Chips.swift`) state one fact each in
@@ -282,7 +283,7 @@ new entry after the version is tagged; the version is the app target's
   on read-only volumes, prefers an edited config from `Overrides/`, and layers
   the global `LaunchOptions` plus per-game `LaunchOverrides` (remembered from
   the launch options dialog) on top of the translated config.
-- Help pages are Markdown files in `eXoMAC/Help/` (ordered by their numeric
+- Help pages are Markdown files in `Silverbox/Help/` (ordered by their numeric
   prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
   Help window: headings, lists, pipe tables, code and links. Add or edit
   pages there.
@@ -296,9 +297,9 @@ new entry after the version is tagged; the version is the app target's
   Keyboard Shortcuts window) and help page 07. Context menus are AppKit
   menus and do not change once open, so anything loaded for them (the Extras
   submenu) comes from `AppModel.extrasCache`, filled on hover and selection.
-- App icon. A floppy disk: `eXoMAC/AppIcon.icon` (amber) is the Icon
+- App icon. A floppy disk: `Silverbox/AppIcon.icon` (amber) is the Icon
   Composer file Xcode compiles into the bundle icon;
-  `eXoMAC/AppIcon-Green.icon` is the alternate, compiled only when the
+  `Silverbox/AppIcon-Green.icon` is the alternate, compiled only when the
   target's "Include all app icon assets" is on. The app icon setting shows
   the chosen one in the Dock and the About window through
   `AppIconVariant.image`, which falls back to the flat 1024 px PNGs in the
@@ -349,9 +350,9 @@ new entry after the version is tagged; the version is the app target's
   are external programs, never linked.
 - **Licensing:** the code is under the MIT License (`LICENSE`); the name and
   the icon artwork are excluded from it. The app shows it and the vendored
-  licenses from `eXoMAC/Licenses/`, which `ProjectFilesTests` keeps identical
+  licenses from `Silverbox/Licenses/`, which `ProjectFilesTests` keeps identical
   to the originals. Credit new outside code in the README's "Third-party
-  code", in `eXoMAC/Licenses/` and in `AcknowledgmentsSheet`. Do not port GPL
+  code", in `Silverbox/Licenses/` and in `AcknowledgmentsSheet`. Do not port GPL
   code (DOSBox, 86Box, ScummVM and most emulators are GPL): read it to
   understand a format, then write our own.
 - **Distribution:** Developer ID, not the App Store. App Sandbox is off,
@@ -389,21 +390,21 @@ new entry after the version is tagged; the version is the app target's
   "$BUILT_PRODUCTS_DIR/Silverbox.app/Contents/MacOS/Silverbox" -libraryPath /Volumes/eXoDOS_ro -musicEnabled 0 \
       -searchText ultima -selectTitle "Ultima V: Warriors of Destiny" -screenshotPath /tmp/shot.png
   ```
-- `EXOMAC_LOG=1` prints media folder scan timings to stderr.
+- `SILVERBOX_LOG=1` prints media folder scan timings to stderr.
 - `-setupPath <folder>` opens the setup sheet for an eXo download at start.
-  `EXOMAC_SETUP_TARGET=<folder> swift test --filter matchesTheWindowsSetup`
+  `SILVERBOX_SETUP_TARGET=<folder> swift test --filter matchesTheWindowsSetup`
   sets up the mounted library's original archives into that folder (without
   the media add-ons, about 20 GB) and compares the result with the Windows setup,
-  then installs and plans Super Tetris from it. `EXOMAC_SETUP_REUSE=1` skips
+  then installs and plans Super Tetris from it. `SILVERBOX_SETUP_REUSE=1` skips
   the unpacking when the folder already holds a setup.
-  `EXOMAC_SETUP_DOWNLOAD=<download> EXOMAC_SETUP_TARGET=<folder> swift test
+  `SILVERBOX_SETUP_DOWNLOAD=<download> SILVERBOX_SETUP_TARGET=<folder> swift test
   --filter setsUpAndPlansTheDownload` does the same for any pack's download:
   it sets it up, counts games per pack and launch kind, translates every
   DOSBox config, and installs and plans the three smallest games per pack
-  (with `EXOMAC_LAUNCH_SMOKE=1`, it also starts the DOSBox ones briefly).
-- `EXOMAC_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
+  (with `SILVERBOX_LAUNCH_SMOKE=1`, it also starts the DOSBox ones briefly).
+- `SILVERBOX_LAUNCH_SMOKE=1 swift test --filter LaunchSmoke` starts two unpacked
   games in DOSBox Staging for a few seconds and checks the emulator log, then
   boots Windows 98 for an eXoWin9x game in DOSBox-X and one in 86Box
-  (`EXOMAC_86BOX=<executable>` when 86Box is not in /Applications).
+  (`SILVERBOX_86BOX=<executable>` when 86Box is not in /Applications).
 - Saved media indexes live in `MediaIndex/` under the local data folder;
   "Rescan Library" deletes them.
