@@ -16,6 +16,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
     /// release build leaves out.
     case scummVMDaily
     case spatterlight
+    case gsplus
 
     public var id: String { rawValue }
 
@@ -39,6 +40,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .scummVM: return "ScummVM"
         case .scummVMDaily: return "ScummVM daily build"
         case .spatterlight: return "Spatterlight"
+        case .gsplus: return "GSplus"
         }
     }
 
@@ -54,6 +56,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .box86: return "86Box"
         case .scummVM, .scummVMDaily: return "scummvm"
         case .spatterlight: return "Spatterlight"
+        case .gsplus: return "GSplus"
         }
     }
 
@@ -74,6 +77,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .spatterlight:
             return
                 "Plays eXoIF text adventures: Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls and more."
+        case .gsplus: return "Runs eXoAppleIIGS games, with the Apple IIGS ROM that eXo ships."
         }
     }
 
@@ -89,6 +93,7 @@ nonisolated public enum EmulatorKind: String, CaseIterable, Sendable, Codable, H
         case .scummVM: return "https://www.scummvm.org"
         case .scummVMDaily: return "https://buildbot.scummvm.org"
         case .spatterlight: return "https://ccxvii.net/spatterlight/"
+        case .gsplus: return "https://github.com/digarok/gsplus"
         }
     }
 }
@@ -226,6 +231,11 @@ nonisolated public enum EmulatorLocator {
                 URL(fileURLWithPath: "/Applications/Spatterlight.app/Contents/MacOS/Spatterlight"),
                 home.appendingPathComponent("Applications/Spatterlight.app/Contents/MacOS/Spatterlight"),
             ]
+        case .gsplus:
+            urls += [
+                URL(fileURLWithPath: "/Applications/GSplus.app/Contents/MacOS/GSplus"),
+                home.appendingPathComponent("Applications/GSplus.app/Contents/MacOS/GSplus"),
+            ]
         }
         return urls
     }
@@ -248,7 +258,7 @@ nonisolated public enum EmulatorCapabilities {
         switch installation.kind {
         case .dosboxX:
             return true
-        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight, .gsplus:
             return false
         case .dosboxStaging:
             if hasBuiltInFluidSynth(installation.executableURL) { return true }

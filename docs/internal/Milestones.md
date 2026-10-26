@@ -111,12 +111,18 @@ Done:
 - eXoIF: story files in Spatterlight, MS-DOS versions in DOSBox, Commodore,
   ZX Spectrum, Apple II, Atari 8-bit, Amstrad CPC and Amiga versions in
   RetroArch (about 1,500 of 2,331 games).
-- eXoAppleIIGS: set up and install.
+- eXoAppleIIGS in GSplus (2026-10-26): the 376 GSplus games and the ten
+  GSport games, 386 of 460, from eXo's configs with Mac paths for the disks
+  and ROM; eXo's menus become versions and its instructions notes. Every
+  config's disks checked against the archives (`setsUpAndPlansTheDownload`);
+  ten games booted, Designasaurus from the app.
+- eXoAppleIIGS's 74 MAME games in Homebrew MAME (2026-10-26), once the user
+  adds `344s0047.bin` (checked by SHA-1; a zip that holds it works too);
+  every game's disks checked; Gauntlet installed and started from the app
+  with MAME 0.289.
 
 Not yet:
 
-- eXoAppleIIGS launching: GSplus configs for about 84% of the games; later
-  MAME for the rest (needs a current `apple2gs` ROM set).
 - eXoIF's BBC Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or
   native emulators).
 - The eXoScummVM hint files (UHS).

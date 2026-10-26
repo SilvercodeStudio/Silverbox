@@ -124,6 +124,15 @@ struct GameStatusChips: View {
                     chips.append(emulatorChip(model.emulatorKind(for: game)))
                 }
             }
+        case .appleIIGS:
+            if let reason = model.appleIIGSProblem(for: game) {
+                chips.append(
+                    Chip(
+                        text: "ROM missing", tone: .warning, systemImage: "exclamationmark.triangle",
+                        help: reason + "."))
+            } else {
+                chips.append(emulatorChip(model.appleIIGSRoute(for: game).emulator))
+            }
         case .windowsProgram:
             if game.eXoPack != nil {
                 chips.append(

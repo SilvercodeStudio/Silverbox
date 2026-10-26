@@ -139,8 +139,7 @@ struct PlayButtonRow: View {
     var body: some View {
         let installed = model.isInstalled(game)
         let variants =
-            (game.isDOSGame || game.launchKind == .scummVM || game.launchKind == .interactiveFiction) && installed
-            ? model.launchVariants(for: game) : []
+            game.hasLaunchVersions && installed ? model.launchVariants(for: game) : []
         let albumLoaded = game.launchKind == .soundtrack && model.album.game?.id == game.id
         let albumPlaying = albumLoaded && model.album.isPlaying
         HStack(spacing: 8) {
@@ -283,6 +282,13 @@ struct MetadataGrid: View {
                     "Mac emulator",
                     model.isInstalled(game)
                         ? model.emulatorKind(for: game).displayName : "Spatterlight or DOSBox, by version")
+            } else if game.launchKind == .appleIIGS {
+                let route = model.appleIIGSRoute(for: game)
+                row("eXoAppleIIGS runs with", route.eXoEmulatorName)
+                row(
+                    "Mac emulator",
+                    route.emulator.displayName
+                        + (model.appleIIGSProblem(for: game) == nil ? "" : ", once you add its ROM"))
             } else if game.launchKind == .windows9x {
                 let kind = model.emulatorKind(for: game)
                 row("eXoWin9x runs with", "Windows 98 in \(kind.displayName)")

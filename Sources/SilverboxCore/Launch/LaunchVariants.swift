@@ -17,11 +17,14 @@ nonisolated public struct LaunchVariant: Identifiable, Hashable, Sendable {
     public var unsupportedReason: String?
     /// Lower is better: the default is the best supported version.
     public var preference: Int
+    /// eXo's instructions for the version, such as which program to open
+    /// first (eXoAppleIIGS).
+    public var note: String?
 
     /// For ScummVM and eXoIF games, `configURL` is the version's folder.
     public init(
         title: String, configURL: URL, needsWindowsHelper: Bool = false, id: String? = nil,
-        unsupportedReason: String? = nil, preference: Int = 0
+        unsupportedReason: String? = nil, preference: Int = 0, note: String? = nil
     ) {
         self.title = title
         self.configURL = configURL
@@ -29,6 +32,7 @@ nonisolated public struct LaunchVariant: Identifiable, Hashable, Sendable {
         self.id = id ?? configURL.lastPathComponent
         self.unsupportedReason = unsupportedReason
         self.preference = preference
+        self.note = note
     }
 
     /// True when the version can start on the Mac.

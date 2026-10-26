@@ -344,6 +344,14 @@ struct EmulatorSettingsView: View {
                 .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .spatterlight, picking: $picking)
             }
+            Section("eXoAppleIIGS games") {
+                Text(
+                    "Most eXoAppleIIGS games run in GSplus, with eXo's settings and the Apple IIGS ROM that eXo ships."
+                )
+                .font(.caption).foregroundStyle(.secondary)
+                EmulatorPathRow(kind: .gsplus, picking: $picking)
+                AppleIIGSROMRow()
+            }
             Section("Consoles, computers and arcade") {
                 Text(
                     "Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here."
@@ -677,6 +685,35 @@ struct DownloaderStatus: View {
             .foregroundStyle(.secondary)
         }
         .font(.caption)
+    }
+}
+
+/// The Apple IIGS character ROM that current MAME needs for the 74
+/// eXoAppleIIGS games eXo runs in MAME: found, or a button to add it.
+struct AppleIIGSROMRow: View {
+    @Environment(AppModel.self) private var model
+    @State private var picking = false
+
+    var body: some View {
+        let found = model.hasAppleIIGSROM
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label(
+                    found ? "Apple IIGS ROM for MAME added" : "Apple IIGS ROM for MAME missing",
+                    systemImage: found ? "checkmark.circle.fill" : "exclamationmark.triangle"
+                )
+                .foregroundStyle(found ? Theme.good : Theme.warning)
+                Spacer()
+                Button(found ? "Replace…" : "Add ROM…") { picking = true }
+            }
+            Text(
+                "eXo runs 74 games in MAME (brew install mame). Current MAME needs one ROM file that eXo's older set lacks: \(AppleIIGSCharacterROM.fileName), 16 KB, the Apple IIGS character ROM. \(AppInfo.displayName) cannot include it. Choose the file, or a zip that holds it, such as apple2gs.zip from a current MAME ROM set; a copy goes into the MAME folder in the local data folder."
+            )
+            .font(.caption).foregroundStyle(.secondary)
+        }
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.data, .zip]) { result in
+            if case .success(let url) = result { model.importAppleIIGSROM(from: url) }
+        }
     }
 }
 

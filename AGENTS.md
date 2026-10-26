@@ -113,11 +113,14 @@ new entry after the version is tagged; the version is the app target's
   for games unpacked inside a read-only library, copies of eXoWin9x game disks,
   and the Windows 98 differencing disks under `emulators/`), `Soundtracks/`
   (albums unpacked from the library's zips), `Launch/`, `Logs/`, `MediaIndex/`,
-  `BitTorrent/` (aria2's DHT table), `user-library.json`. "Install in place"
+  `BitTorrent/` (aria2's DHT table), `MAME/` (eXoAppleIIGS: copies of eXo's
+  MAME settings and IIGS memory, and in `roms/` the ROM the user adds),
+  `user-library.json`. "Install in place"
   (into `eXo/eXoDOS`) is an option. Game downloads are the one exception:
   they go into the collection, as on Windows (see Lite downloads).
 - Emulators. `EmulatorKind` covers DOSBox Staging and DOSBox-X for eXoDOS
-  games, 86Box (`.box86`) for some eXoWin9x games, plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
+  games, 86Box (`.box86`) for some eXoWin9x games, GSplus for eXoAppleIIGS,
+  plus RetroArch, Dolphin, MAME and Mednafen for console, computer and
   arcade platforms (`Game.launchKind` tells them apart). Each platform's
   emulator comes from `EmulatorAssignmentResolver`: the user's choice in
   Settings, else the library's `Emulators.xml` mapped to the Mac emulators
@@ -140,7 +143,7 @@ new entry after the version is tagged; the version is the app target's
   the loader builds its index with `DOSBoxIndex.fromLaunchers(in:)`.
   `isEXoGame` is for installing. Folders that
   differ per pack go through `gamesDirectory(for:)`, `overlayDirectory(for:)`
-  and `dosboxIndex(for:)`. eXoAppleIIGS games install but do not launch yet. Each pack's `Setup <pack>.bat` entry is hidden
+  and `dosboxIndex(for:)`. Each pack's `Setup <pack>.bat` entry is hidden
   (`isEXoSetupScript`). The sidebar's "eXo Packs" section (`LibraryScope.pack`)
   appears when more than one pack is loaded.
 - eXoWin9x. `launchKind == .windows9x`. `LaunchPlanner.planWindows9x`
@@ -207,6 +210,33 @@ new entry after the version is tagged; the version is the app target's
   also names a missing core or ROM). The app's `launchPlanner(_:)` passes
   `settings.retroArchSetup`. The default version is the best `preference`:
   Spatterlight, then DOS, then RetroArch.
+- eXoAppleIIGS. `launchKind == .appleIIGS`. `AppleIIGSLaunch.swift` follows
+  eXo's `Launch_IIGS.bat`: `AppleIIGSIndex` reads `eXo/util/appleIIGS.txt`
+  (`findstr` match, last line wins) for the route: GSplus (376 games),
+  GSport (10, whose `config.txt` is in the unpacked game; GSplus runs them)
+  or MAME (74). `AppleIIGSException` reads `exception.bat`: its `SET`
+  variables (`CONFIGTXT` for GSplus; `DISK1`-`DISK3`, `DISKS`, `SPEED`,
+  `PRINTER` for MAME), a menu of choices that set them (versions), and the
+  `echo` text (`LaunchVariant.note`, shown in the launch options).
+  - GSplus: the Mac GSplus 1.38 (KEGS) takes `-cfg <file>`, changes to the
+    config's folder and writes the file back, so `GSplusConfigTranslator`
+    writes a fresh `Launch/<id>-gsplus/config.kegs` each time: absolute
+    disk paths (found without regard to case; `#name` and missing disks
+    left empty, as GSplus on Windows skips them), the ROM in
+    `eXo/emulators/GSPlus`, GSport's keypad joystick as Auto, no status
+    lines, and the full-screen choice.
+  - MAME (`planAppleIIGSMAME`): eXo ships Windows MAME 0.245 with a
+    matching ROM set; current MAME also needs `344s0047.bin`, which no one
+    may ship, so the user adds it (Settings › Emulators › Add ROM…;
+    `AppleIIGSCharacterROM.importFile` checks the SHA-1, also inside a
+    zip) into `MAME/roms/apple2gs/`; until then `appleIIGSProblem(for:)`
+    is the variants' `unsupportedReason` and the chip says "ROM missing".
+    Homebrew MAME runs with `-noreadconfig` (eXo's `mame.ini` is for
+    Windows), that folder and eXo's `roms` as the ROM path, and eXo's
+    `apple2gs.cfg` (the `fast` one for `SPEED=TRUE`) and `apple2gs/`
+    memory copied to `MAME/cfg` and `MAME/nvram` once.
+  - Disks of a game unpacked in a read-only library are copied to
+    `Overlay/eXoAppleIIGS` once.
 - Favorites. In an eXo pack's XML, `Favorite` marks eXo's picks
   (`Game.isEXoFavorite`, the `.eXoFavorites` scope, "eXo Favorites" in the
   sidebar), not the user's. The user's favorites are
@@ -384,9 +414,15 @@ new entry after the version is tagged; the version is the app target's
   DOSBox-X) and Locus (eXoWin9x, 86Box); eXoWin3x games boot to Windows 3.1.
   `downloadsFromTheEXoDOSTorrent` downloads a game from the eXoDOS torrent
   with aria2, and `eXoDOSTorrentListsEveryGameArchive` checks the
-  torrent's paths against the installer's. eXoDOS 6.04 Lite (the user's
-  download): set up on the Mac, then ZZT's Revenge downloaded, installed and
-  played in the app (2026-10-26); its torrent lists all 7,666 games.
+  torrent's paths against the installer's. eXoAppleIIGS (2026-10-26):
+  every GSplus and GSport config's disks against the archives
+  (`setsUpAndPlansTheDownload`); ten games booted in GSplus 1.38, one
+  (Designasaurus) installed and started from the app; every MAME game's
+  disks checked, and Gauntlet installed and started from the app in
+  Homebrew MAME 0.289 with the user's `344s0047.bin`. eXoDOS 6.04 Lite
+  (the user's download): set up on the Mac, then ZZT's Revenge downloaded,
+  installed and played in the app (2026-10-26); its torrent lists all
+  7,666 games.
 - **Not yet verified:** launches of console, computer and arcade games
   (RetroArch, Dolphin, MAME, Mednafen) and eXoIF's RetroArch versions.
   Say so when a change touches
@@ -446,7 +482,8 @@ new entry after the version is tagged; the version is the app target's
   `opt-right`, `cmd-y`) before the screenshot, to test navigation, and
   `-screenshotSettle 20` waits that many seconds after them (1.5 by
   default), for a job they start, such as Return on the install sheet;
-  `-helpPage 07` opens that help page. If the last session closed the main
+  `-helpPage 07` opens that help page. A `-libraryPath` folder set up from a
+  download finds the download through its setup record. If the last session closed the main
   window, macOS restores no window and the screenshot never comes; add
   `-ApplePersistenceIgnoreState YES`. Example:
 

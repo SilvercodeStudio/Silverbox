@@ -266,6 +266,7 @@ nonisolated extension Game {
         if eXoPack == .win9x { return .windows9x }
         if eXoPack == .scummVM { return .scummVM }
         if eXoPack == .interactiveFiction { return .interactiveFiction }
+        if eXoPack == .appleIIGS { return .appleIIGS }
         let path = applicationPath.trimmingCharacters(in: .whitespaces)
         if path.isEmpty { return .windowsProgram }
         if path.range(of: "://") != nil { return .link }
@@ -280,6 +281,12 @@ nonisolated extension Game {
         if Self.documentExtensions.contains(ext) { return .document }
         if Self.windowsProgramExtensions.contains(ext) { return .windowsProgram }
         return .emulator
+    }
+
+    /// True when the game may come in several versions to choose from
+    /// before it starts (the launch options' Version list).
+    public var hasLaunchVersions: Bool {
+        isDOSGame || [.scummVM, .interactiveFiction, .appleIIGS].contains(launchKind)
     }
 
     /// True for a launcher under `eXo\Videos` or on a videos platform, such
@@ -333,4 +340,6 @@ nonisolated public enum GameLaunchKind: Sendable, Hashable {
     case scummVM
     /// An eXoIF game: each version runs in DOSBox, Spatterlight or not at all.
     case interactiveFiction
+    /// An eXoAppleIIGS game, run in GSplus with eXo's config for it.
+    case appleIIGS
 }

@@ -302,7 +302,11 @@ final class AppModel {
 
     func addCollection(url: URL) {
         guard !settings.collections.contains(where: { $0.root.url == LibraryRoot(url: url).url }) else { return }
-        let collection = LibraryCollection(name: LibraryCollection.suggestedName(for: url), rootPath: url.path)
+        // A folder Silverbox set up from a download still reads the game
+        // archives from that download; its setup record says where it is.
+        let collection = LibraryCollection(
+            name: LibraryCollection.suggestedName(for: url), rootPath: url.path,
+            downloadPath: EXoSetupRecord.read(in: url)?.downloadPath)
         settings.collections.append(collection)
     }
 
@@ -638,7 +642,9 @@ final class AppModel {
     }
 
     func emulatorKind(for game: Game) -> EmulatorKind {
-        if game.eXoPack == .win9x || game.launchKind == .scummVM { return defaultEmulatorKind(for: game) }
+        if game.eXoPack == .win9x || game.launchKind == .scummVM || game.launchKind == .appleIIGS {
+            return defaultEmulatorKind(for: game)
+        }
         if game.launchKind == .interactiveFiction {
             let variants = launchVariants(for: game)
             return ifEmulatorKind(for: game, variant: preferredVariant(for: game, in: variants))
@@ -652,6 +658,7 @@ final class AppModel {
     func defaultEmulatorKind(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x { return needs86Box(game) ? .box86 : .dosboxX }
         if game.launchKind == .scummVM { return .scummVM }
+        if game.launchKind == .appleIIGS { return appleIIGSRoute(for: game).emulator }
         switch settings.emulatorPolicy {
         case .alwaysStaging: return .dosboxStaging
         case .alwaysDOSBoxX: return .dosboxX
@@ -695,6 +702,13 @@ final class AppModel {
             ?? variants.first
     }
 
+    /// The emulator eXo runs an eXoAppleIIGS game in, which decides whether
+    /// it can start here.
+    func appleIIGSRoute(for game: Game) -> AppleIIGSRoute {
+        guard let snapshot = snapshot(for: game) else { return .gsplus }
+        return launchPlanner(snapshot).appleIIGSRoute(for: game)
+    }
+
     /// The emulator an eXoIF version runs in: DOSBox for MS-DOS versions,
     /// Spatterlight for story files.
     func ifEmulatorKind(for game: Game, variant: LaunchVariant?) -> EmulatorKind {
@@ -708,7 +722,7 @@ final class AppModel {
     func play(_ game: Game, variant: LaunchVariant? = nil) {
         guard let library else { return }
         switch game.launchKind {
-        case .dosBox, .windows9x, .scummVM, .interactiveFiction: break
+        case .dosBox, .windows9x, .scummVM, .interactiveFiction, .appleIIGS: break
         case .emulator:
             launchEmulated(game)
             return

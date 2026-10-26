@@ -9,8 +9,8 @@ eXoWin3x, eXoWin9x and the other game preservation projects by the eXo team
 (https://www.retro-exo.com). It sets up an eXo download without Windows,
 reads the collection in place (the LaunchBox XML metadata, box art,
 screenshots, manuals, music and videos), and starts each game in a Mac
-emulator such as DOSBox Staging, DOSBox-X, 86Box, ScummVM or Spatterlight,
-with the settings eXo uses on Windows.
+emulator such as DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight or
+GSplus, with the settings eXo uses on Windows.
 
 The games, media and emulators are not part of this project.
 
@@ -81,8 +81,8 @@ Currently, Silverbox supports the following collections:
    - [eXoDemoScene](https://www.retro-exo.com/demoscene.html) primarily
      MS-DOS based "demos" (graphics / multimedia demonstrations)
    - [eXoAppleIIGS](https://www.retro-exo.com/appleIIGS.html) - Apple IIgs
-     games and educational software. These can be browsed and installed;
-     playing them is planned.
+     games and educational software. Most play in GSplus; the 74 games that
+     eXo runs in MAME need one ROM file that you supply (see Emulators).
    - (Coming soon) - eXoDREAMM - Loom and similar adventure games
 
 3. Emulators for Mac: All you need to browse the collections are Silverbox
@@ -110,7 +110,7 @@ separate folder for unpacked files.
 ### Can I use this for other consoles (SNES, etc.)?
 
 Yes, but currently Silverbox depends on an existing LaunchBox
-library, and launching these games is not tested yet. Silverbox does not
+library, and launching these games is experimental. Silverbox does not
 find games or fetch their metadata and art itself ("scraping"), and you
 cannot add single games by hand yet. However, if you have a LaunchBox
 installation from Windows, Silverbox can recognize and use that folder and
@@ -158,8 +158,8 @@ for an older DOSBox Staging, install it with `brew install fluid-synth`.
 | eXoWin9x            | [86Box](https://86box.net)                                                                    | The thirty or so games that eXo runs in 86Box.                                                                                                                                                                                                                                      |
 | eXoDemoScene        | DOSBox-X                                                                                      | About 95% of the demos; DOSBox Staging for the rest. The three MartyPC demos (8088 MPH, Area 5150, CGADEMO) are not supported.                                                                                                                                                      |
 | eXoScummVM          | [ScummVM](https://www.scummvm.org) 2026.4 or later                                            | Every game. Five games use engines that ScummVM leaves out of its release builds (In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden, Ultima I); set a [daily build](https://buildbot.scummvm.org) as the second ScummVM in Settings to play them. |
-| eXoAppleIIGS        | [GSplus](https://github.com/digarok/gsplus) 1.38 or later                                     | Most games. _Planned._                                                                                                                                                                                                                                                              |
-| eXoAppleIIGS        | [MAME](https://www.mamedev.org) (`brew install mame`)                                         | The 74 games eXo runs in MAME. Needs an `apple2gs` ROM set that matches your MAME version; eXo's set is for MAME 0.245. _Planned._                                                                                                                                                  |
+| eXoAppleIIGS        | [GSplus](https://github.com/digarok/gsplus) 1.38 or later                                     | Most games, with the Apple IIGS ROM that eXo ships, including the ten that eXo runs in GSport.                                                                                                                                                                                      |
+| eXoAppleIIGS        | [MAME](https://www.mamedev.org) (`brew install mame`)                                         | The 74 games eXo runs in MAME. Current MAME needs one ROM file that eXo's set (for MAME 0.245) lacks: `344s0047.bin`, the Apple IIGS character ROM. Add it in Settings › Emulators.                                                                                                 |
 | eXoIF               | DOSBox Staging or DOSBox-X                                                                    | The MS-DOS versions of the games.                                                                                                                                                                                                                                                   |
 | eXoIF               | [RetroArch](https://www.retroarch.com) cores                                                  | C64 and other Commodores (VICE), ZX Spectrum and ZX81 (Fuse, 81), Apple II (AppleWin), Atari 8-bit (atari800, with eXo's ROMs), Amstrad CPC (cap32), Amiga (PUAE, with a Kickstart ROM you supply).                                                                                 |
 | eXoIF               | [Spatterlight](https://ccxvii.net/spatterlight/)                                              | Infocom and other story files that eXo plays in WinFrotz, Lectrote, Gargoyle and similar interpreters. Versions that need Windows programs, MAME or mainframe emulators are not supported.                                                                                          |
@@ -169,8 +169,9 @@ for an older DOSBox Staging, install it with `brew install fluid-synth`.
 
 With the right Mac emulators installed, nearly every game in the DOS and
 Windows packs, the demo scene pack and the ScummVM pack can start. The
-exceptions are a few games in some packs, and whole systems in eXoIF and
-eXoAppleIIGS. "Can start" means a Mac emulator is known to load the game.
+exceptions are a few games in some packs, whole systems in eXoIF, and the
+eXoAppleIIGS games that eXo runs in MAME until you add one ROM file. "Can
+start" means a Mac emulator is known to load the game.
 Each game has not been played through.
 
 | Pack                 | Games | Can start                                                  | Notes                                                                                                                                                                                                                                                                           |
@@ -181,7 +182,7 @@ Each game has not been played through.
 | eXoDemoScene         | 2,425 | About 99%                                                  | DOSBox. Not supported: the three MartyPC demos (8088 MPH, Area 5150, CGADEMO). Four demos have no archive in eXo's download either.                                                                                                                                             |
 | eXoScummVM           | 832   | About 99% (all with a daily build)                         | Five games need engines that ScummVM's release builds leave out.                                                                                                                                                                                                                |
 | eXoIF                | 2,331 | About 64% (about 68% with extra cores and a Kickstart ROM) | Story files in Spatterlight, MS-DOS versions in DOSBox, Commodore, ZX Spectrum, Apple II and Atari 8-bit versions in RetroArch. Not supported yet: BBC Micro, TRS-80, Dragon/CoCo, Oric, TI-99 and other machines, and versions that need MAME, mainframes or Windows programs. |
-| eXoAppleIIGS         | 460   | None yet                                                   | Planned: GSplus for about 84% of the games. The rest need MAME and a current Apple IIGS ROM set.                                                                                                                                                                                |
+| eXoAppleIIGS         | 460   | About 84% (all with a ROM file)                            | GSplus, with eXo's settings; a sample of games boot. The 74 games that eXo runs in MAME need the Apple IIGS character ROM, which you supply.                                                                                                                                    |
 
 Many eXoIF games come in versions for several computers, and a game counts
 when any of its versions can start. Where a version needs a RetroArch core or
@@ -267,17 +268,12 @@ milestones, with what is done and what is not, are in
   has been played yet.
 - ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
   XML beside them, plus single titles configured by hand.
-- More eXo packs. Setup and installing work for eXoWin3x, eXoDemoScene,
-  eXoScummVM, eXoAppleIIGS and eXoIF; eXoWin3x, eXoDemoScene and eXoScummVM
-  launch, and eXoIF
-  launches its story-file, MS-DOS and most 8-bit versions (about 1,500 of
-  2,331 games). Still to do: GSplus configs for eXoAppleIIGS, and eXoIF's
-  BBC Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or native
+- More eXo packs. eXoWin3x, eXoDemoScene, eXoScummVM and eXoAppleIIGS
+  launch, and eXoIF launches its story-file, MS-DOS and most
+  8-bit versions (about 1,500 of 2,331 games). Still to do: eXoIF's BBC
+  Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or native
   emulators).
-  Later: MAME for the eXoAppleIIGS games eXo runs in it, and the eXoScummVM
-  hint files (UHS).
-- Couch mode: a full-screen, controller-first view on top of the grid and the
+  Later: the eXoScummVM hint files (UHS).
+- tvOS client app: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
-- Later: downloading whole eXo packs from the app (today a BitTorrent
-  client does it; eXoDOS Lite games already download one at a time), and
-  metadata and media scraping for games outside the eXo collections.
+- Metadata and media scraping for games outside the eXo collections.

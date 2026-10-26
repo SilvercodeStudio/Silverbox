@@ -381,7 +381,8 @@ nonisolated public struct ConfigTranslator: Sendable {
 
     private func applyOptions(to document: inout DOSBoxConfigDocument, notes: inout [String]) {
         switch emulator {
-        case .dosboxStaging, .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight:
+        case .dosboxStaging, .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight,
+            .gsplus:
             document.set("sdl", "fullscreen", options.fullscreen ? "on" : "off")
             if options.windowSize != .default { document.set("sdl", "window_size", options.windowSize.rawValue) }
             switch options.aspect {

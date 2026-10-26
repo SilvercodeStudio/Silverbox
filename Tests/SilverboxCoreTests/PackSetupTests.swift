@@ -98,6 +98,66 @@ struct PackSetupTests {
             print("Bare ids not found (eXo targets or unsupported): \(bare.map(\.gameID))")
         }
 
+        // eXoAppleIIGS: the emulator eXo uses for each game, and whether the
+        // disks its config names are in its archive.
+        let iigsGames = snapshot.games.filter { $0.launchKind == .appleIIGS }
+        if !iigsGames.isEmpty {
+            let unzip = URL(fileURLWithPath: "/usr/bin/unzip")
+            var routes: [String: Int] = [:]
+            var problems: [String] = []
+            // eXo's own configs name a few disks their games do not have;
+            // the Windows build skips them, and so does Silverbox.
+            var absent: [String] = []
+            for game in iigsGames {
+                let route = planner.appleIIGSRoute(for: game)
+                routes[route.eXoEmulatorName, default: 0] += 1
+                guard let folder = game.installPathComponents?.last else { continue }
+                let archive = snapshot.root.downloadFile("eXo/eXoAppleIIGS/\(game.launcherBaseName).zip").path
+                let listing = try await CommandRunner.run(executable: unzip, arguments: ["-Z1", archive])
+                let files = Set(listing.output.split(separator: "\n").map { $0.lowercased() })
+                if route == .mame {
+                    // MAME's disks come from exception.bat, for each menu choice.
+                    let exception = try #require(planner.appleIIGSException(for: game), "\(game.title)")
+                    let all = exception.choices.isEmpty ? [exception.settings] : exception.choices.map(\.settings)
+                    for settings in all {
+                        let count = Int(settings["DISKS"] ?? "") ?? 1
+                        for key in ["DISK1", "DISK2", "DISK3"].prefix(count) {
+                            guard let disk = settings[key], !disk.isEmpty else {
+                                problems.append("\(game.title): no \(key)")
+                                continue
+                            }
+                            if !files.contains("\(folder)/\(disk)".lowercased()) {
+                                absent.append("\(game.title): \(disk)")
+                            }
+                        }
+                    }
+                    continue
+                }
+                for variant in planner.variants(for: game) {
+                    let config: String
+                    if route == .gsport {
+                        config = try await CommandRunner.run(
+                            executable: unzip, arguments: ["-p", archive, "\(folder)/config.txt"]
+                        ).output
+                    } else if let data = fm.contents(atPath: variant.configURL.path) {
+                        config = String(decoding: data, as: UTF8.self)
+                    } else {
+                        problems.append("\(game.title): no \(variant.configURL.lastPathComponent)")
+                        continue
+                    }
+                    // `../<other game>/` is another game's disk, such as a character disk.
+                    for disk in GSplusConfigTranslator.diskNames(in: config)
+                    where !disk.hasPrefix("../") && !files.contains("\(folder)/\(disk)".lowercased()) {
+                        absent.append("\(game.title): \(disk)")
+                    }
+                }
+            }
+            print("eXoAppleIIGS emulators: \(routes.sorted { $0.value > $1.value })")
+            print("eXoAppleIIGS problems: \(problems.count) \(problems.prefix(10))")
+            print("eXoAppleIIGS disks named but absent: \(absent.count) \(absent)")
+            #expect(problems.isEmpty)
+        }
+
         // Install the three smallest games of each pack and plan the DOSBox ones.
         let installer = GameInstaller(snapshot: snapshot, installLocation: .localStore)
         var installed: [Game] = []
@@ -132,7 +192,8 @@ struct PackSetupTests {
                 )
                 guard LaunchPlanner.defaultIFVersion(versions)?.isPlayable == true else { continue }
             }
-            guard [.dosBox, .scummVM, .interactiveFiction].contains(game.launchKind) else { continue }
+            if game.launchKind == .appleIIGS, afterPlanner.variants(for: game).first?.isPlayable != true { continue }
+            guard [.dosBox, .scummVM, .interactiveFiction, .appleIIGS].contains(game.launchKind) else { continue }
             let kind = afterPlanner.recommendedEmulator(for: game)
             let emulator =
                 kind == .spatterlight

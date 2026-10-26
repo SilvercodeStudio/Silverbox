@@ -51,7 +51,15 @@ Spatterlight keeps its own windows, fonts and saved games. Closing Spatterlight 
 
 ## Apple IIGS games
 
-eXoAppleIIGS games can be browsed and installed, but they do not start yet. Support for GSplus, the emulator eXo uses for most of them, is planned.
+eXoAppleIIGS games run in GSplus. Get it from https://github.com/digarok/gsplus and put GSplus.app in the Applications folder. It uses the Apple IIGS ROM that eXo ships, so you need nothing else. Play installs the game the first time.
+
+Many games come with eXo's instructions, such as which program on the disk to open first or which drive holds the character disk; the launch options show them, under Version or Note. A few games come in parts, such as Cribbage King and Gin King; the launch options list them under Version. Full screen is the only display choice.
+
+In GSplus, F4 opens its menu, where you can insert another disk; close the window to end the game. Games save to their disk images in the installed game's folder. For a game unpacked in a read-only collection, Silverbox copies its disks to the local data folder's `Overlay` folder first.
+
+eXo runs ten games in GSport, the emulator GSplus grew out of; they run in GSplus too.
+
+eXo runs 74 games, such as Gauntlet and Rastan, in MAME. Install MAME with Homebrew (`brew install mame`). eXo's MAME ROM set is for an older MAME, and current MAME needs one more file: `344s0047.bin`, the Apple IIGS character ROM (16 KB). Silverbox cannot include it. If you have it, or `apple2gs.zip` from a current MAME ROM set, add it in Settings › Emulators › eXoAppleIIGS games with Add ROM…; Silverbox checks the file and keeps a copy in the local data folder's `MAME` folder. Until then, these games say "ROM missing".
 
 ## Music in games
 

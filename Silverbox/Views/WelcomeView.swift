@@ -19,6 +19,7 @@ struct WelcomeView: View {
         (.box86, "About thirty eXoWin9x games that need a 3dfx Voodoo card", false),
         (.scummVM, "eXoScummVM games", false),
         (.spatterlight, "eXoIF text adventures", false),
+        (.gsplus, "eXoAppleIIGS games", false),
         (.retroArch, "eXoIF's 8-bit computer versions, and consoles in a LaunchBox library", false),
     ]
 

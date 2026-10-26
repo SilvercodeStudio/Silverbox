@@ -37,6 +37,9 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
     }
     /// ScummVM saves, shared by all collections as in eXo.
     public var scummVMSavesDirectory: URL { savesDirectory.appendingPathComponent("ScummVM", isDirectory: true) }
+    /// MAME's settings and memory for eXoAppleIIGS games, copied from eXo's
+    /// MAME once, and in `roms` the ROM files the user adds.
+    public var mameDirectory: URL { directory.appendingPathComponent("MAME", isDirectory: true) }
     /// Per-game edited copies of DOSBox configs.
     public var overridesDirectory: URL { directory.appendingPathComponent("Overrides", isDirectory: true) }
     /// Soundtrack albums unpacked from the library's zips.

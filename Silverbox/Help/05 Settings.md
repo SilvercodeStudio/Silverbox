@@ -24,6 +24,7 @@ Where each emulator is installed, with its status, or a link to get it when it i
 - **86Box**, for the eXoWin9x games that need it.
 - **ScummVM**, and a ScummVM daily build for the games that need it.
 - **Spatterlight**, for eXoIF.
+- **GSplus**, for eXoAppleIIGS, and the Apple IIGS ROM that MAME needs for the 74 eXoAppleIIGS games eXo runs in it (Add ROM…).
 - **RetroArch** (with its cores folder), **Dolphin**, **MAME** and **Mednafen**, for console, computer and arcade platforms, and a list of those platforms with the emulator and core each one uses.
 
 ## Display & Sound

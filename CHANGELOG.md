@@ -11,6 +11,12 @@ What changed in each version of Silverbox.
   Windows. Downloads need aria2 (`brew install aria2`); the welcome screen
   and Settings › Library say whether it is found. A stopped download
   resumes on the next try.
+- eXoAppleIIGS games play: 386 of the 460 in GSplus, with eXo's settings
+  and the Apple IIGS ROM that eXo ships, and the other 74 in MAME, once
+  you add the one ROM file that current MAME needs and eXo cannot ship
+  (Settings › Emulators › Add ROM…). The launch options show eXo's
+  instructions for a game, such as which program on the disk to open, and
+  let you choose between its parts where eXo offers a menu.
 
 ### Changed
 
@@ -53,6 +59,11 @@ What changed in each version of Silverbox.
   and notices a change while it is open.
 - A collection whose folder is missing, or is not a library, says so in
   plain words in Settings.
+- Adding a collection that Silverbox set up in a separate folder, such as
+  one in the local data folder's Collections, finds the download's game
+  archives again. Before, its games could not be installed.
+- The install sheet no longer names the eXoDOS folder for games from other
+  packs.
 
 ## 0.2
 

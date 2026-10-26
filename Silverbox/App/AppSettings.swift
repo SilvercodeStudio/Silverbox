@@ -141,13 +141,16 @@ struct AppSettings: Codable, Equatable {
         // Launch arguments such as `-libraryPath /Volumes/eXoDOS` replace the
         // collections for this run only. Handy for testing other installs.
         // Several folders can be given, separated by "|". `-demoLibrary 1`
-        // gives the test fixtures' small libraries.
+        // gives the test fixtures' small libraries. A folder set up from a
+        // download keeps finding the download's archives through its setup
+        // record.
         if let paths = defaults.string(forKey: "libraryPath") ?? AppPaths.demoLibraryPaths, !paths.isEmpty {
             settings.collections = paths.split(separator: "|").enumerated().map { offset, path in
                 let url = URL(fileURLWithPath: String(path), isDirectory: true)
                 let id = UUID(uuidString: String(format: "11111111-1111-1111-1111-%012d", offset + 1))!
                 return LibraryCollection(
-                    id: id, name: LibraryCollection.suggestedName(for: url), rootPath: String(path))
+                    id: id, name: LibraryCollection.suggestedName(for: url), rootPath: String(path),
+                    downloadPath: EXoSetupRecord.read(in: url)?.downloadPath)
             }
             settings.transient = true
         }

@@ -39,9 +39,15 @@ eXo's launcher for interactive fiction picks an emulator by the name of each ver
 
 A version whose core is not installed says so; install it from RetroArch's Online Updater › Core Downloader. These RetroArch versions are not yet tested with many games. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
 
+## GSplus for eXoAppleIIGS games
+
+eXo keeps a list of the emulator for each Apple IIGS game (`eXo/util/appleIIGS.txt`): GSplus for most, GSport for ten and MAME for 74. **GSplus** runs the GSplus and GSport games, with the ROM in the collection's `eXo/emulators/GSPlus` folder. Get GSplus from https://github.com/digarok/gsplus and set its location in Settings › Emulators if it is not in the Applications folder.
+
+**MAME** runs the other 74, as eXo's script starts them: the disks each game's `exception.bat` names, eXo's MAME settings and the Apple IIGS's saved Control Panel settings, copied to the local data folder's `MAME` folder the first time. MAME reads ROMs from `MAME/roms` there first, then from eXo's set in `eXo/emulators/MAME/roms`. eXo's set is for MAME 0.245; current MAME also needs `344s0047.bin`, which you add in Settings › Emulators.
+
 ## How a game is configured
 
-Silverbox reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
+Silverbox reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`; eXoAppleIIGS: the GSplus `config.txt`) from the collection and translates it for the chosen emulator: paths become Mac paths, settings that no longer exist are dropped or renamed, and your display choices are layered on top. The translated configuration is written to the local data folder's `Launch` folder before each start.
 
 ## Music and MIDI
 
@@ -51,7 +57,7 @@ General MIDI games use the collection's Sound Canvas SoundFont through FluidSynt
 
 ## Consoles, computers and arcade
 
-Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform. This part is new and not yet tested with real games; please report what you find.
+Games from a LaunchBox library, such as a console collection, start in the emulator assigned to their platform. This part is experimental; please report what you find.
 
 - **RetroArch** runs most platforms through its libretro cores. Install the cores you need in RetroArch itself (Online Updater › Core Downloader); Silverbox finds them in RetroArch's cores folder.
 - **Dolphin** runs Nintendo GameCube and Wii games.

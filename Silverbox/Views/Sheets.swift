@@ -21,8 +21,8 @@ struct InstallSheet: View {
                     Text("Install \(game.title)?").font(.headline)
                     Text(
                         plan?.location == .inPlace
-                            ? "This game must be installed before it can run for the first time. The archive is unpacked into eXo/eXoDOS, exactly as eXoDOS does on Windows."
-                            : "This game must be installed before it can run for the first time. The archive is unpacked into the local data folder; the eXoDOS folder is not changed."
+                            ? "This game must be installed before it can run for the first time. The archive is unpacked into eXo/\(game.eXoPack?.directoryName ?? "eXoDOS"), as eXo does on Windows."
+                            : "This game must be installed before it can run for the first time. The archive is unpacked into the local data folder."
                     )
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -402,11 +402,17 @@ struct LaunchOptionsSheet: View {
 
     private var isScummVM: Bool { pending.game.launchKind == .scummVM }
     private var isIF: Bool { pending.game.launchKind == .interactiveFiction }
+    private var isAppleIIGS: Bool { pending.game.launchKind == .appleIIGS }
     /// The emulator that will run: an eXoIF version decides its own.
     private var effectiveEmulator: EmulatorKind {
         isIF ? model.ifEmulatorKind(for: pending.game, variant: selectedVariant) : emulator
     }
     private var selectedVariant: LaunchVariant? { pending.variants.first { $0.id == variantID } }
+    /// eXo's note for the chosen version: ScummVM's from its files, the
+    /// others' from the version itself.
+    private var versionNote: String? {
+        isScummVM ? model.scummVMNote(for: pending.game, variant: selectedVariant) : selectedVariant?.note
+    }
 
     var body: some View {
         @Bindable var model = model
@@ -447,11 +453,11 @@ struct LaunchOptionsSheet: View {
                                 .font(.caption)
                                 .foregroundStyle(Theme.warning)
                         }
-                        if isScummVM, let note = model.scummVMNote(for: game, variant: selectedVariant) {
+                        if let note = versionNote {
                             Text(note).font(.caption).foregroundStyle(Theme.textSecondary)
                         }
                     }
-                } else if isScummVM, let note = model.scummVMNote(for: game, variant: selectedVariant) {
+                } else if let note = versionNote {
                     Section("Note") {
                         Text(note).font(.caption).foregroundStyle(Theme.textSecondary)
                     }
@@ -461,13 +467,19 @@ struct LaunchOptionsSheet: View {
                 if !(isIF && effectiveEmulator == .spatterlight) {
                     Section("Display") {
                         Toggle("Full screen", isOn: $options.fullscreen)
-                        // 86Box and RetroArch take only full screen from here.
-                        if emulator != .box86, !(isIF && effectiveEmulator == .retroArch) { displayOptions }
+                        // 86Box, GSplus and RetroArch take only full screen from here.
+                        if emulator != .box86, !isAppleIIGS, !(isIF && effectiveEmulator == .retroArch) {
+                            displayOptions
+                        }
                     }
                 }
                 Section("Emulator") {
                     if game.launchKind == .windows9x {
                         LabeledContent("Emulator") { Text("Windows 98 in \(emulator.displayName)") }
+                    } else if isAppleIIGS {
+                        LabeledContent("Emulator") {
+                            Text(model.appleIIGSRoute(for: game).emulator.displayName)
+                        }
                     } else if isIF {
                         LabeledContent("Emulator") {
                             Text(
@@ -604,6 +616,8 @@ struct LaunchOptionsSheet: View {
         let runs: String?
         if pending.game.launchKind == .windows9x {
             runs = "Windows 98 starts first, then the game."
+        } else if isAppleIIGS {
+            runs = "\(pack) runs this game in \(model.appleIIGSRoute(for: pending.game).eXoEmulatorName)."
         } else if isIF {
             runs =
                 "Text adventures open in Spatterlight, MS-DOS versions run in DOSBox, and 8-bit computer versions in RetroArch."

@@ -93,6 +93,10 @@ nonisolated public enum LaunchPlanError: Error, Sendable, Equatable {
     case needsSpatterlight
     case ifVersionUnsupported(String)
     case needsRetroArchCore(String)
+    case needsGSplus
+    case needsMAME
+    case appleIIGSUnsupported(String)
+    case missingROM(URL)
 }
 
 nonisolated extension LaunchPlanError: LocalizedError {
@@ -120,6 +124,13 @@ nonisolated extension LaunchPlanError: LocalizedError {
                 "This version runs in RetroArch's \(core) core. Install RetroArch, then the core from its Online Updater › Core Downloader."
         case .ifVersionUnsupported(let system):
             return "\(system) is not supported on the Mac yet. Choose another version in the launch options."
+        case .needsGSplus:
+            return "eXoAppleIIGS games run in GSplus. Set the GSplus location in Settings › Emulators."
+        case .needsMAME:
+            return
+                "eXo runs this game in MAME. Install it with Homebrew (brew install mame), or set its location in Settings › Emulators."
+        case .appleIIGSUnsupported(let reason): return reason + "."
+        case .missingROM(let url): return "The Apple IIGS ROM that eXo ships is missing: \(url.path)"
         case .scummVMNotInIndex(let name):
             return "eXo's ScummVM index (eXo/util/scummvm.txt) has no entry for \(name)."
         }
@@ -173,6 +184,7 @@ nonisolated public struct LaunchPlanner: Sendable {
     public func variants(for game: Game) -> [LaunchVariant] {
         if game.launchKind == .scummVM { return scummVMVariants(for: game) }
         if game.launchKind == .interactiveFiction { return ifVersions(for: game) }
+        if game.launchKind == .appleIIGS { return appleIIGSVariants(for: game) }
         guard game.isDOSGame, let folder = configFolder(for: game) else { return [] }
         return LaunchVariantDetector.variants(inGameConfigFolder: folder)
     }
@@ -184,6 +196,7 @@ nonisolated public struct LaunchPlanner: Sendable {
     public func recommendedEmulator(for game: Game) -> EmulatorKind {
         if game.eXoPack == .win9x { return .dosboxX }
         if game.launchKind == .scummVM { return .scummVM }
+        if game.launchKind == .appleIIGS { return appleIIGSRoute(for: game).emulator }
         if game.launchKind == .interactiveFiction {
             return ifRoute(for: game, variant: nil)?.emulator ?? .spatterlight
         }
@@ -210,6 +223,9 @@ nonisolated public struct LaunchPlanner: Sendable {
         }
         if game.launchKind == .interactiveFiction {
             return try planInteractiveFiction(game: game, variant: variant, emulator: emulator, options: options)
+        }
+        if game.launchKind == .appleIIGS {
+            return try planAppleIIGS(game: game, variant: variant, emulator: emulator, options: options)
         }
         guard game.isDOSGame, let pack = game.eXoPack else { throw LaunchPlanError.notADOSGame }
         guard let folderName = game.gameFolderName, let configFolder = configFolder(for: game) else {
@@ -315,7 +331,7 @@ nonisolated public struct LaunchPlanner: Sendable {
             ]
         case .dosboxX:
             arguments = ["-defaultdir", workingDirectory.path, "-conf", configURL.path, "-fastlaunch"]
-        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight:
+        case .retroArch, .dolphin, .mame, .mednafen, .box86, .scummVM, .scummVMDaily, .spatterlight, .gsplus:
             throw LaunchPlanError.notADOSBoxEmulator(emulator.kind)
         }
 
