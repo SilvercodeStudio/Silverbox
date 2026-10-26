@@ -8,6 +8,10 @@ What changed in each version of Silverbox.
 
 - A new app icon: a floppy disk, in amber or green. The highlight colours
   match it.
+- Help › Silverbox Website opens getsilverbox.app. The About window is
+  new: the icon on a CRT screen, how many games the library holds and how
+  many are installed and played, every emulator Silverbox uses, and a
+  Website button. The welcome screen opens with the same CRT screen.
 - The help covers every eXo pack, explains how music plays in games, and
   has more troubleshooting. The Keyboard Shortcuts window now lists Play,
   Rescan Library and Show in Finder.

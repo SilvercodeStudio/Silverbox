@@ -26,7 +26,7 @@ APP_DIR ?= $(HOME)/Applications
 # Registers a copied app with Launch Services, so that the Dock and Finder show its new icon.
 LSREGISTER = /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 
-.PHONY: help build run app test core typecheck sweep format lint install-app reset
+.PHONY: help build run app test core typecheck sweep format lint install-app reset site
 
 help:
 	@echo "make build          build the app ($(CONFIG)) with xcodebuild"
@@ -40,6 +40,7 @@ help:
 	@echo "make lint           report formatting problems without changing files"
 	@echo "make install-app    build the app for release (Apple silicon and Intel) and copy it to APP_DIR ($(APP_DIR))"
 	@echo "make reset          delete the app's settings and data, to test a first start (asks first; DATA= for a moved data folder)"
+	@echo "make site           serve the website (docs/site) at http://localhost:$(SITE_PORT)"
 	@echo "Set CONFIG=Release for a release build (Apple silicon and Intel)."
 
 build:
@@ -119,3 +120,8 @@ reset:
 	@[ -z "$(DATA)" ] || rm -rf "$(DATA)"
 	@defaults delete $(DOMAIN) >/dev/null 2>&1 || true
 	@echo "Done. The next start asks for a library again; make run ARGS='-libraryPath /Volumes/eXoDOS_ro' skips that for one run."
+
+# The website, as GitHub Pages serves it. Port 8001, so Silverside's site can run on 8000 beside it.
+SITE_PORT ?= 8001
+site:
+	python3 -m http.server $(SITE_PORT) --bind 127.0.0.1 --directory docs/site

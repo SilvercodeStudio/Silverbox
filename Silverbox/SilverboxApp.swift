@@ -58,6 +58,7 @@ struct SilverboxApp: App {
 /// Names shown to the user.
 enum AppInfo {
     static let displayName = "Silverbox"
+    static let websiteURL = URL(string: "https://getsilverbox.app")!
     /// "Silverbox 0.1 (2)", for reports.
     static var versionLine: String {
         let info = Bundle.main.infoDictionary

@@ -23,6 +23,8 @@ struct AppCommands: Commands {
                 if model.shortcutsShown { dismissWindow(id: "shortcuts") } else { openWindow(id: "shortcuts") }
             }
             .keyboardShortcut("/", modifiers: .command)
+            Divider()
+            Link("\(AppInfo.displayName) Website", destination: AppInfo.websiteURL)
             Link("eXo Project Website", destination: AboutPanel.projectURL)
         }
         // Before the standard Find submenu, so Cmd-F reaches the search field.

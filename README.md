@@ -205,6 +205,7 @@ make format               # reformat the Swift sources with swift-format
 make lint                 # report formatting problems without changing files
 make install-app          # universal Release build copied to ~/Applications
 make reset                # delete the app's settings and local data folder, to test a first start
+make site                 # serve the website (docs/site) at http://localhost:8001
 ```
 
 The core library (XML parsing, media lookup, config translation, music

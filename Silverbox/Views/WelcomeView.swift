@@ -24,79 +24,83 @@ struct WelcomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                VStack(spacing: 6) {
-                    Image(nsImage: model.settings.appIcon.image)
-                        .resizable()
-                        .interpolation(.high)
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 96)
-                    Text("Welcome to \(AppInfo.displayName)")
-                        .font(.system(size: 26, weight: .bold))
-                    Text("Browse and play the eXo game collections on your Mac.")
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                step(1, "Add a collection") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Choose a folder, or drop it on this window. Either kind works:")
-                        bullet(
-                            "shippingbox",
-                            "**An eXo download, as it came**, such as eXoDOS from its torrent. \(AppInfo.displayName) sets it up as eXo's setup does on Windows."
-                        )
-                        bullet(
-                            "folder",
-                            "**A collection that is already set up**, on Windows or on this Mac, or any LaunchBox library folder."
-                        )
-                        Text(
-                            "The folder can be read-only, on another drive or on a network share. \(AppInfo.displayName) never changes it."
-                        )
-                        .font(.callout)
-                        .foregroundStyle(Theme.textSecondary)
-                        Button("Add Collection…") { showingPicker = true }
-                            .buttonStyle(.borderedProminent)
-                            .tint(Theme.accent)
-                            .foregroundStyle(Theme.accentText)
-                            .controlSize(.large)
-                    }
-                }
-                step(2, "Install the emulators") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(
-                            "Games run in Mac emulators that you install yourself. eXoDOS needs DOSBox Staging; the others are for the other packs."
-                        )
-                        VStack(spacing: 0) {
-                            ForEach(Self.emulators, id: \.kind) { item in
-                                emulatorRow(item.kind, use: item.use, needed: item.needed)
-                                if item.kind != Self.emulators.last?.kind { Divider() }
-                            }
-                        }
-                        .background(Theme.panel, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border))
-                    }
-                }
-                VStack(spacing: 8) {
-                    Text(
-                        "Installed games, saves and caches go to the local data folder, \(model.localStore.directory.path). To keep them on another drive, choose that folder in Library Settings before you install anything."
-                    )
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Theme.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    Button("Library Settings…") {
-                        SettingsState.shared.show(tab: .library)
-                        openSettings()
-                    }
-                    .controlSize(.small)
-                }
+            VStack(spacing: 0) {
+                CRTHero(icon: model.settings.appIcon.image, height: 210, iconSize: 160)
+                Theme.accent.frame(height: 3)
+                content
             }
-            .frame(maxWidth: 560)
-            .padding(32)
-            .frame(maxWidth: .infinity)
         }
         .watchingForEmulators()
         .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { model.addFolder(url) }
         }
+    }
+
+    private var content: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 4) {
+                Text("Welcome to \(AppInfo.displayName)")
+                    .font(.system(size: 30, weight: .bold))
+                Text("Browse and play the eXo game collections on your Mac.")
+                    .font(.title3)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            step(1, "Add a collection") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Choose a folder, or drop it on this window. Either kind works:")
+                    bullet(
+                        "shippingbox",
+                        "**An eXo download, as it came**, such as eXoDOS from its torrent. \(AppInfo.displayName) sets it up as eXo's setup does on Windows."
+                    )
+                    bullet(
+                        "folder",
+                        "**A collection that is already set up**, on Windows or on this Mac, or any LaunchBox library folder."
+                    )
+                    Text(
+                        "The folder can be read-only, on another drive or on a network share. \(AppInfo.displayName) never changes it."
+                    )
+                    .font(.callout)
+                    .foregroundStyle(Theme.textSecondary)
+                    Button("Add Collection…") { showingPicker = true }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accent)
+                        .foregroundStyle(Theme.accentText)
+                        .controlSize(.large)
+                }
+            }
+            step(2, "Install the emulators") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(
+                        "Games run in Mac emulators that you install yourself. eXoDOS needs DOSBox Staging; the others are for the other packs."
+                    )
+                    VStack(spacing: 0) {
+                        ForEach(Self.emulators, id: \.kind) { item in
+                            emulatorRow(item.kind, use: item.use, needed: item.needed)
+                            if item.kind != Self.emulators.last?.kind { Divider() }
+                        }
+                    }
+                    .background(Theme.panel, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border))
+                }
+            }
+            VStack(spacing: 8) {
+                Text(
+                    "Installed games, saves and caches go to the local data folder, \(model.localStore.directory.path). To keep them on another drive, choose that folder in Library Settings before you install anything."
+                )
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                Button("Library Settings…") {
+                    SettingsState.shared.show(tab: .library)
+                    openSettings()
+                }
+                .controlSize(.small)
+            }
+        }
+        .frame(maxWidth: 560)
+        .padding(32)
+        .frame(maxWidth: .infinity)
     }
 
     private func step(_ number: Int, _ title: String, @ViewBuilder content: () -> some View) -> some View {

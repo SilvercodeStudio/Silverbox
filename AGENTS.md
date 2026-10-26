@@ -37,6 +37,10 @@ the app as a collection of classic Mac games.
   LaunchBox-style library and audio samples under `Fixtures/`. Tests in
   `RealLibraryTests.swift` run only when `/Volumes/eXoDOS_ro` (or
   `$SILVERBOX_TEST_LIBRARY`) exists.
+- `docs/site/` — the website, getsilverbox.app: static HTML and CSS on
+  GitHub Pages (`.github/workflows/pages.yml`), built like Silverside's
+  site. Its README covers the files, publishing and screenshots. Keep its
+  claims in step with the README and the help.
 - `Package.swift` at the repo root defines the `SilverboxCore` library and the
   vendored C targets. The Xcode app target links the `SilverboxCore` product as a
   local package dependency (the repo root added through File › Add Package
@@ -54,6 +58,7 @@ make format                      # swift-format the Swift sources (settings in .
 make lint                        # report formatting problems without changing files
 make install-app                 # universal Release build copied to ~/Applications (APP_DIR=... elsewhere)
 make reset                       # delete the app's settings and local data folder (asks first; YES=1 skips)
+make site                        # serve the website (docs/site) at http://localhost:8001
 ```
 
 `make run` resolves the built app through `xcodebuild -showBuildSettings`,
@@ -258,7 +263,12 @@ new entry after the version is tagged; the version is the app target's
   `settings.sortOrder` and `settings.sortAscending`, the same settings as
   the toolbar's Sort menu; `Game.sortYear` and `sortDeveloper` give
   `KeyPathComparator` non-optional keys.
-- About. `AboutView` opens `AcknowledgmentsSheet` and `LicenseSheet`; the
+- About. `AboutView` follows Silverside's About window: the icon on a dark
+  CRT band (`CRTHero`, like the website's), an accent rule, name and
+  version, library counts from `sidebarCounts`, the eXo credit with the
+  eXoDOS cover, and Acknowledgments, License and Website buttons
+  (`AppInfo.websiteURL`, also Help › Silverbox Website). It opens
+  `AcknowledgmentsSheet` and `LicenseSheet`; the
   texts come from `Silverbox/Licenses/*.txt`, copies of the repository's
   `LICENSE` and the vendored decoders' licenses that `ProjectFilesTests`
   keeps identical. The license is MIT; the name and icon artwork are not.
@@ -279,7 +289,8 @@ new entry after the version is tagged; the version is the app target's
   `FluidSynthStatus` shows it. Views ask `model.emulatorInstallation(_:)`,
   `model.retroArchSetup` or `emulatorResolver()`, which read the check, not
   `settings.emulatorInstallation(_:)`, so they redraw when it changes.
-- First start. With no collection, the content column shows `WelcomeView`:
+- First start. With no collection, the content column shows `WelcomeView`,
+  under the same `CRTHero` band as the About window:
   Add Collection (`addFolder` takes an eXo download or a set-up
   collection) and the emulators each pack needs.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder

@@ -89,6 +89,9 @@ Done:
 Not yet:
 
 - eXoDOS Lite: download a game on demand when it is not in the download.
+  This is the app's first network request: revise the website's privacy
+  page and its "send anything about me?" answer, and follow AGENTS.md's
+  network rules.
 - BitTorrent downloads of the packs (later).
 
 ## 8. eXoWin9x and eXoWin3x — done
@@ -157,8 +160,10 @@ Done:
 
 Not yet:
 
-- The website for getsilverbox.app (later): `docs/site`, a GitHub Pages
-  workflow, `make site`, screenshots in both appearances.
+- The website for getsilverbox.app: `docs/site`, the Pages workflow and
+  `make site` are in place (2026-10-25). Still to do: current screenshots in
+  both appearances, the Pages and DNS setup, and the download link once
+  there is a signed build.
 - A release script shared with Silverside: archive, Developer ID signing,
   notarization, stapling, a DMG.
 - A CI workflow for `swift test` and `make lint`.

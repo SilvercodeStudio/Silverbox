@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Silverbox — Browse and play the eXo collections on your Mac</title>
+  <meta name="description" content="Silverbox sets up eXoDOS, eXoWin3x, eXoWin9x and the other eXo game preservation collections on your Mac, without a Windows PC. Browse every box, manual and soundtrack, and start each game in the right Mac emulator with eXo's own settings.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#14100b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#e6dccb" media="(prefers-color-scheme: light)">
+  <link rel="canonical" href="https://getsilverbox.app/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://getsilverbox.app/">
+  <meta property="og:title" content="Silverbox — Browse and play the eXo collections on your Mac">
+  <meta property="og:description" content="Set up eXoDOS and the other eXo packs on your Mac, and play each game in the right Mac emulator.">
+  <meta property="og:image" content="https://getsilverbox.app/images/library-dark-1200.webp">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+  <!-- A theme chosen with the button wins over the system appearance; set it before the page draws. -->
+  <script>try { var t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- The header and the hero share one CRT band, so the scanlines run unbroken. -->
+  <div class="sb-crt">
+    <header class="gutter">
+      <nav class="nav wrap" aria-label="Main">
+        <a class="brand" href="/">
+          <img src="images/icon.png" alt="" width="30" height="30">
+          <span>Silverbox</span>
+        </a>
+        <div class="nav-links">
+          <a class="nav-more" href="#how">How it works</a>
+          <a class="nav-more" href="#features">Features</a>
+          <a class="nav-more" href="#plays">What plays</a>
+          <a class="nav-more" href="#faq">FAQ</a>
+          <!-- GitHub's mark, from its Octicons set (MIT). GitHub allows it for a link to a repository. -->
+          <a class="nav-icon" href="https://github.com/SilvercodeStudio/Silverbox" aria-label="Silverbox on GitHub" title="GitHub"><svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
+          <!-- Shown by js/site.js; without the script the page follows the system appearance. -->
+          <button class="nav-icon theme-btn" type="button" aria-label="Switch appearance" title="Switch appearance" hidden><svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg><svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+          <a class="sb-btn sb-btn--small" href="#download">Download</a>
+        </div>
+      </nav>
+    </header>
+
+    <section class="hero-band" aria-labelledby="hero-title">
+      <div class="hero-stack">
+        <img class="hero-icon sb-icon" src="images/icon.png" alt="Silverbox app icon: an orange floppy disk with a rainbow disc showing through" width="120" height="120">
+        <a class="sb-announce" href="https://github.com/SilvercodeStudio/Silverbox">
+          <span class="sb-announce__tag">Coming soon</span>
+          <span>The first public release is on its way. Watch on GitHub to hear when it ships.</span>
+        </a>
+        <span class="sb-eyebrow">A Mac front-end for the eXo collections</span>
+        <h1 id="hero-title" class="sb-display sb-crt-ink hero-title">Browse and play the eXo collections on your Mac.<span class="sb-cursor sb-cursor--blink" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
+        <p class="lead">Silverbox sets up eXoDOS, eXoWin3x, eXoWin9x and the other eXo packs on your Mac, without a Windows PC. Browse every box, manual and soundtrack, and start each game in the right Mac emulator with eXo's own settings.</p>
+        <div class="actions">
+          <a class="sb-btn" href="#download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+            Download for Mac
+          </a>
+          <a class="sb-btn sb-btn--ghost" href="#how">How it works</a>
+        </div>
+        <p class="sb-detail">Version 0.3 · Free and open source · macOS 15 or later · Apple silicon and Intel</p>
+      </div>
+    </section>
+  </div>
+
+  <main id="main">
+    <div class="hero-shot gutter">
+      <div class="wrap">
+        <a class="zoom" href="images/library-dark-2400.webp" data-light="images/library-light-2400.webp">
+          <picture>
+            <source data-theme-light media="(prefers-color-scheme: light)" srcset="images/library-light-1200.webp 1200w, images/library-light-2400.webp 2400w" sizes="(min-width: 1224px) 1160px, calc(100vw - 32px)">
+            <img class="sb-shot" src="images/library-dark-2400.webp" srcset="images/library-dark-1200.webp 1200w, images/library-dark-2400.webp 2400w" sizes="(min-width: 1224px) 1160px, calc(100vw - 32px)" width="2400" height="1194" fetchpriority="high" alt="The Silverbox library: the Ultima games from eXoDOS as box art, with Ultima V selected and its title screen, play history and details beside them">
+          </picture>
+        </a>
+      </div>
+    </div>
+
+    <section class="works-with gutter" aria-label="Works with">
+      <div class="wrap">
+        <div class="works-group">
+          <span class="sb-eyebrow">Plays the collections by the eXo team</span>
+          <ul class="sb-chips">
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoDOS</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoWin3x</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoWin9x</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoDemoScene</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoScummVM</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoIF</li>
+            <li class="sb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>eXoAppleIIGS<b>planned</b></li>
+          </ul>
+        </div>
+        <div class="works-group">
+          <span class="sb-eyebrow">Runs them in Mac emulators</span>
+          <p class="sb-detail">DOSBox Staging · DOSBox-X · 86Box · ScummVM · Spatterlight · RetroArch</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section gutter" aria-labelledby="how-title">
+      <div class="wrap spotlight">
+        <div class="spotlight-text">
+          <span class="sb-eyebrow">How it works</span>
+          <h2 id="how-title" class="sb-display section-title">Set up once, then play.</h2>
+          <p>Silverbox runs eXo's setup itself, so you don't need a Windows PC. A collection already set up on Windows works too.</p>
+          <ol class="sb-steps">
+            <li class="sb-step"><span class="sb-step__num">1</span><h3 class="sb-step__title">Download an eXo collection</h3><p class="sb-step__text">Get the torrent for eXoDOS or another pack from <a href="https://www.retro-exo.com/index2.html">retro-exo.com</a>, and open it in a BitTorrent client such as qBittorrent or Transmission. Use the full download for now; the larger packs take a while.</p></li>
+            <li class="sb-step"><span class="sb-step__num">2</span><h3 class="sb-step__title">Add it to Silverbox</h3><p class="sb-step__text">Drag the folder onto the window. Silverbox asks whether to unpack into the download itself, as on Windows, or into a separate local folder that leaves the download as it came.</p></li>
+            <li class="sb-step"><span class="sb-step__num">3</span><h3 class="sb-step__title">Install the emulators</h3><p class="sb-step__text">DOSBox Staging for most eXoDOS games, and the others for the packs you have. Silverbox shows which ones it found, and notices one you install while it is open.</p></li>
+            <li class="sb-step"><span class="sb-step__num">4</span><h3 class="sb-step__title">Pick a game</h3><p class="sb-step__text">Press Play. The first time, Silverbox installs the game from its archive in the background. Then it starts the emulator eXo chose for that game, with a config translated from eXo's launch script.</p></li>
+          </ol>
+        </div>
+        <div class="spotlight-media">
+          <a class="zoom" href="images/welcome-dark-2400.webp" data-light="images/welcome-light-2400.webp">
+            <picture>
+              <source data-theme-light media="(prefers-color-scheme: light)" srcset="images/welcome-light-1200.webp 1200w, images/welcome-light-2400.webp 2400w" sizes="(min-width: 920px) 640px, 100vw">
+              <img class="sb-shot" src="images/welcome-dark-2400.webp" srcset="images/welcome-dark-1200.webp 1200w, images/welcome-dark-2400.webp 2400w" sizes="(min-width: 920px) 640px, 100vw" width="2400" height="1496" loading="lazy" alt="The welcome screen: add a collection, then install the emulators, with six emulators found">
+            </picture>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section gutter" aria-labelledby="media-title">
+      <div class="wrap spotlight spotlight--reverse">
+        <div class="spotlight-media spotlight-media--even crop-43">
+          <a class="zoom" href="images/details-dark-2400.webp" data-light="images/details-light-2400.webp">
+            <picture>
+              <source data-theme-light media="(prefers-color-scheme: light)" srcset="images/details-light-1200.webp 1200w, images/details-light-2400.webp 2400w" sizes="(min-width: 920px) 50vw, 100vw">
+              <img src="images/details-dark-2400.webp" srcset="images/details-dark-1200.webp 1200w, images/details-dark-2400.webp 2400w" sizes="(min-width: 920px) 50vw, 100vw" width="2400" height="1193" loading="lazy" alt="Ultima V's details: credits, the manual, and what came in the box: cluebook, journey log, map, reference cards and spellbook">
+            </picture>
+          </a>
+        </div>
+        <div class="spotlight-text">
+          <span class="sb-eyebrow">Media and extras</span>
+          <h2 id="media-title" class="sb-display spotlight-title">Every manual, map and cluebook, a click away.</h2>
+          <p>Each game shows its box art, title screen, gameplay and video, scaled pixel-perfect, beside its credits and the story behind it. Below them is everything eXo kept from the box: the manual, and the cluebook, map and spellbook that came with it. Quick Look pages through all of it.</p>
+          <p>A game whose emulator isn't installed still shows, with all of it.</p>
+          <ul class="sb-chips" aria-label="Media for each game">
+            <li class="sb-chip">Box front</li>
+            <li class="sb-chip">Title screen</li>
+            <li class="sb-chip">Gameplay</li>
+            <li class="sb-chip">Video</li>
+            <li class="sb-chip">Manual</li>
+            <li class="sb-chip">In the box</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gutter" aria-labelledby="launch-title">
+      <div class="wrap spotlight">
+        <div class="spotlight-text">
+          <span class="sb-eyebrow">Launching</span>
+          <h2 id="launch-title" class="sb-display spotlight-title">The right DOSBox for every game.</h2>
+          <p>eXoDOS picks a DOSBox build per game: 0.74, ECE, Staging, SVN Daum or DOSBox-X. Silverbox matches each to a Mac build, sending Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging, and translates the game's config from eXo's Windows launch script.</p>
+          <p>Want something different? Change the emulator for any game in its info sheet, or edit a copy of its config. Changes are kept in the local data folder; the eXo files are not changed.</p>
+          <div class="panel-line">
+            <span class="sb-path">eXo/eXoDOS/!dos/ultima5/dosbox.conf</span>
+            <span class="sb-detail">eXoDOS runs it with DOSBox Staging 0.81.1 · Mac emulator: DOSBox Staging</span>
+          </div>
+        </div>
+        <div class="spotlight-media">
+          <a class="zoom" href="images/game-info-dark-2400.webp" data-light="images/game-info-light-2400.webp">
+            <picture>
+              <source data-theme-light media="(prefers-color-scheme: light)" srcset="images/game-info-light-1200.webp 1200w, images/game-info-light-2400.webp 2400w" sizes="(min-width: 920px) 640px, 100vw">
+              <img class="sb-shot" src="images/game-info-dark-2400.webp" srcset="images/game-info-dark-1200.webp 1200w, images/game-info-dark-2400.webp 2400w" sizes="(min-width: 920px) 640px, 100vw" width="2400" height="1312" loading="lazy" alt="Ultima V's game info sheet: launcher, installer and DOSBox config paths, the eXoDOS build, and the emulator choice">
+            </picture>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gutter" aria-labelledby="sound-title">
+      <div class="wrap spotlight spotlight--reverse">
+        <div class="sheet">
+          <a class="zoom" href="images/display-sound-dark-1200.webp" data-light="images/display-sound-light-1200.webp">
+            <picture>
+              <source data-theme-light media="(prefers-color-scheme: light)" srcset="images/display-sound-light-600.webp 600w, images/display-sound-light-1200.webp 1200w" sizes="(min-width: 920px) 520px, min(520px, 100vw)">
+              <img class="sb-shot sb-shot--crop" src="images/display-sound-dark-1200.webp" srcset="images/display-sound-dark-600.webp 600w, images/display-sound-dark-1200.webp 1200w" sizes="(min-width: 920px) 520px, min(520px, 100vw)" width="1200" height="1119" loading="lazy" alt="Display and Sound settings: window size, aspect ratio correction, the CRT shader, and General MIDI rendered with FluidSynth">
+            </picture>
+          </a>
+        </div>
+        <div class="spotlight-text">
+          <span class="sb-eyebrow">Sound and picture</span>
+          <h2 id="sound-title" class="sb-display spotlight-title">The music the games were written for.</h2>
+          <p>Games set up for the Roland MT-32 use MT-32 emulation with the ROMs that come with eXo. General MIDI plays through FluidSynth and the eXoDOS Sound Canvas SoundFont, as on Windows; DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Where eXo's in-game sound menus pick General MIDI, Silverbox sends them to the same synthesizer.</p>
+          <div class="panel-line">
+            <span class="sb-status sb-status--ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>FluidSynth ready in DOSBox Staging</span>
+            <span class="sb-detail">General MIDI games play with the eXoDOS Sound Canvas SoundFont.</span>
+          </div>
+          <p>The picture can stay as each game was configured, or take a CRT shader in DOSBox Staging. Start in full screen, and skip the emulator's start-up banner.</p>
+          <ul class="sb-chips" aria-label="Sound and picture options">
+            <li class="sb-chip">Roland MT-32</li>
+            <li class="sb-chip">Sound Canvas</li>
+            <li class="sb-chip">General MIDI</li>
+            <li class="sb-chip">CRT shader</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gutter" aria-labelledby="library-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="sb-eyebrow">The library</span>
+          <h2 id="library-title" class="sb-display section-title">More than the games.</h2>
+          <p>A full set of eXo collections holds thousands of games, and the books, magazines and music that came with them. Silverbox keeps all of it easy to look through.</p>
+        </div>
+        <div class="features">
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></div>
+            <h3 class="sb-card__title">Soundtracks</h3>
+            <p class="sb-card__text">Play the eXoDOS game soundtracks as albums inside the app, and start from the track you want.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6"/></svg></div>
+            <h3 class="sb-card__title">Menu music</h3>
+            <p class="sb-card__text">Where eXo supplies it, each game's music plays as you browse, tracker modules included. Turn it off any time.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></div>
+            <h3 class="sb-card__title">Manuals, magazines and books</h3>
+            <p class="sb-card__text">Read what eXo collected alongside the games, from hint books to old computer magazines.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></div>
+            <h3 class="sb-card__title">Search as you type</h3>
+            <p class="sb-card__text">One search covers every pack at once, and narrows the library with each letter. Other Versions finds the same game in your other packs.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></div>
+            <h3 class="sb-card__title">Box art or a list</h3>
+            <p class="sb-card__text">Browse by cover in a grid you can size, or as a list you can sort.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></div>
+            <h3 class="sb-card__title">Your favorites, and eXo's</h3>
+            <p class="sb-card__text">Keep your own favorites, or start with the games the eXo team marked as eXo Favorites.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>
+            <h3 class="sb-card__title">Play history</h3>
+            <p class="sb-card__text">Installed and Recently Played, with when you last played each game, for how long, and how often.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h4M8 9v4"/><circle cx="15.5" cy="10.5" r=".8"/><circle cx="17.5" cy="13" r=".8"/><path d="M7 6h10a5 5 0 0 1 4.9 6l-.9 4.4a2.5 2.5 0 0 1-4.3 1.2L14.5 15h-5l-2.2 2.6a2.5 2.5 0 0 1-4.3-1.2L2.1 12A5 5 0 0 1 7 6z"/></svg></div>
+            <h3 class="sb-card__title">Keyboard and controller</h3>
+            <p class="sb-card__text">Browse the whole library from the keyboard, or from the couch with a PlayStation, Xbox or MFi controller, manuals and maps included.</p>
+          </article>
+          <article class="sb-card">
+            <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+            <h3 class="sb-card__title">Read-only is fine</h3>
+            <p class="sb-card__text">Keep the collection on another drive or a NAS, even one a Windows PC shares. Installs, saves and caches go to a local data folder.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="emulators" class="section gutter" aria-labelledby="emulators-title">
+      <div class="wrap spotlight spotlight--top">
+        <div class="spotlight-text">
+          <span class="sb-eyebrow">Emulators</span>
+          <h2 id="emulators-title" class="sb-display section-title">The emulators do the hard part.</h2>
+          <p>Games run in Mac emulators that you install yourself, each made by its own team. Put them in Applications, or choose them in Settings. Silverbox starts every game in the one eXo chose for it, with eXo's settings for that game.</p>
+          <p>eXo ships Windows builds of the same emulators; Silverbox doesn't use them. And you need none of them just to browse.</p>
+        </div>
+        <div class="spotlight-media spotlight-media--even">
+          <ul class="sb-list" aria-label="Emulators Silverbox works with">
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://www.dosbox-staging.org">DOSBox Staging</a><span class="sb-list__sub">Most eXoDOS games, eXoWin3x, and the MS-DOS versions in eXoIF</span></span></li>
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://dosbox-x.com">DOSBox-X</a><span class="sb-list__sub">Windows 98 for eXoWin9x, most eXoDemoScene demos, and the eXoDOS games eXo runs in DOSBox-X or SVN Daum</span></span></li>
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://86box.net">86Box</a><span class="sb-list__sub">The thirty or so eXoWin9x games eXo runs in 86Box</span></span></li>
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://www.scummvm.org">ScummVM</a><span class="sb-list__sub">Every eXoScummVM game, with 2026.4 or later (a daily build for five of them)</span></span></li>
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://ccxvii.net/spatterlight/">Spatterlight</a><span class="sb-list__sub">eXoIF's Infocom and other story files</span></span></li>
+            <li><span class="sb-list__body"><a class="sb-list__name" href="https://www.retroarch.com">RetroArch</a><span class="sb-list__sub">eXoIF's Commodore, ZX Spectrum, Apple II, Atari 8-bit, Amstrad and Amiga versions</span></span></li>
+            <li><span class="sb-list__body"><span class="sb-list__name">GSplus</span><span class="sb-list__sub">eXoAppleIIGS. Planned.</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="plays" class="section gutter" aria-labelledby="plays-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="sb-eyebrow">What plays</span>
+          <h2 id="plays-title" class="sb-display section-title">Nearly every game, in most packs.</h2>
+          <p>With the right Mac emulators installed, nearly every game in the DOS and Windows packs, the demo scene pack and the ScummVM pack can start. "Can start" means a Mac emulator is known to load the game; not every game has been played through.</p>
+        </div>
+        <div class="plays">
+          <table>
+            <thead>
+              <tr><th scope="col">Pack</th><th scope="col">Games</th><th scope="col">Can start</th><th scope="col">Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">eXoDOS</th><td class="count">7,667</td><td class="starts">Nearly all</td><td>DOSBox Staging or DOSBox-X. A few menu choices need a Windows helper.</td></tr>
+              <tr><th scope="row">eXoWin3x</th><td class="count">1,139</td><td class="starts">Nearly all</td><td>Windows 3.1 in DOSBox Staging or DOSBox-X.</td></tr>
+              <tr><th scope="row">eXoWin9x</th><td class="count">665</td><td class="starts">All</td><td>Windows 98 in DOSBox-X, about thirty games in 86Box. Network play isn't supported; games start in Solo mode.</td></tr>
+              <tr><th scope="row">eXoDemoScene</th><td class="count">2,425</td><td class="starts">About 99%</td><td>DOSBox. The three MartyPC demos aren't supported.</td></tr>
+              <tr><th scope="row">eXoScummVM</th><td class="count">832</td><td class="starts">About 99%</td><td>All of them with a ScummVM daily build.</td></tr>
+              <tr><th scope="row">eXoIF</th><td class="count">2,331</td><td class="starts">About 64%</td><td>Story files, MS-DOS and most 8-bit versions; the 8-bit versions in RetroArch are new and lightly tested. BBC Micro, TRS-80 and some other machines aren't supported yet.</td></tr>
+              <tr><th scope="row">eXoAppleIIGS</th><td class="count">460</td><td class="starts">Not yet</td><td>Setup and installing work. Planned: GSplus for about 84% of the games.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gutter" aria-labelledby="beyond-title">
+      <div class="wrap">
+        <div class="sb-card beyond">
+          <div class="beyond-head">
+            <span class="sb-eyebrow">Beyond eXo</span>
+            <h2 id="beyond-title" class="sb-display spotlight-title">Your LaunchBox library, too.</h2>
+          </div>
+          <div class="beyond-body">
+            <p>Underneath, the eXo collections are LaunchBox libraries, so Silverbox reads others as well. Point it at a LaunchBox folder from Windows and your console, computer and arcade games join the list, with the metadata and media LaunchBox already gathered. Launching them in RetroArch, Dolphin, MAME and Mednafen is built, but not yet tested with real games.</p>
+            <p>Silverbox doesn't scan ROMs or fetch art itself; building the library is LaunchBox's job. Silverbox isn't affiliated with LaunchBox.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section gutter" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="sb-eyebrow">Questions</span>
+          <h2 id="faq-title" class="sb-display section-title">Frequently asked</h2>
+        </div>
+        <div class="sb-faq">
+          <details open>
+            <summary>Is this an official eXo project?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>No. Silverbox is an independent app, not affiliated with or endorsed by the eXo project. The collections are made by the eXo team; Silverbox only reads them.</p>
+          </details>
+          <details>
+            <summary>Does Silverbox come with any games?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>No. It includes no games, media or emulators. Download the eXo collections from <a href="https://www.retro-exo.com/index2.html">retro-exo.com</a> and the emulators from their own sites.</p>
+          </details>
+          <details>
+            <summary>Do I need a Windows PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>No. Silverbox runs eXo's setup itself. A collection that was set up on Windows works too.</p>
+          </details>
+          <details>
+            <summary>Will it change my eXo folder?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>Only if you ask it to. By default, installed games, save backups, edited configs and caches go to a local data folder, and the eXo folder can be read-only. Setting up inside the download, or installing games in place as eXo does on Windows, are choices you make.</p>
+          </details>
+          <details>
+            <summary>What about eXoDOS Lite?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>Not yet. Use the full download for now; downloading games on demand is planned.</p>
+          </details>
+          <details>
+            <summary>Can I share a collection with a Windows PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>Yes. Keep it on a NAS or network share both can reach. Don't open the same folder on both at once unless the Mac unpacks into its own local folder.</p>
+          </details>
+          <details>
+            <summary>Can I use it for consoles?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>With a LaunchBox library, you can browse them now; launching them is built but not yet tested. Silverbox uses the metadata and media LaunchBox has already registered; it doesn't discover or scrape games on its own.</p>
+          </details>
+          <details>
+            <summary>Is it related to LaunchBox?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>No. The eXo collections come set up for LaunchBox, a Windows front-end, so Silverbox reads its library format. LaunchBox is a separate product by its own developers.</p>
+          </details>
+          <details>
+            <summary>What does it need?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>macOS 15 or later on Apple silicon or Intel, one or more eXo downloads, and the emulators for the packs you play.</p>
+          </details>
+          <details>
+            <summary>Does it need an account, or send anything about me?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>No account, and nothing is sent. Silverbox makes no network requests: it reads your collections and starts the emulators on your Mac. See <a href="privacy.html">Privacy</a>.</p>
+          </details>
+          <details>
+            <summary>Who makes it?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>One software engineer with decades of industry experience and an interest in preserving classic games and media. It was built with extensive help from AI coding tools, under his close direction.</p>
+          </details>
+          <details>
+            <summary>What does it cost?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+            <p>Nothing. Silverbox is free, and its code is open source under the <a href="license.html">MIT License</a> on <a href="https://github.com/SilvercodeStudio/Silverbox">GitHub</a>. The name and the icon stay with the author.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="download gutter" aria-labelledby="download-title">
+      <div class="wrap download-panel sb-crt">
+        <img class="download-icon sb-icon" src="images/icon.png" alt="" width="84" height="84" loading="lazy">
+        <h2 id="download-title" class="sb-display sb-crt-ink download-title">Your eXo collection, on your Mac.<span class="sb-cursor" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2>
+        <div class="actions">
+          <!-- [DOWNLOAD URL]: point this at the signed build when there is one. -->
+          <a class="sb-btn" href="https://github.com/SilvercodeStudio/Silverbox/releases">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+            Download for Mac
+          </a>
+          <a class="sb-btn sb-btn--ghost" href="https://github.com/SilvercodeStudio/Silverbox">Source on GitHub</a>
+        </div>
+        <p class="sb-detail">Version 0.3 · Free and open source · macOS 15 or later · Apple silicon and Intel</p>
+      </div>
+    </section>
+
+    <section class="acks gutter" aria-labelledby="acks-title">
+      <div class="wrap">
+        <div class="acks-head">
+          <span class="sb-eyebrow">Acknowledgments</span>
+          <h2 id="acks-title">Built on other people's work</h2>
+        </div>
+        <div class="acks-list">
+          <p><strong>The eXo team</strong>, for eXoDOS and the other collections at <a href="https://www.retro-exo.com">retro-exo.com</a>, and the years of preservation behind them.</p>
+          <p><strong>The emulators</strong>: DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight and RetroArch. Each is installed separately and keeps its own license.</p>
+          <p><strong>stb_vorbis and libxmp-lite</strong>, included under their own licenses, play Ogg Vorbis and tracker-module menu music. FluidSynth, inside the emulators, plays General MIDI.</p>
+          <p><strong>LaunchBox</strong>, whose library format the collections use.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer gutter">
+    <div class="wrap">
+      <div class="footer-brand">
+        <img src="images/icon.png" alt="" width="22" height="22" loading="lazy">
+        <span>© 2026 Preston Landers</span>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="https://github.com/SilvercodeStudio/Silverbox/blob/main/CHANGELOG.md">What's new</a>
+        <a href="https://github.com/SilvercodeStudio/Silverbox/issues">Support</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="license.html">License</a>
+        <a href="https://github.com/SilvercodeStudio/Silverbox"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>GitHub</a>
+      </nav>
+      <p class="footer-note">From the developer of <a href="https://silverside.app">Silverside</a>, accurate CD ripping for the Mac.</p>
+    </div>
+  </footer>
+  <script src="js/site.js" defer></script>
+</body>
+</html>
