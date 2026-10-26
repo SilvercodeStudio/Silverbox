@@ -110,11 +110,12 @@ separate folder for unpacked files.
 ### Can I use this for other consoles (SNES, etc.)?
 
 Yes, but currently Silverbox depends on an existing LaunchBox
-library, and launching these games is not tested yet. You can set up individual games manually, but it does
-not include any "discovery" or "scraping" functionality. However, if you
-have a LaunchBox installation from Windows, Silverbox can recognize 
-and use that folder and take advantage of the metadata, media, etc. already
-registered by LaunchBox.
+library, and launching these games is not tested yet. Silverbox does not
+find games or fetch their metadata and art itself ("scraping"), and you
+cannot add single games by hand yet. However, if you have a LaunchBox
+installation from Windows, Silverbox can recognize and use that folder and
+take advantage of the metadata, media, etc. already registered by
+LaunchBox.
 
 ### Who are you?
 
@@ -188,9 +189,13 @@ ROM that is not installed, the launch options say which.
 
 ## Where your data goes
 
-A collection can be read-only (an external drive or a network share):
-Silverbox never changes it. Installed games, save backups, edited configs,
-unpacked soundtracks and caches are kept in a local data folder, by default
+A collection can be read-only (an external drive or a network share).
+Silverbox changes your eXo download only when you ask it to: when you set
+up the download in place, or install games in place. eXoDOS Lite games
+download into the set-up collection: the download folder itself after an
+in-place setup, otherwise the collection's copy in the local data folder.
+Installed games, save backups, edited configs, unpacked soundtracks and
+caches are kept in a local data folder, by default
 `~/Library/Application Support/Silverbox`, which Settings can point at
 another drive; favorites, play history and settings stay in Application
 Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS does on
@@ -262,5 +267,6 @@ milestones, with what is done and what is not, are in
   hint files (UHS).
 - Couch mode: a full-screen, controller-first view on top of the grid and the
   controller input that exist today.
-- Later: BitTorrent downloads of the eXoDOS packs, and metadata and media
-  scraping for games outside the eXo collections.
+- Later: downloading whole eXo packs from the app (today a BitTorrent
+  client does it; eXoDOS Lite games already download one at a time), and
+  metadata and media scraping for games outside the eXo collections.

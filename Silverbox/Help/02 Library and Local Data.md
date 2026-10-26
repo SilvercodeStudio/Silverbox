@@ -1,10 +1,10 @@
 # Collections and the local data folder
 
-Silverbox reads from one or more collections and writes only to a local data folder.
+Silverbox reads from one or more collections and writes to a local data folder. It changes your eXo download only when you ask it to: when you set up the download in place (eXoDOS Lite games then download into it too), or install games in place.
 
 ## Collections
 
-A collection is a set-up eXo pack (or several packs merged into one folder), or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for the eXo packs also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. Silverbox only reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
+A collection is a set-up eXo pack (or several packs merged into one folder), or any LaunchBox library folder: the folder that holds `Data` and `Images`, and for the eXo packs also `eXo`, `Manuals`, `Music` and `Videos`. A collection can live on an external drive or a network share, and it can be read-only. Silverbox reads from it: game metadata, artwork, manuals, music, videos, game archives, DOSBox configurations and the MT-32 sound files.
 
 Each collection appears as its own section in the sidebar. All Games, Favorites, Installed, Recently Played and search span every collection.
 
@@ -34,7 +34,7 @@ The eXoDOS Lite download leaves out every game archive and its manuals, music an
 
 Downloads need [aria2](https://aria2.github.io/), a free download program: install it with Homebrew (`brew install aria2`). Settings › Library › Game downloads says whether it is found. Silverbox starts aria2 for each game, one game at a time, and aria2 stops sharing as soon as the files are complete. The first download can wait a minute or so at "Looking for peers" while aria2 finds other computers sharing the torrent. aria2 then keeps a list of them, so later downloads start in seconds. As with any BitTorrent program, the other computers in the swarm see your IP address.
 
-The archives go into the collection, as on Windows, so the collection must be writable: the game's zip into `eXo/eXoDOS` and its manuals, music and extras into `Content/GameData/eXoDOS`, which are then unpacked into the collection. Unfinished downloads wait in `eXo/DOWNLOAD`; Cancel stops a download, and installing the game again resumes it. A game that eXo added after the torrent was made is not in it; it comes with the update that added it.
+The archives go into the set-up collection, as on Windows. That is the download folder itself only if setup ran in place; otherwise it is the collection's copy in `Collections` in the local data folder, and the download stays as it came. A collection set up on Windows on a read-only drive or share cannot download games. The game's zip goes into `eXo/eXoDOS`. Its manuals, music and extras go into `Content/GameData/eXoDOS` and are then unpacked into the collection. Unfinished downloads wait in `eXo/DOWNLOAD`; Cancel stops a download, and installing the game again resumes it. A game that eXo added after the torrent was made is not in it; it comes with the update that added it.
 
 ## The local data folder
 

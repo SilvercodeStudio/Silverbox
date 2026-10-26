@@ -15,7 +15,7 @@ release work before the app goes to the eXo team.
 | 4   | Several collections                         | Done        |
 | 5   | Music, soundtracks, videos and extras       | Done        |
 | 6   | Keyboard and game controller                | Done        |
-| 7   | Set up an eXo download on the Mac           | Mostly done |
+| 7   | Set up an eXo download on the Mac           | Done        |
 | 8   | eXoWin9x and eXoWin3x                       | Done        |
 | 9   | eXo's other packs                           | In progress |
 | 10  | Console, computer and arcade libraries      | In progress |
@@ -76,10 +76,13 @@ Not planned:
 - Arrows, Return, Space and Escape in the grid and list; menu shortcuts; the
   Keyboard Shortcuts window; controller buttons as key presses.
 
-## 7. Set up an eXo download on the Mac — mostly done
+## 7. Set up an eXo download on the Mac — done
 
-Done:
-
+- `EXoDownload` and `EXoSetup`: what eXo's `Setup <pack>.bat` does, in place
+  or into `Collections/<name>`; nested zips, XML merges, add-on platforms,
+  CP437 file names.
+- Checked against the Windows setup of eXoDOS v6
+  (`matchesTheWindowsSetup`).
 - eXoDOS Lite game downloads (2026-10-26): a game whose archive the
   collection lacks downloads from the torrent in `eXo/util/aria/` with
   aria2 from Homebrew, as eXo's `install.bat` does, then installs. Tested
@@ -88,15 +91,6 @@ Done:
   Revenge downloaded (about a minute, cold), installed with its video and
   played in DOSBox Staging, confirmed by the user. A stopped download
   resumes. The website's privacy page and FAQ describe it.
-- `EXoDownload` and `EXoSetup`: what eXo's `Setup <pack>.bat` does, in place
-  or into `Collections/<name>`; nested zips, XML merges, add-on platforms,
-  CP437 file names.
-- Checked against the Windows setup of eXoDOS v6
-  (`matchesTheWindowsSetup`).
-
-Not yet:
-
-- BitTorrent downloads of the packs (later).
 
 ## 8. eXoWin9x and eXoWin3x — done
 
@@ -175,5 +169,6 @@ Not yet:
 ## Later
 
 - Couch mode: a full-screen, controller-first view.
+- Download whole eXo packs from the app; today a BitTorrent client does it.
 - Metadata and media scraping for games outside the eXo collections.
 - An iPhone and iPad companion that browses the library from the Mac.
