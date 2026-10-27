@@ -6,7 +6,7 @@ Select a game and press Play, press Command-Return, or double-click its box.
 
 An eXo game must be installed before it plays the first time. Press Install… in the inspector, or Play, and confirm. Silverbox unpacks the game's archive into the local data folder (or the eXoDOS folder, see Settings). If the collection ships an update for the game, it is applied automatically. If setup left the game's manuals and extras packed, they are unpacked too. If you uninstalled the game before and kept a backup, you can restore your saved progress. In an eXoDOS Lite collection, the game's archive downloads first; see Collections and the local data folder.
 
-Installing runs in the background, so you can keep browsing and install other games at the same time. A bar at the bottom of the window shows each installation: its progress, the step under way and the time it has taken. Downloads run one at a time; the others wait their turn. **Cancel** stops the installation and removes the half-made game folder. A cancelled download keeps what it has, and continues the next time you install the game. The Dock icon shows the progress too. When an installation finishes while you work in another app, the Dock icon bounces and a notification says so; macOS asks once whether Silverbox may show notifications. With "Play when installation finishes" on, the game starts by itself. If an installation fails, its row stays in the bar with the reason until you dismiss it.
+Installing runs in the background, so you can keep browsing and install other games at the same time. A bar at the bottom of the window shows each installation: its progress, the step under way and the time it has taken. Downloads run one at a time; the others wait their turn. **Cancel** stops the installation and removes its temporary files. The game becomes installed only when unpacking finishes; an existing installation is left alone. A cancelled download keeps what it has, and continues the next time you install the game. The Dock icon shows the progress too. When an installation finishes while you work in another app, the Dock icon bounces and a notification says so; macOS asks once whether Silverbox may show notifications. With "Play when installation finishes" on, the game starts by itself. If an installation fails, its row stays in the bar with the reason until you dismiss it.
 
 ## The launch options dialog
 
@@ -65,7 +65,7 @@ This applies to every game that runs in DOSBox: eXoDOS, eXoWin3x, eXoDemoScene, 
 
 ## Uninstalling
 
-Choose Uninstall from the game's context menu. Silverbox offers to back up your saved games and any changed files first. The backup is a small archive in the local data folder's `Saves` folder, and it is offered for restore the next time you install the game.
+Quit the game, then choose Uninstall from its context menu. Games using the same files cannot be installed, removed or started over one another; this also protects the Windows 98 virtual machines. Quit running games before quitting Silverbox, which stays open to protect their files. Finish or cancel active installation and setup jobs before quitting too. Silverbox offers to back up your saved games and any changed files first. The backup is a small archive under the local data folder's `Saves/Installations` folder, kept separately for each installation, and it is offered for restore the next time you install the game. Older backups in `Saves` are still offered. If a backup fails, the game and the previous backup are left in place.
 
 ## Extras and manuals
 

@@ -37,9 +37,11 @@ nonisolated public enum SaveArchiver {
     /// in `folder` that are new or differ from `archive`.
     public static func changedFiles(in folder: URL, comparedTo archive: URL) async throws -> [String] {
         let original = try await entries(of: archive)
-        return localFiles(in: folder).compactMap { file -> String? in
+        return try localFiles(in: folder).compactMap { file -> String? in
             guard let entry = original[file.relativePath.lowercased()] else { return file.relativePath }
-            if file.size != entry.size || CRC32.checksum(ofFileAt: file.url) != entry.crc { return file.relativePath }
+            if try file.size != entry.size || CRC32.readChecksum(ofFileAt: file.url) != entry.crc {
+                return file.relativePath
+            }
             return nil
         }
         .sorted()
@@ -52,26 +54,38 @@ nonisolated public enum SaveArchiver {
     }
 
     /// Every regular file under `folder`, with paths prefixed by the folder name.
-    static func localFiles(in folder: URL) -> [LocalFile] {
+    static func localFiles(in folder: URL) throws -> [LocalFile] {
         let fm = FileManager.default
-        let prefix = folder.lastPathComponent
-        guard
-            let enumerator = fm.enumerator(
-                at: folder, includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
-                options: [.skipsHiddenFiles])
-        else { return [] }
         let basePath = folder.standardizedFileURL.path
+        let prefix = folder.lastPathComponent
         var files: [LocalFile] = []
-        for case let url as URL in enumerator {
-            let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
-            guard values?.isRegularFile == true else { continue }
-            let path = url.standardizedFileURL.path
-            guard path.hasPrefix(basePath + "/") else { continue }
-            files.append(
-                LocalFile(
-                    url: url, relativePath: prefix + "/" + path.dropFirst(basePath.count + 1),
-                    size: values?.fileSize ?? -1))
+        func visit(_ directory: URL) throws {
+            for url in try fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+                try Task.checkCancellation()
+                let values = try url.resourceValues(forKeys: [
+                    .isRegularFileKey, .isDirectoryKey, .isSymbolicLinkKey, .fileSizeKey,
+                ])
+                // Following links could back up files outside the installation,
+                // and ignoring them would silently lose them on uninstall.
+                guard values.isSymbolicLink != true else { throw SaveBackupError.unsupportedFile(url) }
+                if values.isDirectory == true {
+                    try visit(url)
+                } else if values.isRegularFile == true {
+                    let path = url.standardizedFileURL.path
+                    guard path.hasPrefix(basePath + "/"), let size = values.fileSize else {
+                        throw SaveBackupError.unsupportedFile(url)
+                    }
+                    let relative = prefix + "/" + path.dropFirst(basePath.count + 1)
+                    guard !relative.contains("\n"), !relative.contains("\r") else {
+                        throw SaveBackupError.unsupportedFile(url)
+                    }
+                    files.append(LocalFile(url: url, relativePath: relative, size: size))
+                } else {
+                    throw SaveBackupError.unsupportedFile(url)
+                }
+            }
         }
+        try visit(folder)
         return files
     }
 
@@ -83,16 +97,25 @@ nonisolated public enum SaveArchiver {
         guard !changed.isEmpty else { return 0 }
         let fm = FileManager.default
         try fm.createDirectory(at: saveArchive.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if fm.fileExists(atPath: saveArchive.path) { try fm.removeItem(at: saveArchive) }
+        let temporary = saveArchive.deletingLastPathComponent().appendingPathComponent(
+            ".silverbox-backup-\(UUID().uuidString).zip")
+        defer { try? fm.removeItem(at: temporary) }
         let listURL = fm.temporaryDirectory.appendingPathComponent("exo-save-\(UUID().uuidString).txt")
         try changed.joined(separator: "\n").write(to: listURL, atomically: true, encoding: .utf8)
         defer { try? fm.removeItem(at: listURL) }
         let result = try await CommandRunner.run(
-            executable: zipExecutable, arguments: ["-q", "-@", saveArchive.path],
+            executable: zipExecutable, arguments: ["-q", "-@", temporary.path],
             workingDirectory: folder.deletingLastPathComponent(), standardInput: listURL)
         guard result.status == 0 else {
             throw InstallError.extractionFailed(status: result.status, output: result.output)
         }
+        try Task.checkCancellation()
+        let check = try await CommandRunner.run(executable: unzipExecutable, arguments: ["-tqq", temporary.path])
+        guard check.status == 0 else {
+            throw InstallError.extractionFailed(status: check.status, output: check.output)
+        }
+        try Task.checkCancellation()
+        try FileOperations.publish(temporary, to: saveArchive)
         return changed.count
     }
 }
@@ -115,10 +138,15 @@ nonisolated public enum CRC32 {
     }
 
     public static func checksum(ofFileAt url: URL) -> UInt32? {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        try? readChecksum(ofFileAt: url)
+    }
+
+    static func readChecksum(ofFileAt url: URL) throws -> UInt32 {
+        let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var crc: UInt32 = 0xFFFF_FFFF
-        while let chunk = try? handle.read(upToCount: 1 << 20), !chunk.isEmpty {
+        while let chunk = try handle.read(upToCount: 1 << 20), !chunk.isEmpty {
+            try Task.checkCancellation()
             update(&crc, with: chunk)
         }
         return crc ^ 0xFFFF_FFFF
@@ -127,6 +155,16 @@ nonisolated public enum CRC32 {
     private static func update(_ crc: inout UInt32, with data: Data) {
         for byte in data {
             crc = table[Int((crc ^ UInt32(byte)) & 0xFF)] ^ (crc >> 8)
+        }
+    }
+}
+
+nonisolated public enum SaveBackupError: Error, LocalizedError, Sendable {
+    case unsupportedFile(URL)
+
+    public var errorDescription: String? {
+        switch self {
+        case .unsupportedFile(let url): return "Cannot safely back up \(url.path). The game has not been removed."
         }
     }
 }

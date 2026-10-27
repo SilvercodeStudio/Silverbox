@@ -370,7 +370,8 @@ struct UninstallSheet: View {
                         dismiss()
                     }
                 }
-                .disabled(working || plan == nil)
+                .disabled(working || plan == nil || model.fileOperationBlocker(for: game) != nil)
+                .help(model.fileOperationBlocker(for: game) ?? "")
             }
         }
         .padding(20)

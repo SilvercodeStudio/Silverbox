@@ -19,6 +19,13 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
     public var differencingDisks: [DifferencingDisk]
     /// Batch files rewritten for the emulator (see ``MIDIBatchPatcher``).
     public var filePatches: [FilePatch]
+    public var installedFolderURL: URL?
+
+    public var operationURLs: [URL] {
+        [configURL] + directoriesToCreate + fileCopies.map(\.destination)
+            + differencingDisks.map(\.child) + filePatches.map(\.destination)
+            + [installedFolderURL].compactMap { $0 }
+    }
 
     public init(
         game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, arguments: [String],
@@ -26,6 +33,7 @@ nonisolated public struct LaunchPlan: Sendable, Hashable {
         directoriesToCreate: [URL] = [], fileCopies: [FileCopy] = [], differencingDisks: [DifferencingDisk] = [],
         filePatches: [FilePatch] = []
     ) {
+        self.installedFolderURL = nil
         self.game = game
         self.variant = variant
         self.emulator = emulator
@@ -185,6 +193,16 @@ nonisolated public struct LaunchPlanner: Sendable {
     public func plan(
         game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions,
         choices: LaunchChoices = LaunchChoices()
+    ) throws -> LaunchPlan {
+        var plan = try planUnreserved(
+            game: game, variant: variant, emulator: emulator, options: options, choices: choices)
+        plan.installedFolderURL = installedFolder(for: game)
+        return plan
+    }
+
+    private func planUnreserved(
+        game: Game, variant: LaunchVariant?, emulator: EmulatorInstallation, options: LaunchOptions,
+        choices: LaunchChoices
     ) throws -> LaunchPlan {
         if game.eXoPack == .win9x { return try planWindows9x(game: game, emulator: emulator, options: options) }
         if game.launchKind == .scummVM {

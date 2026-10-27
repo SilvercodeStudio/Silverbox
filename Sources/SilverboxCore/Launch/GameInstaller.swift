@@ -23,6 +23,11 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
     public var saveBackupURL: URL
     public var location: InstallLocation
 
+    /// Shared save files as well as the physical game folder.
+    public var operationURLs: [URL] {
+        [installedFolderURL, archiveURL, saveBackupURL] + [saveArchiveURL].compactMap { $0 }
+    }
+
     public var archiveExists: Bool { FileManager.default.fileExists(atPath: archiveURL.path) }
     public var isInstalled: Bool { FileManager.default.fileExists(atPath: installedFolderURL.path) }
 
@@ -43,6 +48,8 @@ nonisolated public enum InstallError: Error, Sendable, Equatable {
     case extractionFailed(status: Int32, output: String)
     case folderMissingAfterExtract(URL)
     case notInstalled
+    case alreadyInstalled(URL)
+    case unsafeDestination
 }
 
 nonisolated extension InstallError: LocalizedError {
@@ -56,6 +63,9 @@ nonisolated extension InstallError: LocalizedError {
         case .folderMissingAfterExtract(let url):
             return "The archive did not create the expected folder \(url.lastPathComponent)."
         case .notInstalled: return "The game is not installed."
+        case .alreadyInstalled(let url):
+            return "A game is already installed at \(url.path). It has been left unchanged."
+        case .unsafeDestination: return "The installation path is not a safe game folder."
         }
     }
 }
@@ -188,7 +198,8 @@ nonisolated public struct GameInstaller: Sendable {
 
     public func plan(for game: Game) -> InstallPlan? {
         guard let pack = game.eXoPack, let components = game.installPathComponents,
-            let folderName = components.last
+            let folderName = components.last,
+            components.allSatisfy({ !$0.isEmpty && $0 != ".." && !$0.hasPrefix(".silverbox-") })
         else { return nil }
         let root = snapshot.root
         let localStore = snapshot.localStore
@@ -215,8 +226,9 @@ nonisolated public struct GameInstaller: Sendable {
         let librarySave = root.eXoDirectory.appendingPathComponent(pack.directoryName, isDirectory: true)
             .appendingPathComponent("!save", isDirectory: true)
             .appendingPathComponent("\(game.launcherBaseName).zip")
-        let backupTarget = localStore?.saveArchiveURL(for: game) ?? librarySave
-        let existingSave = [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
+        let installedFolder = destination.appendingPathComponent(folderName, isDirectory: true)
+        let backupTarget = localStore?.saveArchiveURL(for: game, installation: installedFolder) ?? librarySave
+        let existingSave = [backupTarget, localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
             .first { FileManager.default.fileExists(atPath: $0.path) }
 
         // A Mac setup can leave each game's extras packed until it is
@@ -251,50 +263,87 @@ nonisolated public struct GameInstaller: Sendable {
         )
     }
 
-    public func install(
+    @concurrent public func install(
         _ plan: InstallPlan, restoreSaves: Bool = false, extractor: any ArchiveExtractor = UnzipCommandExtractor(),
         progress: (@Sendable (InstallProgress) -> Void)? = nil
     ) async throws {
-        guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
-        try FileManager.default.createDirectory(at: plan.destinationDirectory, withIntermediateDirectories: true)
-        var steps: [(stage: String, archive: URL, destination: URL, patterns: [String])] = [
-            ("Unpacking the game", plan.archiveURL, plan.destinationDirectory, [])
-        ]
-        if let update = plan.updateArchiveURL {
-            steps.append(("Applying eXo's update", update, plan.destinationDirectory, []))
+        // Reserve the extras' actual file paths rather than the whole
+        // collection: unrelated games may still install in parallel.
+        var resources = plan.operationURLs
+        if let extras = plan.extrasArchiveURL, let destination = plan.extrasDestination {
+            let prefixes = plan.extrasPatterns.map(ZipArchive.literalPrefix(of:))
+            let entries = try await ZipArchive.entries(of: extras)
+            resources += entries.filter { entry in
+                !entry.hasSuffix("/") && (prefixes.isEmpty || prefixes.contains { entry.hasPrefix($0) })
+            }.map { destination.appendingPathComponent($0) }
         }
+        let lease = try FileOperationCoordinator.shared.acquire(
+            resources, operation: "installation of \(plan.game.title)")
+        defer { lease.release() }
+        try Task.checkCancellation()
+        guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
+        guard !plan.isInstalled else { throw InstallError.alreadyInstalled(plan.installedFolderURL) }
+        let fm = FileManager.default
+        // A sibling staging folder stays on the destination volume, but is
+        // never counted as an installed game. Only its game folder is committed.
+        try fm.createDirectory(at: plan.destinationDirectory, withIntermediateDirectories: true)
+        let staging = plan.destinationDirectory.appendingPathComponent(
+            ".silverbox-install-\(UUID().uuidString)", isDirectory: true)
+        try fm.createDirectory(at: staging, withIntermediateDirectories: false)
+        defer { try? fm.removeItem(at: staging) }
+        var steps: [(stage: String, archive: URL, destination: URL, patterns: [String])] = [
+            ("Unpacking the game", plan.archiveURL, staging, [])
+        ]
+        if let update = plan.updateArchiveURL { steps.append(("Applying eXo's update", update, staging, [])) }
         if let extras = plan.extrasArchiveURL, let destination = plan.extrasDestination {
             steps.append(("Unpacking the extras", extras, destination, plan.extrasPatterns))
         }
         if restoreSaves, let save = plan.saveArchiveURL {
-            steps.append(("Restoring saved progress", save, plan.destinationDirectory, []))
+            steps.append(("Restoring saved progress", save, staging, []))
         }
         for step in steps {
-            guard let progress else {
-                try await extractor.extract(archive: step.archive, into: step.destination, only: step.patterns)
-                continue
-            }
-            // The total is the whole archive's entry count; with patterns only part of it is written.
-            let total: Int? = step.patterns.isEmpty ? try? await ZipArchive.entries(of: step.archive).count : nil
-            progress(InstallProgress(stage: step.stage, filesDone: 0, filesTotal: total))
+            try Task.checkCancellation()
+            let total: Int? =
+                progress != nil && step.patterns.isEmpty ? try? await ZipArchive.entries(of: step.archive).count : nil
+            progress?(InstallProgress(stage: step.stage, filesDone: 0, filesTotal: total))
             try await extractor.extract(archive: step.archive, into: step.destination, only: step.patterns) { done in
-                progress(InstallProgress(stage: step.stage, filesDone: done, filesTotal: total))
+                progress?(InstallProgress(stage: step.stage, filesDone: done, filesTotal: total))
             }
         }
-        guard plan.isInstalled else { throw InstallError.folderMissingAfterExtract(plan.installedFolderURL) }
+        let name = plan.installedFolderURL.lastPathComponent
+        let matches = try fm.contentsOfDirectory(
+            at: staging, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey]
+        )
+        .filter { $0.lastPathComponent.caseInsensitiveCompare(name) == .orderedSame }
+        guard matches.count == 1, let stagedGame = matches.first else {
+            throw InstallError.folderMissingAfterExtract(plan.installedFolderURL)
+        }
+        let values = try stagedGame.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true, values.isSymbolicLink != true else { throw InstallError.unsafeDestination }
+        try Task.checkCancellation()
+        guard !plan.isInstalled else { throw InstallError.alreadyInstalled(plan.installedFolderURL) }
+        // moveItem refuses to replace an existing folder. Never remove an
+        // existing installation to make this commit succeed.
+        try fm.moveItem(at: stagedGame, to: plan.installedFolderURL)
     }
 
     /// Removes the game folder. With `backupSaves`, files that are new or
     /// changed since the original archive are zipped first. Returns the
     /// number of files backed up.
     @discardableResult
-    public func uninstall(_ plan: InstallPlan, backupSaves: Bool) async throws -> Int {
+    @concurrent public func uninstall(_ plan: InstallPlan, backupSaves: Bool) async throws -> Int {
+        let lease = try FileOperationCoordinator.shared.acquire(
+            plan.operationURLs, operation: "removal of \(plan.game.title)")
+        defer { lease.release() }
+        try Task.checkCancellation()
         guard plan.isInstalled else { throw InstallError.notInstalled }
         var saved = 0
-        if backupSaves, plan.archiveExists {
+        if backupSaves {
+            guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
             saved = try await SaveArchiver.backup(
                 folder: plan.installedFolderURL, originalArchive: plan.archiveURL, to: plan.saveBackupURL)
         }
+        try Task.checkCancellation()
         try FileManager.default.removeItem(at: plan.installedFolderURL)
         return saved
     }

@@ -27,13 +27,27 @@ final class GameLauncher {
     @ObservationIgnored private var processes: [UUID: Process] = [:]
     @ObservationIgnored private var logHandles: [UUID: FileHandle] = [:]
 
+    @ObservationIgnored private var reservations: [UUID: FileOperationLease] = [:]
+
     var isRunning: Bool { !sessions.isEmpty }
 
     func launch(_ plan: LaunchPlan) throws {
-        try launch(plan.launch)
+        let lease = try FileOperationCoordinator.shared.acquire(
+            plan.operationURLs, operation: "\(plan.game.title) playing")
+        do {
+            try plan.writeConfig()
+            try launch(plan.launch, reservation: lease)
+        } catch {
+            lease.release()
+            throw error
+        }
     }
 
     func launch(_ plan: EmulatorLaunch) throws {
+        try launch(plan, reservation: nil)
+    }
+
+    private func launch(_ plan: EmulatorLaunch, reservation: FileOperationLease?) throws {
         let id = UUID()
         let process = Process()
         process.executableURL = plan.emulator.executableURL
@@ -61,7 +75,13 @@ final class GameLauncher {
                 self?.finish(id: id, status: status)
             }
         }
-        try process.run()
+        do {
+            try process.run()
+        } catch {
+            try? logHandles.removeValue(forKey: id)?.close()
+            throw error
+        }
+        reservations[id] = reservation
         processes[id] = process
         sessions.append(
             GameSession(
@@ -70,6 +90,7 @@ final class GameLauncher {
 
     private func finish(id: UUID, status: Int32) {
         processes[id] = nil
+        reservations.removeValue(forKey: id)?.release()
         try? logHandles.removeValue(forKey: id)?.close()
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
         var session = sessions.remove(at: index)

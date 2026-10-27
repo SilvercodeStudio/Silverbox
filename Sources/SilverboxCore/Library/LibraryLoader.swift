@@ -266,7 +266,7 @@ nonisolated public struct LibraryLoader: Sendable {
         return entries.compactMap { entry in
             let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             let name = entry.lastPathComponent
-            return isDirectory && !name.hasPrefix("!") ? name : nil
+            return isDirectory && !name.hasPrefix("!") && !name.hasPrefix(".silverbox-") ? name : nil
         }
     }
 }

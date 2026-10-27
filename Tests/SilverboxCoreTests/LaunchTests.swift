@@ -464,7 +464,7 @@ struct LaunchPlannerTests {
         let saved = try await installerAfterInstall.uninstall(planAfterInstall, backupSaves: true)
         #expect(saved == 2)
         #expect(!fm.fileExists(atPath: installed.path))
-        let backup = localStore.saveArchiveURL(for: game)
+        let backup = planAfterInstall.saveBackupURL
         #expect(fm.fileExists(atPath: backup.path))
 
         // Reinstall and restore the backup.

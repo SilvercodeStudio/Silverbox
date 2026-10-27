@@ -177,8 +177,11 @@ final class AppModel {
     var setupProgress: EXoSetupProgress?
     @ObservationIgnored var setupTask: Task<Void, Never>?
 
-    private let userStateStore = UserLibraryStateStore(url: AppPaths.userLibraryState)
+    private let userStatePersistence = UserLibraryStatePersistence(
+        store: UserLibraryStateStore(url: AppPaths.userLibraryState))
     private var saveTask: Task<Void, Never>?
+    private var libraryGeneration = UUID()
+    private var installedRefreshGeneration = UUID()
     @ObservationIgnored private var pendingSelectTitle: String?
     private var searchTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
@@ -197,7 +200,24 @@ final class AppModel {
 
     init() {
         settings = AppSettings.load()
-        userState = (try? userStateStore.load()) ?? UserLibraryState()
+        var stateWarning: AppAlert?
+        do {
+            let recovery = try userStatePersistence.load()
+            userState = recovery.state
+            if let preserved = recovery.preservedURL {
+                stateWarning = AppAlert(
+                    title: "Favorites and play history recovered",
+                    message:
+                        "The saved file could not be read. A previous readable copy was used when available. The original is preserved at \(preserved.path)."
+                )
+            }
+        } catch {
+            userState = UserLibraryState()
+            stateWarning = AppAlert(
+                title: "Could not read favorites and play history",
+                message: "\(error.localizedDescription) Saving is disabled to protect the existing file.")
+        }
+        alert = stateWarning
         applyDataRoot()
         music.volume = settings.musicVolume
         album.volume = settings.musicVolume
@@ -343,6 +363,7 @@ final class AppModel {
     /// Reloads after settings changes settle, so typing in a path field does
     /// not trigger a load per keystroke.
     private func scheduleReload() {
+        libraryGeneration = UUID()
         reloadTask?.cancel()
         reloadTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(800))
@@ -354,6 +375,7 @@ final class AppModel {
     /// Reads every enabled collection again. Pass `clearMediaCache` for an
     /// explicit rescan, so saved indexes and parsed libraries are rebuilt.
     func reloadLibrary(clearMediaCache: Bool = false) {
+        libraryGeneration = UUID()
         loadTask?.cancel()
         extrasCache = [:]
         extrasTasks = []
@@ -582,12 +604,29 @@ final class AppModel {
 
     private func scheduleUserStateSave() {
         saveTask?.cancel()
-        let state = userState
-        let store = userStateStore
-        saveTask = Task.detached(priority: .utility) {
-            try? await Task.sleep(for: .milliseconds(500))
-            guard !Task.isCancelled else { return }
-            try? store.save(state)
+        userStatePersistence.enqueue(userState)
+        let persistence = userStatePersistence
+        saveTask = Task { [weak self] in
+            do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
+            let failure = await Task.detached(priority: .utility) { () -> String? in
+                do { try persistence.flush(); return nil } catch { return error.localizedDescription }
+            }.value
+            if let failure {
+                self?.alert = AppAlert(title: "Could not save favorites and play history", message: failure)
+            }
+        }
+    }
+
+    /// Called synchronously before normal application termination. A failed
+    /// save cancels quitting so the pending changes can be retried.
+    func flushUserState() -> Bool {
+        saveTask?.cancel()
+        do {
+            try userStatePersistence.flush()
+            return true
+        } catch {
+            alert = AppAlert(title: "Could not save favorites and play history", message: error.localizedDescription)
+            return false
         }
     }
 
@@ -740,7 +779,6 @@ final class AppModel {
             }
             let plan = try planner.plan(
                 game: game, variant: variant, emulator: emulator, options: options, choices: choices)
-            try plan.writeConfig()
             music.pause()
             album.pause()
             try launcher.launch(plan)
@@ -929,6 +967,14 @@ final class AppModel {
 
     // MARK: - Installing
 
+    func fileOperationBlocker(for game: Game) -> String? {
+        // Observe session/job changes so disabled controls update on completion.
+        _ = launcher.sessions
+        _ = installRuns.map(\.phase)
+        guard let plan = installer(for: game)?.plan(for: game) else { return nil }
+        return FileOperationCoordinator.shared.conflict(for: [plan.installedFolderURL])?.localizedDescription
+    }
+
     func installer(for game: Game) -> GameInstaller? {
         guard let snapshot = snapshot(for: game) else { return nil }
         return GameInstaller(snapshot: snapshot, installLocation: settings.installLocation)
@@ -942,6 +988,10 @@ final class AppModel {
     func startInstall(_ game: Game, playAfter: Bool, restoreSaves: Bool) -> InstallRun? {
         guard let installer = installer(for: game), let firstPlan = installer.plan(for: game) else { return nil }
         guard !installRuns.contains(where: { $0.game.id == game.id && $0.isRunning }) else { return nil }
+        if let reason = fileOperationBlocker(for: game) {
+            alert = AppAlert(title: "Cannot install \(game.title)", message: reason)
+            return nil
+        }
         let download = firstPlan.archiveExists ? nil : installer.downloadPlan(for: firstPlan)
         let run = InstallRun(game: game)
         installRuns.append(run)
@@ -968,7 +1018,6 @@ final class AppModel {
                 JobNotifier.notify(title: "\(game.title) installed", body: "The game is ready to play.")
                 if playAfter { play(game) }
             } catch is CancellationError {
-                try? FileManager.default.removeItem(at: plan.installedFolderURL)
                 run.finish(.cancelled)
             } catch {
                 run.finish(.failed(error.localizedDescription))
@@ -1074,21 +1123,31 @@ final class AppModel {
         }
     }
 
-    /// Re-reads the installed game folders of one collection without reparsing the XML.
+    /// Re-reads installed folders without reparsing XML, including every
+    /// collection that can see the shared local games folder.
     func refreshInstalledFolders(for game: Game) async {
-        guard let library, let snapshot = library.snapshot(for: game) else { return }
-        let eXoDirectory = snapshot.root.eXoDirectory
-        let localGames = snapshot.localStore?.gamesRoot
-        let (paths, local) = await Task.detached {
-            (
-                LibraryLoader.installedGamePaths(in: eXoDirectory),
-                localGames.map { LibraryLoader.installedGamePaths(in: $0) } ?? []
-            )
+        guard let library else { return }
+        let generation = libraryGeneration
+        let refresh = UUID()
+        installedRefreshGeneration = refresh
+        let snapshots = library.snapshots
+        let scans = await Task.detached {
+            snapshots.map { snapshot in
+                InstalledGameScan(
+                    snapshot: snapshot,
+                    libraryPaths: LibraryLoader.installedGamePaths(in: snapshot.root.eXoDirectory),
+                    localPaths: snapshot.localStore.map { LibraryLoader.installedGamePaths(in: $0.gamesRoot) } ?? [])
+            }
         }.value
-        let updated = snapshot.replacingInstalledGames(library: paths, local: local)
-        self.library = library.replacing(updated)
-        media[updated.collection.id] = MediaCatalog(
-            snapshot: updated, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
+        guard generation == libraryGeneration, refresh == installedRefreshGeneration,
+            let current = self.library
+        else { return }
+        let updated = scans.reduce(current) { $0.applying($1) }
+        self.library = updated
+        for snapshot in updated.snapshots {
+            media[snapshot.collection.id] = MediaCatalog(
+                snapshot: snapshot, indexStore: MediaIndexStore(directory: AppPaths.mediaIndexes))
+        }
         refreshVisibleGames()
     }
 

@@ -530,6 +530,8 @@ struct GameContextMenu: View {
         Button("Show in Finder") { model.revealInFinder(game) }
         if installed, game.isEXoGame {
             Button("Uninstall…") { model.pendingUninstall = game }
+                .disabled(model.fileOperationBlocker(for: game) != nil)
+                .help(model.fileOperationBlocker(for: game) ?? "")
         }
     }
 }

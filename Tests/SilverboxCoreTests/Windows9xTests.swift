@@ -176,7 +176,7 @@ struct Windows9xTests {
         let plan = try #require(installer.plan(for: game))
         #expect(plan.archiveURL == zipURL)
         #expect(plan.destinationDirectory.path == localStore.gamesRoot.appendingPathComponent("eXoWin9x/1996").path)
-        #expect(plan.saveBackupURL == localStore.savesDirectory.appendingPathComponent("eXoWin9x/Mini Win (1996).zip"))
+        #expect(plan.saveBackupURL == localStore.saveArchiveURL(for: game, installation: plan.installedFolderURL))
         try await installer.install(plan)
 
         let snapshot = Win9xFixture.snapshot(root: root, localStore: localStore)

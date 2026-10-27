@@ -26,6 +26,23 @@ What changed in each version of Silverbox.
 
 ### Fixed
 
+- Failed or cancelled installations leave existing games alone and no longer
+  appear as installed. Games that share files cannot be installed, removed
+  or started over one another, including Windows 98 virtual machines. Quit
+  running games, and finish or cancel active jobs, before quitting Silverbox
+  so their files stay protected.
+- Save backups include hidden files and keep the previous backup if creating
+  a replacement fails. Separate installations keep separate backups; older
+  backups can still be restored.
+- Cancelling an installation or download before its helper starts no longer
+  crashes the app. An extraction helper that cannot start reports its error
+  instead of hanging. Damaged ZIP files report an error instead of crashing.
+- Collections from downloads with the same folder name no longer reuse one
+  another's setup. Finishing background jobs no longer restores stale
+  collection information.
+- Favorites and play history keep a previous readable copy, preserve damaged
+  files for recovery, report save failures and finish saving before quitting.
+
 - Collections set up inside the local data folder follow it when you move
   or rename that folder and choose it again in Settings. Before, they could
   not be found.

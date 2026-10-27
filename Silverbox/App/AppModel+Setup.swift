@@ -52,6 +52,7 @@ extension AppModel {
         let localTarget = localSetupTarget(for: download)
         // An earlier Mac setup wrote its record in the download or in the local data folder.
         let previous = [download.root, localTarget].lazy
+            .filter { EXoSetupTarget.belongs(to: download.root, target: $0) }
             .compactMap { target in EXoSetupRecord.read(in: target).map { (target: target, record: $0) } }.first
         let packs = Set(download.packs.map(\.name))
         if let previous, packs.isSubset(of: Set(previous.record.packs)) {
@@ -70,8 +71,7 @@ extension AppModel {
 
     /// A folder named after the download in the local data folder.
     func localSetupTarget(for download: EXoDownload) -> URL {
-        localStore.directory.appendingPathComponent("Collections", isDirectory: true)
-            .appendingPathComponent(download.root.lastPathComponent, isDirectory: true)
+        EXoSetupTarget.localTarget(for: download.root, in: localStore)
     }
 
     func startSetup(_ pending: PendingSetup, target: URL, options: EXoSetupOptions) {

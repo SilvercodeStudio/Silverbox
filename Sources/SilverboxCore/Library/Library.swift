@@ -72,3 +72,30 @@ nonisolated public struct Library: Sendable {
         Library(snapshots: snapshots.map { $0.collection.id == snapshot.collection.id ? snapshot : $0 })
     }
 }
+
+/// A filesystem scan carries the source it read. Applying it to the current
+/// library preserves other collections and rejects changed/removed sources.
+nonisolated public struct InstalledGameScan: Sendable {
+    public let collectionID: UUID
+    public let root: LibraryRoot
+    public let localStore: LocalStore?
+    public let libraryPaths: Set<String>
+    public let localPaths: Set<String>
+
+    public init(snapshot: LibrarySnapshot, libraryPaths: Set<String>, localPaths: Set<String>) {
+        collectionID = snapshot.collection.id
+        root = snapshot.root
+        localStore = snapshot.localStore
+        self.libraryPaths = libraryPaths
+        self.localPaths = localPaths
+    }
+}
+
+nonisolated extension Library {
+    public func applying(_ scan: InstalledGameScan) -> Library {
+        guard let snapshot = snapshot(id: scan.collectionID), snapshot.root == scan.root,
+            snapshot.localStore == scan.localStore
+        else { return self }
+        return replacing(snapshot.replacingInstalledGames(library: scan.libraryPaths, local: scan.localPaths))
+    }
+}

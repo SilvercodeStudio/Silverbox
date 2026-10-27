@@ -136,8 +136,11 @@ nonisolated public struct EXoSetup: Sendable {
         return steps
     }
 
-    public func run(progress: (@Sendable (EXoSetupProgress) -> Void)? = nil) async throws {
-        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+    @concurrent public func run(progress: (@Sendable (EXoSetupProgress) -> Void)? = nil) async throws {
+        let lease = try FileOperationCoordinator.shared.acquire([target], operation: "collection setup")
+        defer { lease.release() }
+        try Task.checkCancellation()
+        try EXoSetupTarget.claim(target, for: download.root)
         let steps = self.steps
         let weights = steps.map { Double(EXoDownload.size(of: [$0.archive])) }
         // The nested util archives and the XML merge get the last tenth.

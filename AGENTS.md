@@ -108,7 +108,7 @@ new entry after the version is tagged; the version is the app target's
   Settings; `user-library.json` and the settings always stay in Application
   Support): `Games/` (unpacked games; mirrors `eXo/`, so `Games/eXoDOS/<folder>`
   and `Games/eXoWin9x/<year>/<folder>`),
-  `Saves/` (backups of changed files made on uninstall), `Overrides/<gameID>/`
+  `Saves/Installations/<installation key>/` (backups of changed files made on uninstall; older backups in `Saves/` are still restore sources), `Overrides/<gameID>/`
   (edited configs), `Overlay/` (also mirrors `eXo/`: `eXoDOS/` overlay mounts
   for games unpacked inside a read-only library, copies of eXoWin9x game disks,
   and the Windows 98 differencing disks under `emulators/`), `Soundtracks/`
@@ -160,7 +160,7 @@ new entry after the version is tagged; the version is the app target's
   reading the `xml/merge_*.bat` scripts, registers add-on platforms as
   `eXoLBpm.exe` would, and writes `Data/Silverbox Setup.json`. It sets up
   in place or, by choice or when the download is read-only, into
-  `Collections/<name>` in the local data folder with
+  `Collections/<name>-<source key>` in the local data folder (existing named folders are reused only when their recorded source matches) with
   `LibraryCollection.downloadPath` pointing back (`LibraryRoot.downloadFile`
   finds game zips and extras there). Settings stores absolute paths, so
   `AppModel.setDataFolder` moves the collections inside the old data folder
@@ -278,10 +278,20 @@ new entry after the version is tagged; the version is the app target's
   downloads), then runs `GameInstaller.install` with its progress
   closure, `JobsBar` shows the runs above the now-playing bar, Cancel stops
   the download (which resumes on the next try) or the unzip (and removes
-  the half-made folder), `DockProgress` draws the mean
+  only that run's hidden staging folder), `DockProgress` draws the mean
   progress on the Dock tile, and `JobNotifier` bounces and notifies when a
   job finishes while the app is in the background. Setup reports through
   the same two services.
+- File operations. `FileOperationCoordinator` reserves physical paths (including
+  aliases and ancestor folders) for installing, uninstalling and setup. A
+  `GameLauncher` session holds the launch plan's reservation from before
+  `writeConfig` until the emulator exits, including shared Win9x VM files.
+  Installations publish a staged game folder only on success and never
+  replace an existing installation. Keep Silverbox open until games and jobs
+  finish, so those reservations and cancellation cleanup stay active.
+  User-state changes go through `UserLibraryStatePersistence`: enqueue the
+  latest state, serialize flushes, preserve unreadable originals and flush
+  before normal termination.
 - Sidebar. Rows carry `.badge` counts from `AppModel.sidebarCounts`,
   recounted off the main thread shortly after the library or the user's
   state changes (playlists are not counted); each collection's header shows

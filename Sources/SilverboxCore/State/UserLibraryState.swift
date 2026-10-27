@@ -92,6 +92,8 @@ nonisolated public struct UserLibraryStateStore: Sendable {
         self.url = url
     }
 
+    public var previousURL: URL { url.appendingPathExtension("previous") }
+
     public func load() throws -> UserLibraryState {
         guard FileManager.default.fileExists(atPath: url.path) else { return UserLibraryState() }
         let data = try Data(contentsOf: url)
@@ -100,12 +102,78 @@ nonisolated public struct UserLibraryStateStore: Sendable {
         return try decoder.decode(UserLibraryState.self, from: data)
     }
 
+    /// Preserve an unreadable original before allowing subsequent changes.
+    /// If preservation fails, callers must keep saving disabled.
+    public func loadRecovering() throws -> UserStateRecovery {
+        do {
+            return UserStateRecovery(state: try load(), preservedURL: nil)
+        } catch {
+            let preserved = url.deletingLastPathComponent()
+                .appendingPathComponent("user-library-unreadable-\(UUID().uuidString).json")
+            try FileManager.default.copyItem(at: url, to: preserved)
+            let previous = try? UserLibraryStateStore(url: previousURL).load()
+            return UserStateRecovery(state: previous ?? UserLibraryState(), preservedURL: preserved)
+        }
+    }
+
     public func save(_ state: UserLibraryState) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(state)
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // Keep one known-readable generation. Never replace it with a damaged
+        // original that loadRecovering has just preserved separately.
+        if (try? load()) != nil, let old = try? Data(contentsOf: url) {
+            try old.write(to: previousURL, options: .atomic)
+        }
         try data.write(to: url, options: [.atomic])
+    }
+}
+
+nonisolated public struct UserStateRecovery: Sendable {
+    public let state: UserLibraryState
+    public let preservedURL: URL?
+}
+
+/// Debounced callers enqueue immediately; every flush writes the latest
+/// pending state under one lock. An older task can never write an old snapshot
+/// after a newer flush. Failed writes remain pending for retry or shutdown.
+nonisolated public final class UserLibraryStatePersistence: @unchecked Sendable {
+    private let lock = NSLock()
+    private let store: UserLibraryStateStore
+    private var pending: UserLibraryState?
+    private var loaded = false
+
+    public init(store: UserLibraryStateStore) { self.store = store }
+
+    public func load() throws -> UserStateRecovery {
+        lock.lock()
+        defer { lock.unlock() }
+        let result = try store.loadRecovering()
+        loaded = true
+        return result
+    }
+
+    public func enqueue(_ state: UserLibraryState) {
+        lock.lock()
+        defer { lock.unlock() }
+        pending = state
+    }
+
+    public func flush() throws {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let pending else { return }
+        guard loaded else { throw UserStatePersistenceError.originalNotPreserved }
+        try store.save(pending)
+        self.pending = nil
+    }
+}
+
+nonisolated public enum UserStatePersistenceError: Error, LocalizedError, Sendable {
+    case originalNotPreserved
+    public var errorDescription: String? {
+        "The existing favorites and play history could not be read or preserved. Saving is disabled to protect the original file."
     }
 }

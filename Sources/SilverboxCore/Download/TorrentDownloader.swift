@@ -145,13 +145,18 @@ nonisolated public struct TorrentDownloader: Sendable, Hashable {
     {
         guard plan.isWritable else { throw TorrentDownloadError.readOnlyCollection }
         let scratch = plan.scratchDirectory
+        let lease = try FileOperationCoordinator.shared.acquire(
+            plan.items.map(\.destination) + [scratch], operation: "a game download")
+        defer { lease.release() }
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
         if let dhtFile {
             try FileManager.default.createDirectory(
                 at: dhtFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         }
 
-        let process = Process()
+        try Task.checkCancellation()
+        let lifecycle = CancellableProcess()
+        let process = lifecycle.process
         process.executableURL = executable
         process.arguments = arguments(for: plan, parentProcess: ProcessInfo.processInfo.processIdentifier)
         process.currentDirectoryURL = scratch
@@ -170,14 +175,15 @@ nonisolated public struct TorrentDownloader: Sendable, Hashable {
         }
         let status: Int32 = try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
-                process.terminationHandler = { finished in
+                process.terminationHandler = { [weak lifecycle] finished in
+                    lifecycle?.finished()
                     pipe.fileHandleForReading.readabilityHandler = nil
                     // The last lines can still be in the pipe; a newline ends one left open.
                     report(pipe.fileHandleForReading.readDataToEndOfFile() + Data("\n".utf8))
                     continuation.resume(returning: finished.terminationStatus)
                 }
                 do {
-                    try process.run()
+                    try lifecycle.run()
                 } catch {
                     pipe.fileHandleForReading.readabilityHandler = nil
                     continuation.resume(throwing: error)
@@ -185,7 +191,7 @@ nonisolated public struct TorrentDownloader: Sendable, Hashable {
             }
         } onCancel: {
             // aria2 saves its control file on SIGTERM, so the download resumes later.
-            process.terminate()
+            lifecycle.cancel()
         }
         try Task.checkCancellation()
         guard status == 0 else { throw TorrentDownloadError.failed(status: status, message: output.lastError) }

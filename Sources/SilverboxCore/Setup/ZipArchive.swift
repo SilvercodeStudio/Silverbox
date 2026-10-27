@@ -51,49 +51,90 @@ nonisolated public enum ZipArchive {
         let tailLength = min(size, 65_557 + 20)
         try handle.seek(toOffset: size - tailLength)
         let tail = try handle.read(upToCount: Int(tailLength)) ?? Data()
-        guard let end = tail.lastRange(of: Data([0x50, 0x4B, 0x05, 0x06]))?.lowerBound else { return [] }
-        var directoryOffset = UInt64(tail.littleEndian(UInt32.self, at: end + 16))
-        var directorySize = UInt64(tail.littleEndian(UInt32.self, at: end + 12))
-        // Zip64: the locator just before the end record points at the larger record.
-        if directoryOffset == 0xFFFF_FFFF || directorySize == 0xFFFF_FFFF, end >= 20,
-            tail.littleEndian(UInt32.self, at: end - 20) == 0x0706_4B50
-        {
-            try handle.seek(toOffset: tail.littleEndian(UInt64.self, at: end - 12))
+        let signature = Data([0x50, 0x4B, 0x05, 0x06])
+        var end: Int?
+        if tail.count >= 22 {
+            for offset in stride(from: tail.count - 22, through: 0, by: -1) {
+                if tail[offset..<(offset + 4)] == signature,
+                    offset + 22 + Int(try tail.littleEndian(UInt16.self, at: offset + 20)) == tail.count
+                {
+                    end = offset
+                    break
+                }
+            }
+        }
+        guard let end else { throw ZipArchiveError.malformed }
+        // Multi-volume archives cannot be extracted as one local ZIP.
+        guard try tail.littleEndian(UInt16.self, at: end + 4) == 0,
+            try tail.littleEndian(UInt16.self, at: end + 6) == 0
+        else { throw ZipArchiveError.malformed }
+        var directoryOffset = UInt64(try tail.littleEndian(UInt32.self, at: end + 16))
+        var directorySize = UInt64(try tail.littleEndian(UInt32.self, at: end + 12))
+        var entryCount = UInt64(try tail.littleEndian(UInt16.self, at: end + 10))
+        if directoryOffset == 0xFFFF_FFFF || directorySize == 0xFFFF_FFFF || entryCount == 0xFFFF {
+            guard end >= 20, try tail.littleEndian(UInt32.self, at: end - 20) == 0x0706_4B50 else {
+                throw ZipArchiveError.malformed
+            }
+            let recordOffset = try tail.littleEndian(UInt64.self, at: end - 12)
+            guard recordOffset <= size, size - recordOffset >= 56 else { throw ZipArchiveError.malformed }
+            try handle.seek(toOffset: recordOffset)
             let record = try handle.read(upToCount: 56) ?? Data()
-            guard record.count == 56, record.littleEndian(UInt32.self, at: 0) == 0x0606_4B50 else { return [] }
-            directorySize = record.littleEndian(UInt64.self, at: 40)
-            directoryOffset = record.littleEndian(UInt64.self, at: 48)
+            guard record.count == 56, try record.littleEndian(UInt32.self, at: 0) == 0x0606_4B50,
+                try record.littleEndian(UInt32.self, at: 16) == 0,
+                try record.littleEndian(UInt32.self, at: 20) == 0
+            else { throw ZipArchiveError.malformed }
+            directorySize = try record.littleEndian(UInt64.self, at: 40)
+            directoryOffset = try record.littleEndian(UInt64.self, at: 48)
+            entryCount = try record.littleEndian(UInt64.self, at: 32)
+        }
+        guard directoryOffset <= size, directorySize <= size - directoryOffset,
+            let count = Int(exactly: directorySize), entryCount <= directorySize / 46
+        else {
+            throw ZipArchiveError.malformed
         }
         try handle.seek(toOffset: directoryOffset)
-        let directory = try handle.read(upToCount: Int(directorySize)) ?? Data()
+        let directory = try handle.read(upToCount: count) ?? Data()
+        guard directory.count == count else { throw ZipArchiveError.malformed }
         var entries: [CentralEntry] = []
         var offset = 0
-        while offset + 46 <= directory.count, directory.littleEndian(UInt32.self, at: offset) == 0x0201_4B50 {
-            let flags = directory.littleEndian(UInt16.self, at: offset + 8)
-            var uncompressed = UInt64(directory.littleEndian(UInt32.self, at: offset + 24))
-            let nameLength = Int(directory.littleEndian(UInt16.self, at: offset + 28))
-            let extraLength = Int(directory.littleEndian(UInt16.self, at: offset + 30))
-            let commentLength = Int(directory.littleEndian(UInt16.self, at: offset + 32))
-            let start = directory.startIndex + offset + 46
-            guard start + nameLength + extraLength <= directory.endIndex else { break }
-            // A zip64 extra field (id 1) holds the real size when the field is full.
+        while entries.count < entryCount {
+            guard offset <= directory.count, directory.count - offset >= 46,
+                try directory.littleEndian(UInt32.self, at: offset) == 0x0201_4B50
+            else {
+                throw ZipArchiveError.malformed
+            }
+            let flags = try directory.littleEndian(UInt16.self, at: offset + 8)
+            var uncompressed = UInt64(try directory.littleEndian(UInt32.self, at: offset + 24))
+            let nameLength = Int(try directory.littleEndian(UInt16.self, at: offset + 28))
+            let extraLength = Int(try directory.littleEndian(UInt16.self, at: offset + 30))
+            let commentLength = Int(try directory.littleEndian(UInt16.self, at: offset + 32))
+            let start = offset + 46
+            let length = nameLength + extraLength + commentLength
+            guard length <= directory.count - start else { throw ZipArchiveError.malformed }
             if uncompressed == 0xFFFF_FFFF {
-                var extra = offset + 46 + nameLength
+                var extra = start + nameLength
                 let extraEnd = extra + extraLength
-                while extra + 4 <= extraEnd {
-                    let id = directory.littleEndian(UInt16.self, at: extra)
-                    let length = Int(directory.littleEndian(UInt16.self, at: extra + 2))
-                    if id == 1, length >= 8 {
-                        uncompressed = directory.littleEndian(UInt64.self, at: extra + 4)
+                var found = false
+                while extra < extraEnd {
+                    guard extraEnd - extra >= 4 else { throw ZipArchiveError.malformed }
+                    let id = try directory.littleEndian(UInt16.self, at: extra)
+                    let length = Int(try directory.littleEndian(UInt16.self, at: extra + 2))
+                    guard length <= extraEnd - extra - 4 else { throw ZipArchiveError.malformed }
+                    if id == 1 {
+                        guard length >= 8 else { throw ZipArchiveError.malformed }
+                        uncompressed = try directory.littleEndian(UInt64.self, at: extra + 4)
+                        found = true
                         break
                     }
                     extra += 4 + length
                 }
+                guard found else { throw ZipArchiveError.malformed }
             }
             entries.append(
                 CentralEntry(
-                    name: directory[start..<(start + nameLength)], flags: flags, uncompressedSize: uncompressed))
-            offset += 46 + nameLength + extraLength + commentLength
+                    name: directory[start..<(start + nameLength)], flags: flags,
+                    uncompressedSize: uncompressed))
+            offset = start + length
         }
         return entries
     }
@@ -134,7 +175,9 @@ nonisolated public enum ZipArchive {
     public static func unpackedSize(of archive: URL, matching fragment: String) -> Int64 {
         let entries = (try? centralDirectory(of: archive)) ?? []
         return entries.reduce(0) { total, entry in
-            total + (entry.path.contains(fragment) ? Int64(clamping: entry.uncompressedSize) : 0)
+            guard entry.path.contains(fragment) else { return total }
+            let (sum, overflow) = total.addingReportingOverflow(Int64(clamping: entry.uncompressedSize))
+            return overflow ? Int64.max : sum
         }
     }
 
@@ -177,7 +220,28 @@ nonisolated public enum ZipArchive {
             arguments += patterns
         }
 
-        let process = Process()
+        let result = try await runExtractor(executable: executable, arguments: arguments, onFile: onFile)
+        let status = result.status
+        // unzip: 1 means warnings (for example odd time stamps), and 11 "no
+        // matching files", which a pattern can cause on purpose.
+        // bsdtar reports patterns that matched nothing the same way.
+        let succeeded =
+            isUTF8
+            ? (status == 0 || status == 1 || (status == 11 && !patterns.isEmpty))
+            : status == 0 || (!patterns.isEmpty && result.output.contains("Not found in archive"))
+        guard succeeded else {
+            throw InstallError.extractionFailed(status: status, output: result.output)
+        }
+    }
+
+    /// Runs the selected extractor. Kept separate from archive inspection so
+    /// startup failures can be exercised without replacing a system tool.
+    static func runExtractor(
+        executable: URL, arguments: [String], onFile: (@Sendable (Int) -> Void)? = nil
+    ) async throws -> (status: Int32, output: String) {
+        try Task.checkCancellation()
+        let lifecycle = CancellableProcess()
+        let process = lifecycle.process
         process.executableURL = executable
         process.arguments = arguments
         // bsdtar converts names to the locale's character set.
@@ -193,31 +257,27 @@ nonisolated public enum ZipArchive {
         }
         let status: Int32 = try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
-                process.terminationHandler = { finished in
+                process.terminationHandler = { [weak lifecycle] finished in
+                    lifecycle?.finished()
                     pipe.fileHandleForReading.readabilityHandler = nil
+                    _ = state.add(pipe.fileHandleForReading.readDataToEndOfFile())
                     continuation.resume(returning: finished.terminationStatus)
                 }
                 do {
-                    try process.run()
+                    try lifecycle.run()
                 } catch {
                     pipe.fileHandleForReading.readabilityHandler = nil
+                    process.terminationHandler = nil
+                    // No child owns the pipe: its parent-side writer is still
+                    // open, so draining to EOF here would wait indefinitely.
                     continuation.resume(throwing: error)
                 }
             }
         } onCancel: {
-            process.terminate()
+            lifecycle.cancel()
         }
         try Task.checkCancellation()
-        // unzip: 1 means warnings (for example odd time stamps), and 11 "no
-        // matching files", which a pattern can cause on purpose.
-        // bsdtar reports patterns that matched nothing the same way.
-        let succeeded =
-            isUTF8
-            ? (status == 0 || status == 1 || (status == 11 && !patterns.isEmpty))
-            : status == 0 || (!patterns.isEmpty && state.tail.contains("Not found in archive"))
-        guard succeeded else {
-            throw InstallError.extractionFailed(status: status, output: state.tail)
-        }
+        return (status, state.tail)
     }
 
     /// Counts the entry lines the tools print (`inflating:` from unzip,
@@ -258,7 +318,10 @@ nonisolated public enum ZipArchive {
 
 nonisolated extension Data {
     /// A little-endian integer at `offset` from the start.
-    fileprivate func littleEndian<T: FixedWidthInteger>(_: T.Type, at offset: Int) -> T {
+    fileprivate func littleEndian<T: FixedWidthInteger>(_: T.Type, at offset: Int) throws -> T {
+        guard offset >= 0, offset <= count, MemoryLayout<T>.size <= count - offset else {
+            throw ZipArchiveError.malformed
+        }
         var value: T = 0
         let start = startIndex + offset
         for (shift, byte) in self[start..<(start + MemoryLayout<T>.size)].enumerated() {
@@ -266,4 +329,9 @@ nonisolated extension Data {
         }
         return value
     }
+}
+
+nonisolated public enum ZipArchiveError: Error, LocalizedError, Sendable {
+    case malformed
+    public var errorDescription: String? { "The ZIP archive is damaged or has an unsupported layout." }
 }

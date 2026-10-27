@@ -142,6 +142,12 @@ Silverside (the same author's CD ripper) is the reference.
 
 Done:
 
+- Pre-release file safety: staged installations, verified replacement save
+  backups, complete file enumeration, path reservations for game operations
+  and shared virtual machines, cancellation-safe subprocesses, checked ZIP
+  parsing, source-aware setup destinations, generation-checked library
+  refreshes, and serialized user-state saving with recovery and quit flush.
+  Regression tests cover the review's ten numbered issues (2026-10-26).
 - Status chips, the launch log sheet, background jobs, sidebar counts,
   empty states, list header sorting, About with Acknowledgments and the
   License (2026-10-23); the welcome view with emulator status, short
@@ -158,6 +164,9 @@ Done:
 
 Not yet:
 
+- Exercise the file-safety changes with real running emulators: conflicting
+  Win9x launches, uninstall while playing, and quit while a game or job is
+  active. The core failure cases have automated regression coverage.
 - The website for getsilverbox.app: `docs/site`, the Pages workflow and
   `make site` are in place (2026-10-25). Still to do: current screenshots in
   both appearances, the Pages and DNS setup, and the download link once

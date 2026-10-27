@@ -56,6 +56,18 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
         return folder.appendingPathComponent("\(game.launcherBaseName).zip")
     }
 
+    /// New backups follow the physical installation, so two in-place copies
+    /// cannot overwrite each other's progress. Legacy backups remain restore sources.
+    public func saveArchiveURL(for game: Game, installation: URL) -> URL {
+        let root = FileOperations.identity(of: gamesRoot) + "/"
+        let path = FileOperations.identity(of: installation)
+        // Moving the entire local data folder must not orphan its backups.
+        let identity = path.hasPrefix(root) ? "local/" + path.dropFirst(root.count) : path
+        return savesDirectory.appendingPathComponent("Installations", isDirectory: true)
+            .appendingPathComponent(FileOperations.storageKey(forIdentity: identity), isDirectory: true)
+            .appendingPathComponent("\(game.launcherBaseName).zip")
+    }
+
     /// The edited config a user keeps for a game, if any.
     public func overrideConfigURL(for game: Game, configName: String) -> URL {
         overridesDirectory.appendingPathComponent(game.launchBoxID, isDirectory: true).appendingPathComponent(

@@ -201,6 +201,13 @@ another drive; favorites, play history and settings stay in Application
 Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS does on
 Windows, is available in Settings.
 
+Installations are unpacked in a temporary folder and become available only
+when they finish. Operations that would change the same game or virtual
+machine cannot run together. New save backups are kept separately for each
+installation under `Saves/Installations`; older backups remain available
+for restore. Favorites and play history keep one previous readable copy,
+and a damaged file is preserved before recovery.
+
 ## Build
 
 Open `Silverbox.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
@@ -251,6 +258,10 @@ What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
 milestones, with what is done and what is not, are in
 [docs/internal/Milestones.md](docs/internal/Milestones.md).
 
+- Exercise the new file safeguards with real running games: overlapping
+  Windows 98 launch attempts and quitting with an active game or job. The
+  automated tests cover reservations, interrupted installs, backup failures
+  and recovery of favorites and play history.
 - Launch console, computer and arcade games for real with RetroArch, Dolphin,
   MAME and Mednafen. The planner and the emulator assignments exist; nothing
   has been played yet.
