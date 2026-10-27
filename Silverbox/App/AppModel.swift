@@ -180,6 +180,11 @@ final class AppModel {
     private let userStatePersistence = UserLibraryStatePersistence(
         store: UserLibraryStateStore(url: AppPaths.userLibraryState))
     private var saveTask: Task<Void, Never>?
+    /// True when the saved file could not be read or kept aside: changes then
+    /// stay in memory, so the file is left as it is.
+    private var userStateSavingDisabled = false
+    /// True after a save failed, so the alert shows once until a save works.
+    private var userStateSaveFailed = false
     private var libraryGeneration = UUID()
     private var installedRefreshGeneration = UUID()
     @ObservationIgnored private var pendingSelectTitle: String?
@@ -213,6 +218,7 @@ final class AppModel {
             }
         } catch {
             userState = UserLibraryState()
+            userStateSavingDisabled = true
             stateWarning = AppAlert(
                 title: "Could not read favorites and play history",
                 message: "\(error.localizedDescription) Saving is disabled to protect the existing file.")
@@ -607,6 +613,7 @@ final class AppModel {
     }
 
     private func scheduleUserStateSave() {
+        guard !userStateSavingDisabled else { return }
         saveTask?.cancel()
         userStatePersistence.enqueue(userState)
         let persistence = userStatePersistence
@@ -615,22 +622,25 @@ final class AppModel {
             let failure = await Task.detached(priority: .utility) { () -> String? in
                 do { try persistence.flush(); return nil } catch { return error.localizedDescription }
             }.value
-            if let failure {
-                self?.alert = AppAlert(title: "Could not save favorites and play history", message: failure)
+            guard let self else { return }
+            // A failed save stays pending and is tried again with the next change.
+            if let failure, !userStateSaveFailed {
+                alert = AppAlert(title: "Could not save favorites and play history", message: failure)
             }
+            userStateSaveFailed = failure != nil
         }
     }
 
-    /// Called synchronously before normal application termination. A failed
-    /// save cancels quitting so the pending changes can be retried.
-    func flushUserState() -> Bool {
+    /// Saves pending changes before the app quits. Returns why the save
+    /// failed, or nil when it worked or saving is disabled.
+    func flushUserState() -> String? {
         saveTask?.cancel()
+        guard !userStateSavingDisabled else { return nil }
         do {
             try userStatePersistence.flush()
-            return true
+            return nil
         } catch {
-            alert = AppAlert(title: "Could not save favorites and play history", message: error.localizedDescription)
-            return false
+            return error.localizedDescription
         }
     }
 
@@ -980,6 +990,16 @@ final class AppModel {
     }
 
     // MARK: - Installing
+
+    /// True while an installation, download or setup runs.
+    var hasRunningJobs: Bool { setupTask != nil || installRuns.contains(where: \.isRunning) }
+
+    /// Cancels every installation, download and setup. Each one removes its
+    /// staging folder as it stops; a stopped download resumes later.
+    func cancelJobs() {
+        for run in installRuns where run.isRunning { run.cancel() }
+        cancelSetup()
+    }
 
     func fileOperationBlocker(for game: Game) -> String? {
         // Observe session/job changes so disabled controls update on completion.

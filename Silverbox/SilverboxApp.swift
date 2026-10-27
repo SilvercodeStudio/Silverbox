@@ -74,35 +74,56 @@ enum AppInfo {
 final class SilverboxAppDelegate: NSObject, NSApplicationDelegate {
     weak var model: AppModel?
 
+    /// The debug screenshot run quits by itself and must never wait for an answer.
+    private var unattended: Bool { !(UserDefaults.standard.string(forKey: "screenshotPath") ?? "").isEmpty }
+
+    /// Every alert here can be passed with "Quit Anyway", so a logout or
+    /// restart is never blocked for good.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        if let model, model.launcher.isRunning {
-            explain(
-                "Games are still running",
-                "Quit the running games before quitting Silverbox, so their files stay protected.", application: sender)
-            return .terminateCancel
+        guard let model else { return .terminateNow }
+        let games = model.launcher.isRunning
+        let jobs = model.hasRunningJobs
+        if games || jobs, !unattended {
+            let message = [
+                jobs
+                    ? "Installations and setup stop. You can start them again later, and a stopped download resumes."
+                    : nil,
+                games ? "Games that are running stay open." : nil,
+            ].compactMap { $0 }.joined(separator: " ")
+            guard
+                confirm(
+                    jobs ? "Stop the running jobs and quit?" : "Quit while games are running?", message,
+                    application: sender)
+            else { return .terminateCancel }
         }
-        if let model, model.setupTask != nil || model.installRuns.contains(where: \.isRunning) {
-            explain(
-                "Jobs are still running",
-                "Finish or cancel the active installations and setup before quitting Silverbox.", application: sender)
-            return .terminateCancel
+        guard jobs else { return saveState(of: model, application: sender) ? .terminateNow : .terminateCancel }
+        // Wait for the jobs to stop, so each one removes its staging folder.
+        model.cancelJobs()
+        Task {
+            let deadline = Date.now.addingTimeInterval(15)
+            while model.hasRunningJobs, Date.now < deadline { try? await Task.sleep(for: .milliseconds(100)) }
+            sender.reply(toApplicationShouldTerminate: saveState(of: model, application: sender))
         }
-        if let model, !model.flushUserState() {
-            explain(
-                "Could not save favorites and play history",
-                model.alert?.message ?? "Try saving again before quitting.", application: sender)
-            model.alert = nil
-            return .terminateCancel
-        }
-        return .terminateNow
+        return .terminateLater
     }
 
-    private func explain(_ title: String, _ message: String, application: NSApplication) {
+    /// Saves favorites and play history. When that fails, the user can stay
+    /// to try again or quit without the latest changes.
+    private func saveState(of model: AppModel, application: NSApplication) -> Bool {
+        guard let failure = model.flushUserState(), !unattended else { return true }
+        return confirm(
+            "Could not save favorites and play history",
+            "\(failure) If you quit now, the latest changes are lost.", application: application)
+    }
+
+    /// True when the user chooses "Quit Anyway". Cancel is the default button.
+    private func confirm(_ title: String, _ message: String, application: NSApplication) -> Bool {
         application.activate()
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Quit Anyway")
+        return alert.runModal() == .alertSecondButtonReturn
     }
 }

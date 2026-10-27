@@ -286,6 +286,25 @@ struct FileSafetyTests {
         try FileManager.default.copyItem(at: plan.archiveURL, to: legacy)
         #expect(installer.plan(for: plan.game)?.saveArchiveURL == legacy)
     }
+
+    @Test func soleBackupOfAnotherInstallationIsOffered() async throws {
+        let (installer, plan) = try await SafetyFixture.installation()
+        let store = try #require(installer.snapshot.localStore)
+        // A collection that was installed in place on a volume now mounted under another name.
+        func backup(at path: String) throws -> URL {
+            let url = store.saveArchiveURL(for: plan.game, installation: URL(fileURLWithPath: path))
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: plan.archiveURL, to: url)
+            return url
+        }
+        let old = try backup(at: "/Volumes/Old Name/eXo/eXoDOS/MiniGame")
+        #expect(old != plan.saveBackupURL)
+        #expect(installer.plan(for: plan.game)?.saveArchiveURL == old)
+        // With two candidates, neither is chosen.
+        _ = try backup(at: "/Volumes/Other/eXo/eXoDOS/MiniGame")
+        #expect(installer.plan(for: plan.game)?.saveArchiveURL == nil)
+    }
 }
 
 @Suite("Archive failure safety")

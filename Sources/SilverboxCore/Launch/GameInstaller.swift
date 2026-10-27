@@ -228,8 +228,13 @@ nonisolated public struct GameInstaller: Sendable {
             .appendingPathComponent("\(game.launcherBaseName).zip")
         let installedFolder = destination.appendingPathComponent(folderName, isDirectory: true)
         let backupTarget = localStore?.saveArchiveURL(for: game, installation: installedFolder) ?? librarySave
-        let existingSave = [backupTarget, localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
-            .first { FileManager.default.fileExists(atPath: $0.path) }
+        let fm = FileManager.default
+        let existingSave =
+            fm.fileExists(atPath: backupTarget.path)
+            ? backupTarget
+            : localStore?.soleSaveArchiveOfAnotherInstallation(for: game)
+                ?? [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
+                .first { fm.fileExists(atPath: $0.path) }
 
         // A Mac setup can leave each game's extras packed until it is
         // installed: in a GameData zip of its own, or in the pack's config

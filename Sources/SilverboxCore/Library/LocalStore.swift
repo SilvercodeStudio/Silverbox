@@ -71,6 +71,22 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
             .appendingPathComponent("\(game.launcherBaseName).zip")
     }
 
+    /// The game's backup for another installation, when there is exactly one.
+    /// A collection reached by another path (a volume mounted under a new
+    /// name) gets new keys, and this finds its backups again. With two or
+    /// more, none is chosen, so one copy's progress never goes to another.
+    public func soleSaveArchiveOfAnotherInstallation(for game: Game) -> URL? {
+        let fm = FileManager.default
+        let folder = savesDirectory.appendingPathComponent("Installations", isDirectory: true)
+        let matches = ((try? fm.contentsOfDirectory(atPath: folder.path)) ?? [])
+            .map {
+                folder.appendingPathComponent($0, isDirectory: true).appendingPathComponent(
+                    "\(game.launcherBaseName).zip")
+            }
+            .filter { fm.fileExists(atPath: $0.path) }
+        return matches.count == 1 ? matches[0] : nil
+    }
+
     /// The edited config a user keeps for a game, if any.
     public func overrideConfigURL(for game: Game, configName: String) -> URL {
         overridesDirectory.appendingPathComponent(game.launchBoxID, isDirectory: true).appendingPathComponent(

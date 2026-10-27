@@ -73,7 +73,7 @@ This applies to every game that runs in DOSBox: eXoDOS, eXoWin3x, eXoDemoScene, 
 
 ## Uninstalling
 
-Quit the game, then choose Uninstall from its context menu. Games using the same files cannot be installed, removed or started over one another; this also protects the Windows 98 virtual machines. Quit running games before quitting Silverbox, which stays open to protect their files. Finish or cancel active installation and setup jobs before quitting too. Silverbox offers to back up your saved games and any changed files first. The backup is a small archive under the local data folder's `Saves/Installations` folder, kept separately for each installation, and it is offered for restore the next time you install the game. Older backups in `Saves` are still offered. If a backup fails, the game and the previous backup are left in place.
+Quit the game, then choose Uninstall from its context menu. Games using the same files cannot be installed, removed or started over one another; this also protects the Windows 98 virtual machines. If you quit Silverbox while games or installations run, it asks first: "Quit Anyway" stops the installations and setup cleanly, and the games stay open. Silverbox offers to back up your saved games and any changed files first. The backup is a small archive under the local data folder's `Saves/Installations` folder, kept separately for each installation, and it is offered for restore the next time you install the game. When there is no backup for that installation but exactly one for another (for example, the collection's drive now mounts under another name), that one is offered. Older backups in `Saves` are still offered. If a backup fails, the game and the previous backup are left in place.
 
 ## Extras and manuals
 

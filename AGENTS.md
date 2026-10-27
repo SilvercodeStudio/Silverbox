@@ -317,11 +317,15 @@ new entry after the version is tagged; the version is the app target's
   `GameLauncher` session holds the launch plan's reservation from before
   `writeConfig` until the emulator exits, including shared Win9x VM files.
   Installations publish a staged game folder only on success and never
-  replace an existing installation. Keep Silverbox open until games and jobs
-  finish, so those reservations and cancellation cleanup stay active.
+  replace an existing installation. Quitting with games or jobs running asks
+  first (`applicationShouldTerminate`); "Quit Anyway" cancels the jobs and
+  waits up to 15 s for them to remove their staging folders. A restore
+  falls back to the game's only backup under another installation key
+  (`soleSaveArchiveOfAnotherInstallation`), for a remounted volume.
   User-state changes go through `UserLibraryStatePersistence`: enqueue the
   latest state, serialize flushes, preserve unreadable originals and flush
-  before normal termination.
+  before normal termination; a failed flush offers "Quit Anyway", and when
+  the file could not be read or kept aside nothing is saved at all.
 - Sidebar. Rows carry `.badge` counts from `AppModel.sidebarCounts`,
   recounted off the main thread shortly after the library or the user's
   state changes (playlists are not counted); each collection's header shows
