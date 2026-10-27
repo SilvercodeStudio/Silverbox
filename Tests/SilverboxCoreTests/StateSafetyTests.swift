@@ -118,3 +118,22 @@ struct StateSafetyTests {
         #expect(!FileManager.default.fileExists(atPath: store.url.path))
     }
 }
+
+@Suite("Games left running")
+struct RunningGameLedgerTests {
+    @Test func keepsRecordsUntilNoneAreLeft() throws {
+        let url = try FixtureLibrary.scratchDirectory().appendingPathComponent("running-games.json")
+        let ledger = RunningGameLedger(url: url)
+        #expect(ledger.load().isEmpty)
+        let record = RunningGameRecord(
+            id: UUID(), processIdentifier: 123, processStart: 1_761_500_000_123_456, title: "Mini Game",
+            paths: ["/tmp/Games/eXoDOS/MiniGame"])
+        try ledger.save([record])
+        #expect(ledger.load() == [record])
+        try ledger.save([])
+        #expect(!FileManager.default.fileExists(atPath: url.path))
+        // A damaged file reads as no games, so it never blocks anything.
+        try Data("{".utf8).write(to: url)
+        #expect(ledger.load().isEmpty)
+    }
+}

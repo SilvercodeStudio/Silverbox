@@ -319,9 +319,16 @@ new entry after the version is tagged; the version is the app target's
   Installations publish a staged game folder only on success and never
   replace an existing installation. Quitting with games or jobs running asks
   first (`applicationShouldTerminate`); "Quit Anyway" cancels the jobs and
-  waits up to 15 s for them to remove their staging folders. A restore
-  falls back to the game's only backup under another installation key
-  (`soleSaveArchiveOfAnotherInstallation`), for a remounted volume.
+  waits up to 15 s for them to remove their staging folders. Games stay
+  open: each reserved launch is recorded in `running-games.json` (beside
+  `user-library.json`; `RunningGameLedger`) with its process number, start
+  time and paths, and at the next start `GameLauncher` reserves the paths
+  again for each emulator still running (`adopted`) until it exits. A game
+  installed in the collection's own folder has a backup key from the
+  absolute path, so its backup has a `<name>.json` beside it
+  (`SaveBackupSource`: collection ID, game ID, folder in the collection);
+  when no backup is at a known place, `LocalStore.movedSaveArchive` offers
+  the one backup whose record matches, for a remounted volume.
   User-state changes go through `UserLibraryStatePersistence`: enqueue the
   latest state, serialize flushes, preserve unreadable originals and flush
   before normal termination; a failed flush offers "Quit Anyway", and when

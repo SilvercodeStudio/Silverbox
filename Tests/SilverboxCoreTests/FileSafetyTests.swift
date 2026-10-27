@@ -287,23 +287,47 @@ struct FileSafetyTests {
         #expect(installer.plan(for: plan.game)?.saveArchiveURL == legacy)
     }
 
-    @Test func soleBackupOfAnotherInstallationIsOffered() async throws {
-        let (installer, plan) = try await SafetyFixture.installation()
+    @Test func movedCollectionBackupNeedsMatchingSource() async throws {
+        let (local, _) = try await SafetyFixture.installation()
+        let installer = GameInstaller(snapshot: local.snapshot, installLocation: .inPlace)
+        let plan = try #require(installer.plan(for: local.snapshot.games[0]))
+        let source = try #require(plan.saveBackupSource)
+        #expect(source.folder == "exo/exodos/minigame")
         let store = try #require(installer.snapshot.localStore)
-        // A collection that was installed in place on a volume now mounted under another name.
-        func backup(at path: String) throws -> URL {
+        // Backups made while the collection was mounted under another name.
+        func backup(at path: String, source: SaveBackupSource?) throws -> URL {
             let url = store.saveArchiveURL(for: plan.game, installation: URL(fileURLWithPath: path))
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try FileManager.default.copyItem(at: plan.archiveURL, to: url)
+            try source?.write(forBackup: url)
             return url
         }
-        let old = try backup(at: "/Volumes/Old Name/eXo/eXoDOS/MiniGame")
-        #expect(old != plan.saveBackupURL)
-        #expect(installer.plan(for: plan.game)?.saveArchiveURL == old)
-        // With two candidates, neither is chosen.
-        _ = try backup(at: "/Volumes/Other/eXo/eXoDOS/MiniGame")
+        // Another collection's copy, and a backup with no record, are never offered.
+        var other = source
+        other.collectionID = UUID()
+        _ = try backup(at: "/Volumes/Other/eXo/eXoDOS/MiniGame", source: other)
+        _ = try backup(at: "/Volumes/Unknown/eXo/eXoDOS/MiniGame", source: nil)
         #expect(installer.plan(for: plan.game)?.saveArchiveURL == nil)
+
+        let old = try backup(at: "/Volumes/Old Name/eXo/eXoDOS/MiniGame", source: source)
+        #expect(installer.plan(for: plan.game)?.saveArchiveURL == old)
+        // A backup at a known place comes first.
+        let legacy = store.saveArchiveURL(for: plan.game)
+        try FileManager.default.createDirectory(
+            at: legacy.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: plan.archiveURL, to: legacy)
+        #expect(installer.plan(for: plan.game)?.saveArchiveURL == legacy)
+    }
+
+    @Test func uninstallRecordsTheBackupSource() async throws {
+        let (local, _) = try await SafetyFixture.installation()
+        let installer = GameInstaller(snapshot: local.snapshot, installLocation: .inPlace)
+        let plan = try #require(installer.plan(for: local.snapshot.games[0]))
+        try await installer.install(plan)
+        try Data("saved".utf8).write(to: plan.installedFolderURL.appendingPathComponent("SAVE.DAT"))
+        #expect(try await installer.uninstall(plan, backupSaves: true) == 1)
+        #expect(SaveBackupSource.read(forBackup: plan.saveBackupURL) == plan.saveBackupSource)
     }
 }
 

@@ -36,11 +36,13 @@ What changed in each version of Silverbox.
   appear as installed. Games that share files cannot be installed, removed
   or started over one another, including Windows 98 virtual machines. When
   you quit while games or jobs run, Silverbox asks first; "Quit Anyway"
-  stops the jobs cleanly and leaves the games open.
+  stops the jobs cleanly and leaves the games open; their files stay
+  protected when Silverbox opens again, until the games quit.
 - Save backups include hidden files and keep the previous backup if creating
   a replacement fails. Separate installations keep separate backups; older
-  backups can still be restored, and so can a backup made before the
-  collection's volume was mounted under another name.
+  backups can still be restored, and so can a backup of a game in the
+  collection's own folder made before its volume mounted under another
+  name.
 - Cancelling an installation or download before its helper starts no longer
   crashes the app. An extraction helper that cannot start reports its error
   instead of hanging. Damaged ZIP files report an error instead of crashing.

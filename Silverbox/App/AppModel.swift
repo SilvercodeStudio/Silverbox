@@ -1004,6 +1004,7 @@ final class AppModel {
     func fileOperationBlocker(for game: Game) -> String? {
         // Observe session/job changes so disabled controls update on completion.
         _ = launcher.sessions
+        _ = launcher.adopted
         _ = installRuns.map(\.phase)
         guard let plan = installer(for: game)?.plan(for: game) else { return nil }
         return FileOperationCoordinator.shared.conflict(for: [plan.installedFolderURL])?.localizedDescription

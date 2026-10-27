@@ -22,6 +22,9 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
     /// Where a save backup is written on uninstall.
     public var saveBackupURL: URL
     public var location: InstallLocation
+    /// Written beside the backup for a game installed in the collection, so
+    /// the backup is found again if the collection's path changes.
+    public var saveBackupSource: SaveBackupSource? = nil
 
     /// Shared save files as well as the physical game folder.
     public var operationURLs: [URL] {
@@ -39,6 +42,34 @@ nonisolated public struct InstallPlan: Sendable, Hashable {
         guard let saveArchiveURL else { return nil }
         return (try? FileManager.default.attributesOfItem(atPath: saveArchiveURL.path)[.modificationDate] as? Date)
             ?? nil
+    }
+}
+
+/// Which installation a save backup came from: the collection, the game and
+/// the game folder relative to the collection (as ``FileOperations/identity(of:)``
+/// writes paths). Kept in `<name>.json` beside the backup.
+nonisolated public struct SaveBackupSource: Codable, Hashable, Sendable {
+    public var collectionID: UUID
+    public var gameID: String
+    public var folder: String
+
+    public init(collectionID: UUID, gameID: String, folder: String) {
+        self.collectionID = collectionID
+        self.gameID = gameID
+        self.folder = folder
+    }
+
+    static func url(forBackup backup: URL) -> URL {
+        backup.deletingPathExtension().appendingPathExtension("json")
+    }
+
+    public static func read(forBackup backup: URL) -> SaveBackupSource? {
+        guard let data = try? Data(contentsOf: url(forBackup: backup)) else { return nil }
+        return try? JSONDecoder().decode(SaveBackupSource.self, from: data)
+    }
+
+    public func write(forBackup backup: URL) throws {
+        try JSONEncoder().encode(self).write(to: Self.url(forBackup: backup), options: .atomic)
     }
 }
 
@@ -228,13 +259,22 @@ nonisolated public struct GameInstaller: Sendable {
             .appendingPathComponent("\(game.launcherBaseName).zip")
         let installedFolder = destination.appendingPathComponent(folderName, isDirectory: true)
         let backupTarget = localStore?.saveArchiveURL(for: game, installation: installedFolder) ?? librarySave
-        let fm = FileManager.default
+        // Backups at known places come first. A key from the game's local
+        // games folder survives a move; one from the collection's path does not.
+        var backupSource: SaveBackupSource?
+        if localStore != nil, location == .inPlace {
+            let rootPath = FileOperations.identity(of: root.url) + "/"
+            let path = FileOperations.identity(of: installedFolder)
+            if path.hasPrefix(rootPath) {
+                backupSource = SaveBackupSource(
+                    collectionID: snapshot.collection.id, gameID: game.launchBoxID,
+                    folder: String(path.dropFirst(rootPath.count)))
+            }
+        }
         let existingSave =
-            fm.fileExists(atPath: backupTarget.path)
-            ? backupTarget
-            : localStore?.soleSaveArchiveOfAnotherInstallation(for: game)
-                ?? [localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
-                .first { fm.fileExists(atPath: $0.path) }
+            [backupTarget, localStore?.saveArchiveURL(for: game), librarySave].compactMap { $0 }
+            .first { FileManager.default.fileExists(atPath: $0.path) }
+            ?? backupSource.flatMap { localStore?.movedSaveArchive(for: game, source: $0) }
 
         // A Mac setup can leave each game's extras packed until it is
         // installed: in a GameData zip of its own, or in the pack's config
@@ -264,7 +304,8 @@ nonisolated public struct GameInstaller: Sendable {
             extrasPatterns: extrasPatterns,
             saveArchiveURL: existingSave,
             saveBackupURL: backupTarget,
-            location: location
+            location: location,
+            saveBackupSource: backupSource
         )
     }
 
@@ -347,6 +388,8 @@ nonisolated public struct GameInstaller: Sendable {
             guard plan.archiveExists else { throw InstallError.archiveMissing(plan.archiveURL) }
             saved = try await SaveArchiver.backup(
                 folder: plan.installedFolderURL, originalArchive: plan.archiveURL, to: plan.saveBackupURL)
+            // Without the record the backup is still found at its own path.
+            if saved > 0 { try? plan.saveBackupSource?.write(forBackup: plan.saveBackupURL) }
         }
         try Task.checkCancellation()
         try FileManager.default.removeItem(at: plan.installedFolderURL)

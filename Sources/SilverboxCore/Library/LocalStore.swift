@@ -71,11 +71,12 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
             .appendingPathComponent("\(game.launcherBaseName).zip")
     }
 
-    /// The game's backup for another installation, when there is exactly one.
-    /// A collection reached by another path (a volume mounted under a new
-    /// name) gets new keys, and this finds its backups again. With two or
-    /// more, none is chosen, so one copy's progress never goes to another.
-    public func soleSaveArchiveOfAnotherInstallation(for game: Game) -> URL? {
+    /// The game's backup from the same collection and game folder under an
+    /// earlier path, such as a volume that now mounts under another name:
+    /// its key follows the old path, so ``saveArchiveURL(for:installation:)``
+    /// misses it. Only a backup whose recorded source matches counts, and
+    /// only when there is exactly one.
+    public func movedSaveArchive(for game: Game, source: SaveBackupSource) -> URL? {
         let fm = FileManager.default
         let folder = savesDirectory.appendingPathComponent("Installations", isDirectory: true)
         let matches = ((try? fm.contentsOfDirectory(atPath: folder.path)) ?? [])
@@ -83,7 +84,7 @@ nonisolated public struct LocalStore: Hashable, Sendable, Codable {
                 folder.appendingPathComponent($0, isDirectory: true).appendingPathComponent(
                     "\(game.launcherBaseName).zip")
             }
-            .filter { fm.fileExists(atPath: $0.path) }
+            .filter { SaveBackupSource.read(forBackup: $0) == source && fm.fileExists(atPath: $0.path) }
         return matches.count == 1 ? matches[0] : nil
     }
 

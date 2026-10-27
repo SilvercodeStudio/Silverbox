@@ -293,6 +293,10 @@ enum AppPaths {
     static var userLibraryState: URL {
         (scratchData ?? applicationSupport).appendingPathComponent("user-library.json")
     }
+    /// Games that may still run from an earlier session (`RunningGameLedger`).
+    static var runningGames: URL {
+        (scratchData ?? applicationSupport).appendingPathComponent("running-games.json")
+    }
 
     /// The scratch data folder for this run: `-dataPath <folder>`, or a
     /// folder in the temporary folder for `-demoLibrary 1`. Nil normally.

@@ -88,7 +88,9 @@ final class SilverboxAppDelegate: NSObject, NSApplicationDelegate {
                 jobs
                     ? "Installations and setup stop. You can start them again later, and a stopped download resumes."
                     : nil,
-                games ? "Games that are running stay open." : nil,
+                games
+                    ? "Games that are running stay open, and their files stay protected when Silverbox opens again."
+                    : nil,
             ].compactMap { $0 }.joined(separator: " ")
             guard
                 confirm(
