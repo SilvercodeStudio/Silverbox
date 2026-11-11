@@ -105,4 +105,38 @@ struct MediaIndexStoreTests {
         store.clear()
         #expect(store.load(folder: folder) == nil)
     }
+
+    /// A file added to a region folder changes only that folder's date, so
+    /// the saved index must check it too.
+    @Test func rescansWhenARegionFolderChanges() throws {
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let folder = scratch.appendingPathComponent("Box - Front", isDirectory: true)
+        let region = folder.appendingPathComponent("North America", isDirectory: true)
+        try FileManager.default.createDirectory(at: region, withIntermediateDirectories: true)
+        try Data().write(to: region.appendingPathComponent("Doom-01.png"))
+        let old = Date(timeIntervalSinceNow: -3600)
+        for url in [region, folder] {
+            try FileManager.default.setAttributes([.modificationDate: old], ofItemAtPath: url.path)
+        }
+        let store = MediaIndexStore(directory: scratch.appendingPathComponent("MediaIndex"))
+        let scanned = MediaFolderIndex.scan(folder: folder)
+        #expect(scanned.subfolderDates?.keys.sorted() == ["North America"])
+        store.save(scanned)
+        #expect(store.load(folder: folder)?.fileCount == 1)
+
+        try Data().write(to: region.appendingPathComponent("Heretic-01.png"))
+        #expect(store.load(folder: folder) == nil)
+        #expect(MediaFolderIndex.scan(folder: folder).fileCount == 2)
+    }
+
+    /// An index saved before sub-folder dates were kept is scanned again once.
+    @Test func rescansAnIndexWithoutSubfolderDates() throws {
+        let folder = FixtureLibrary.root.imagesDirectory.appendingPathComponent("MS-DOS/Box - Front", isDirectory: true)
+        var scanned = MediaFolderIndex.scan(folder: folder)
+        scanned.subfolderDates = nil
+        let store = MediaIndexStore(
+            directory: try FixtureLibrary.scratchDirectory().appendingPathComponent("MediaIndex"))
+        store.save(scanned)
+        #expect(store.load(folder: folder) == nil)
+    }
 }

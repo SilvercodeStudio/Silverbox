@@ -288,6 +288,21 @@ enum AppPaths {
     static var logs: URL { dataRoot.appendingPathComponent("Logs", isDirectory: true) }
     static var mediaIndexes: URL { dataRoot.appendingPathComponent("MediaIndex", isDirectory: true) }
     static var libraryCache: URL { dataRoot.appendingPathComponent("LibraryCache", isDirectory: true) }
+    /// Saved thumbnails of box art and screenshots (`ThumbnailDiskCache`):
+    /// `~/Library/Caches/app.getsilverbox.Silverbox/Thumbnails`, always on
+    /// this Mac, so covers on a share load quickly; in the scratch data
+    /// folder for a test run.
+    static let thumbnails: URL = {
+        if let scratchData { return scratchData.appendingPathComponent("Thumbnails", isDirectory: true) }
+        let fm = FileManager.default
+        let caches =
+            fm.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Caches")
+        return caches.appendingPathComponent(
+            Bundle.main.bundleIdentifier ?? "app.getsilverbox.Silverbox", isDirectory: true
+        )
+        .appendingPathComponent("Thumbnails", isDirectory: true)
+    }()
     /// aria2's DHT table, which lets game downloads find peers quickly.
     static var torrentState: URL { dataRoot.appendingPathComponent("BitTorrent", isDirectory: true) }
     static var userLibraryState: URL {

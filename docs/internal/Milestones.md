@@ -31,6 +31,8 @@ release work before the app goes to the eXo team.
   title.
 - Grid and list views, the sidebar, search, sorting, the inspector.
 - Read-only libraries (a read-only volume or a network share).
+- Box art and screenshot thumbnails saved on this Mac (up to 300 MB), so
+  covers on a share load from the share once.
 
 ## 2. Launch eXoDOS games in DOSBox — done
 

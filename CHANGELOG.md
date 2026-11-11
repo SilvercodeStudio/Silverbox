@@ -21,6 +21,9 @@ What changed in each version of Silverbox.
   filled in with the version, your Mac, your collections' packs and the
   emulators found. Help › Send Feedback… opens a new discussion. Nothing
   is sent until you submit it.
+- Box art and screenshots from a network share load much faster after
+  the first time: Silverbox keeps small copies of them on this Mac (up to
+  about 300 MB). Rescan Library deletes them.
 
 ### Changed
 
@@ -77,6 +80,8 @@ What changed in each version of Silverbox.
   archives again. Before, its games could not be installed.
 - The install sheet no longer names the eXoDOS folder for games from other
   packs.
+- Artwork added to a region folder, such as `Box - Front/North America`,
+  now shows without Rescan Library.
 
 ## 0.2
 

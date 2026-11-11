@@ -58,4 +58,4 @@ If your eXoDOS folder is writable and you prefer the Windows layout, set Setting
 
 ## Rescanning
 
-After you add or update packs, or add artwork to a collection, choose Library › Rescan Library (or Rescan All in Settings › Library). This re-reads the metadata and rebuilds the artwork index.
+After you add or update packs, or replace artwork in a collection, choose Library › Rescan Library (or Rescan All in Settings › Library). This re-reads the metadata, rebuilds the artwork index and deletes the saved copies of box art and screenshots. New artwork files are found without a rescan.

@@ -85,6 +85,10 @@ new entry after the version is tagged; the version is the app target's
 `MARKETING_VERSION`. The milestones and what is still to do are in
 `docs/internal/Milestones.md`; keep it and the README's "To do" up to date.
 
+Commit messages: a subject line, a blank line, then paragraphs. Hard-wrap
+the body at about 75 characters, and break lines between words, never
+inside a path or code span.
+
 ## Conventions
 
 - Keep core code free of Apple-only frameworks so it can later back a
@@ -259,7 +263,19 @@ new entry after the version is tagged; the version is the app target's
   file is named after the title, one named after the ROM file
   (`Game.launcherBaseName`) counts, as LaunchBox allows; Skraper and
   EmuMovies name media that way. Videos, manuals and music already match by
-  launcher name first, then title.
+  launcher name first, then title. A saved image index
+  (`MediaIndexStore`) is reused while the folder and each sub-folder keep
+  their modification dates (`MediaFolderIndex.isCurrent`).
+- Thumbnails. `ThumbnailCache` (app) decodes images at a pixel size and
+  keeps 800 in memory; sizes up to 600 px also go to
+  `ThumbnailDiskCache` in `AppPaths.thumbnails`
+  (`~/Library/Caches/<bundle id>/Thumbnails`, local even when the data
+  folder is not), keyed by the image's path and size and never checked
+  against the original, since that check is what costs on a share. JPEG
+  for opaque, downscaled images, PNG otherwise; the least recently used
+  go past 300 MB. Rescan Library clears both. Measured on the eXoDOS
+  share: about 390 ms per grid cover from the share while scrolling, 0.3
+  ms from the disk cache.
 - Soundtracks. Entries whose launcher is foobar2000 with a zip argument are
   `launchKind == .soundtrack`. `SoundtrackLibrary` (core) resolves the zip,
   lists it with `unzip -Z1` and unpacks it; `AlbumPlayer` (app) plays the

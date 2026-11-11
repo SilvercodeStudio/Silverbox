@@ -156,7 +156,7 @@ final class AppModel {
         var configureOnly = false
     }
 
-    let thumbnails = ThumbnailCache()
+    let thumbnails = ThumbnailCache(disk: ThumbnailDiskCache(directory: AppPaths.thumbnails))
     let music = MenuMusicPlayer()
     let launcher = GameLauncher()
     let gamepad = GamepadInput()
@@ -393,6 +393,8 @@ final class AppModel {
         if clearMediaCache {
             MediaIndexStore(directory: AppPaths.mediaIndexes).clear()
             LibraryCache(directory: AppPaths.libraryCache).clear()
+            let thumbnails = thumbnails
+            Task { await thumbnails.clear() }
         }
         let collections = settings.enabledCollections
         guard !collections.isEmpty else {

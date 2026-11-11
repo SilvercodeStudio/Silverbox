@@ -14,7 +14,9 @@ If the game is unpacked inside a read-only eXoDOS folder, Silverbox mounts a wri
 
 ## Box art is missing
 
-Artwork is found by file name, the same way LaunchBox does it. The first scan of a large collection on a slow drive can take a minute; the index is then saved, so later launches are fast. If artwork was added to the collection, choose Library › Rescan Library.
+Artwork is found by file name, the same way LaunchBox does it. The first scan of a large collection on a slow drive can take a minute; the index is then saved, so later launches are fast. Silverbox finds new artwork files by itself. If you replaced an image with another one of the same name, choose Library › Rescan Library.
+
+Box art and screenshots on a network share load slowly the first time. Silverbox then keeps a small copy of each on this Mac, so they show at once the next time.
 
 ## The emulator is not found
 
@@ -69,7 +71,7 @@ The local data folder is in the same place, unless Settings › Library moves it
 Elsewhere:
 
 - `~/Library/Preferences/app.getsilverbox.Silverbox.plist`: the settings and window positions.
-- `~/Library/Caches/app.getsilverbox.Silverbox`: the Help window's cache. You can delete it at any time.
+- `~/Library/Caches/app.getsilverbox.Silverbox`: the Help window's cache, and in `Thumbnails` the small copies of box art and screenshots (up to about 300 MB; the oldest go first). Library › Rescan Library deletes the copies, and you can delete the folder at any time.
 
 Silverbox changes a collection only when you ask: a game download or "Install in place" puts the game in the collection, and setting up a download in place writes the setup there.
 

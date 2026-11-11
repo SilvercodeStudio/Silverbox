@@ -63,6 +63,9 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
     /// The folder's modification date when it was scanned, used to decide
     /// whether a saved index is still current.
     public var modificationDate: Date?
+    /// The same for each sub-folder (a region, such as `North America`), by
+    /// its path in the folder: a file added there changes only its date.
+    public var subfolderDates: [String: Date]?
 
     public static let imageExtensions: Set<String> = [
         "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "heic",
@@ -75,11 +78,32 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
         "canada", "oceania", "australia", "germany", "france", "japan",
     ]
 
-    public init(folder: URL, filesByKey: [String: [MediaFile]], fileCount: Int, modificationDate: Date? = nil) {
+    public init(
+        folder: URL, filesByKey: [String: [MediaFile]], fileCount: Int, modificationDate: Date? = nil,
+        subfolderDates: [String: Date]? = nil
+    ) {
         self.folder = folder
         self.filesByKey = filesByKey
         self.fileCount = fileCount
         self.modificationDate = modificationDate
+        self.subfolderDates = subfolderDates
+    }
+
+    /// True while the folder and every sub-folder have the dates they had
+    /// when the index was made. Each check is one look at a folder, not at
+    /// its files.
+    public var isCurrent: Bool {
+        guard let modificationDate, let subfolderDates,
+            Self.sameDate(modificationDate, Self.modificationDate(of: folder))
+        else { return false }
+        return subfolderDates.allSatisfy { path, date in
+            Self.sameDate(date, Self.modificationDate(of: folder.appendingPathComponent(path, isDirectory: true)))
+        }
+    }
+
+    private static func sameDate(_ saved: Date, _ current: Date?) -> Bool {
+        guard let current else { return false }
+        return abs(saved.timeIntervalSince(current)) < 1
     }
 
     public static func modificationDate(of folder: URL) -> Date? {
@@ -99,11 +123,18 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
             return MediaFolderIndex(folder: folder, filesByKey: [:], fileCount: 0)
         }
         let basePath = folder.standardizedFileURL.path
+        var subfolders: [String: Date] = [:]
         for case let url as URL in enumerator {
             // Anything with an image extension is taken as a file; checking
             // each entry's type would cost a stat per file on slow volumes.
             let ext = url.pathExtension.lowercased()
-            guard extensions.contains(ext) else { continue }
+            guard extensions.contains(ext) else {
+                let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey])
+                if values?.isDirectory == true, let date = values?.contentModificationDate {
+                    subfolders[relativePath(of: url, in: basePath)] = date
+                }
+                continue
+            }
             let parent = url.deletingLastPathComponent().standardizedFileURL.path
             var region = parent.hasPrefix(basePath) ? String(parent.dropFirst(basePath.count)) : ""
             if region.hasPrefix("/") { region.removeFirst() }
@@ -113,7 +144,14 @@ nonisolated public struct MediaFolderIndex: Sendable, Codable {
             count += 1
         }
         return MediaFolderIndex(
-            folder: folder, filesByKey: byKey, fileCount: count, modificationDate: modificationDate(of: folder))
+            folder: folder, filesByKey: byKey, fileCount: count, modificationDate: modificationDate(of: folder),
+            subfolderDates: subfolders)
+    }
+
+    private static func relativePath(of url: URL, in basePath: String) -> String {
+        let path = url.standardizedFileURL.path
+        guard path.hasPrefix(basePath + "/") else { return url.lastPathComponent }
+        return String(path.dropFirst(basePath.count + 1))
     }
 
     /// Files for a game, best first: exact game-ID matches win over plain
@@ -203,11 +241,9 @@ nonisolated public struct MediaIndexStore: Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         guard let index = try? decoder.decode(MediaFolderIndex.self, from: data) else { return nil }
-        guard index.folder.standardizedFileURL.path == folder.standardizedFileURL.path else { return nil }
-        let current = MediaFolderIndex.modificationDate(of: folder)
-        guard let saved = index.modificationDate, let current,
-            abs(saved.timeIntervalSince(current)) < 1
-        else { return nil }
+        guard index.folder.standardizedFileURL.path == folder.standardizedFileURL.path, index.isCurrent else {
+            return nil
+        }
         return index
     }
 
