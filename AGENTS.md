@@ -349,8 +349,22 @@ new entry after the version is tagged; the version is the app target's
   (`AppInfo.websiteURL`, also Help › Silverbox Website). It opens
   `AcknowledgmentsSheet` and `LicenseSheet`; the
   texts come from `Silverbox/Licenses/*.txt`, copies of the repository's
-  `LICENSE` and the vendored decoders' licenses that `ProjectFilesTests`
-  keeps identical. The license is MIT; the name and icon artwork are not.
+  `NOTICE`, `LICENSE` and the vendored decoders' licenses that
+  `ProjectFilesTests` keeps identical. The license is the GNU GPL; the
+  name and icon artwork are not covered by it.
+- Version and commit. The app target's "Record the Git commit" build phase
+  runs `scripts/record-commit.sh`, which writes `scripts/commit-id.sh`'s
+  commit (`c2b2f09`, `-dirty` with uncommitted changes) into the built
+  Info.plist as `SilverboxCommit`, and `SilverboxArchive` for an archive.
+  `AppInfo.versionLine` ("Silverbox 0.3 (4) · c2b2f09") goes into launch
+  and problem reports; the About window leaves a clean commit out of an
+  archive. The phase needs the target's user script sandboxing off.
+- Reports. Help › Report a Problem… and Send Feedback… open GitHub's new
+  issue and new discussion pages for `ProblemReport.repository`, filled in
+  by `ProblemReport` (core) from `AppModel+Reports`: the version, the Mac,
+  each collection's packs and game count, and the emulators found. No
+  paths or collection names. The app sends nothing itself; the privacy
+  page says so.
 - Status chips. `Chip` and `ChipRow` (`Chips.swift`) state one fact each in
   a tone: `Theme.good`, `.warning` or `.bad`, kept apart from the accent.
   Use these tones for status, never `.red` or `.orange`. `GameStatusChips`
@@ -454,13 +468,19 @@ new entry after the version is tagged; the version is the app target's
   Never edit vendored files; put wrappers and shims in our own code (a shim
   header in `include/` is fine when it says so). Emulators and `unzip`/`bsdtar`
   are external programs, never linked.
-- **Licensing:** the code is under the MIT License (`LICENSE`); the name and
-  the icon artwork are excluded from it. The app shows it and the vendored
-  licenses from `Silverbox/Licenses/`, which `ProjectFilesTests` keeps identical
-  to the originals. Credit new outside code in the README's "Third-party
-  code", in `Silverbox/Licenses/` and in `AcknowledgmentsSheet`. Do not port GPL
-  code (DOSBox, 86Box, ScummVM and most emulators are GPL): read it to
-  understand a format, then write our own.
+- **Licensing:** the code is under the GNU General Public License, version 3
+  or later (`LICENSE`, the FSF's text verbatim). `NOTICE` has the
+  copyright notice and what the license does not cover: the name and the
+  icon artwork, the vendored decoders (their own licenses), and the eXo
+  team's collections and the eXoDOS cover. The app shows the notice, the
+  license and the vendored licenses from `Silverbox/Licenses/`, which
+  `ProjectFilesTests` keeps identical to the originals. Credit new outside
+  code in the README's "Third-party code", in `Silverbox/Licenses/` and in
+  `AcknowledgmentsSheet`. Contributions come in under the MIT License, and
+  the author keeps the right to use them under other licenses
+  (`CONTRIBUTING.md`), so do not port GPL or other copyleft code either
+  (DOSBox, 86Box, ScummVM and most emulators are GPL): the author could then
+  no longer relicense. Read it to understand a format, then write our own.
 - **Distribution:** Developer ID, not the App Store. App Sandbox is off,
   because the app reads libraries anywhere and starts other programs.
 - **Platform versions:** Swift 6 language mode for the package and the app.

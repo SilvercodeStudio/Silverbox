@@ -10,6 +10,7 @@ struct ProjectFilesTests {
     @Test func bundledLicensesMatchTheirSources() throws {
         let pairs = [
             ("LICENSE", "Silverbox/Licenses/Silverbox.txt"),
+            ("NOTICE", "Silverbox/Licenses/Silverbox-Notice.txt"),
             ("Sources/CStbVorbis/LICENSE", "Silverbox/Licenses/stb_vorbis.txt"),
             ("Sources/CXmpLite/LICENSE", "Silverbox/Licenses/libxmp-lite.txt"),
         ]
@@ -20,9 +21,17 @@ struct ProjectFilesTests {
         }
     }
 
-    @Test func licenseKeepsTheNameAndIcons() throws {
+    @Test func licenseIsTheGPL() throws {
         let license = try String(contentsOf: Self.root.appendingPathComponent("LICENSE"), encoding: .utf8)
-        #expect(license.contains("Permission is hereby granted, free of charge"))
-        #expect(license.contains("The name \"Silverbox\" and the icon and logo artwork"))
+        #expect(
+            license.hasPrefix(
+                "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n"))
+        #expect(license.contains("END OF TERMS AND CONDITIONS"))
+    }
+
+    @Test func noticeKeepsTheNameAndIcons() throws {
+        let notice = try String(contentsOf: Self.root.appendingPathComponent("NOTICE"), encoding: .utf8)
+        #expect(notice.contains("either version 3 of the License, or (at your option) any later version"))
+        #expect(notice.contains("The name \"Silverbox\" and the icon and logo artwork"))
     }
 }

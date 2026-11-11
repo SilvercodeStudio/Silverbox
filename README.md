@@ -253,6 +253,17 @@ and a note on its origin:
 
 macOS plays the other music formats itself.
 
+## License
+
+Silverbox is free software under the GNU General Public License, version 3
+or later; see [LICENSE](LICENSE) and [NOTICE](NOTICE). The name "Silverbox"
+and the icon artwork are not covered by it: a modified version that you
+distribute needs a different name and icon. The eXo collections are the work
+of the eXo team and are not part of Silverbox.
+
+Contributions come in under the MIT License, and ship in Silverbox under the
+GPL; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## To do
 
 What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the

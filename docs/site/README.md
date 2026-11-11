@@ -22,7 +22,7 @@ Switch macOS between Light and Dark (System Settings › Appearance) to see both
 - `tools/shot.swift`: crops a window screenshot to the window's edge and writes the WebP images the pages use (see below).
 - `CNAME`: the custom domain. `.nojekyll`: Pages serves the files as they are.
 
-The license page carries the text of the repository's `LICENSE`; keep the two the same.
+The license page carries the text of the repository's `NOTICE` and links to `LICENSE`; keep them the same.
 
 ## Publishing
 

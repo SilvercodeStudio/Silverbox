@@ -159,7 +159,8 @@ Done:
   License (2026-10-23); the welcome view with emulator status, short
   warning chips with help tags, help tags on disabled controls, and
   emulators noticed while the app is open (2026-10-25).
-- `LICENSE` (MIT; the name and the icon artwork excluded), `CHANGELOG.md`,
+- `LICENSE` (the GNU GPL, version 3 or later), `NOTICE` (the name and the
+  icon artwork excluded), `CONTRIBUTING.md`, `CHANGELOG.md`,
   this file, `make lint`, `make install-app` (registers the app with Launch
   Services), the copyright and the Games category in the app's Info.plist,
   Swift 6 language mode for the app, `-dataPath` and `-demoLibrary`; the

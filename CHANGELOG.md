@@ -20,6 +20,10 @@ What changed in each version of Silverbox.
 
 ### Changed
 
+- Silverbox is free software under the GNU General Public License,
+  version 3 or later. About › License shows the copyright notice and the
+  full text of the license. Contributions come in under the terms in
+  CONTRIBUTING.md.
 - A new app icon: a floppy disk, in amber or green. The highlight colours
   match it.
 - Help › Silverbox Website opens getsilverbox.app. The About window is

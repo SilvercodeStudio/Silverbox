@@ -12,11 +12,9 @@ enum AboutPanel {
         return "Version \(short) (\(build))"
     }
 
-    /// "© 2026 Preston Landers": the Info.plist copyright without its license
-    /// note, which the License button covers.
+    /// "© 2026 Preston Landers", from the Info.plist.
     static var copyright: String {
-        let full = Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
-        return full.replacingOccurrences(of: ". MIT License.", with: "")
+        Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
     }
 }
 

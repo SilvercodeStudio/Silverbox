@@ -98,7 +98,8 @@ struct AcknowledgmentsSheet: View {
     }
 }
 
-/// The app's own license, from the bundled copy of the LICENSE file.
+/// The app's notice and its license, the GNU GPL, from the bundled copies
+/// of the NOTICE and LICENSE files.
 struct LicenseSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -107,11 +108,15 @@ struct LicenseSheet: View {
             Text("License").font(.headline).padding(20)
             Divider()
             ScrollView {
-                Text(BundledLicense.text(named: "Silverbox"))
-                    .font(.callout)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(BundledLicense.text(named: "Silverbox-Notice")).font(.callout)
+                    Divider()
+                    // The GPL's own line breaks, which a proportional font would break again.
+                    Text(BundledLicense.text(named: "Silverbox")).font(.system(size: 11, design: .monospaced))
+                }
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
             }
             Divider()
             HStack {
@@ -120,7 +125,7 @@ struct LicenseSheet: View {
             }
             .padding(14)
         }
-        .frame(width: 560, height: 460)
+        .frame(width: 640, height: 580)
         .background(Theme.window)
     }
 }

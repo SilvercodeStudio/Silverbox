@@ -1,0 +1,14 @@
+Silverbox, a front-end for the eXo game preservation collections on macOS
+Copyright (C) 2026 Preston Landers
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program, in the file LICENSE. If not, see <https://www.gnu.org/licenses/>.
+
+The name "Silverbox" and the icon and logo artwork (Silverbox/AppIcon.icon, Silverbox/AppIcon-Green.icon, and the AppIconAmber and AppIconGreen image sets) are not covered by this license. All rights reserved. If you distribute a modified version, give it a different name and icon.
+
+The vendored decoders under Sources/CStbVorbis and Sources/CXmpLite keep their own licenses, in the LICENSE file beside each.
+
+The eXoDOS, eXoWin3x, eXoWin9x and other eXo collections are the work of the eXo team and are not part of this program. The eXoDOS cover in the About window (the eXoDOSCover image set) is the eXo team's artwork, shown to credit them. It is not covered by this license.
