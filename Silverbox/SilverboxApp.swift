@@ -62,12 +62,30 @@ struct SilverboxApp: App {
 enum AppInfo {
     static let displayName = "Silverbox"
     static let websiteURL = URL(string: "https://getsilverbox.app")!
-    /// "Silverbox 0.1 (2)", for reports.
-    static var versionLine: String {
+    static let repositoryURL = ProblemReport.repository
+
+    /// "0.3 (4)": the version and the build number, which is left out when
+    /// it is the same as the version.
+    static var version: String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "\(displayName) \(version) (\(build))"
+        return build == version ? version : "\(version) (\(build))"
+    }
+
+    /// The Git commit of the build, abbreviated, with "-dirty" when the build
+    /// had changes that were not committed. The "Record the Git commit" build
+    /// phase (`scripts/record-commit.sh`) puts it in the Info.plist; nil
+    /// without it.
+    static let commit = Bundle.main.object(forInfoDictionaryKey: "SilverboxCommit") as? String
+
+    /// True for an archive (Product › Archive, `make dist`): a release, which
+    /// its Git tag names, so the About window leaves out a clean commit.
+    static let isArchive = Bundle.main.object(forInfoDictionaryKey: "SilverboxArchive") as? Bool == true
+
+    /// "Silverbox 0.3 (4) · 536e697-dirty", for reports. Always with the commit.
+    static var versionLine: String {
+        "\(displayName) \(version)" + (commit.map { " · \($0)" } ?? "")
     }
 }
 

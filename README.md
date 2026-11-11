@@ -222,6 +222,7 @@ make sweep                # translate every eXoDOS config in the mounted library
 make format               # reformat the Swift sources with swift-format
 make lint                 # report formatting problems without changing files
 make install-app          # universal Release build copied to ~/Applications
+make open-app             # install-app, then open the app
 make reset                # delete the app's settings and local data folder, to test a first start
 make site                 # serve the website (docs/site) at http://localhost:8001
 ```

@@ -48,3 +48,53 @@ struct LaunchReportTests {
         #expect(LaunchReport.lastLines(of: "short") == "short")
     }
 }
+
+@Suite("Problem report")
+struct ProblemReportTests {
+    static let details = ProblemReport.Details(
+        program: "Silverbox 0.3 (4) · 536e697", system: "macOS 26.2 (Build 25C56), Mac15,8, Apple silicon",
+        collections: ["eXoDOS: 7,666 games"], emulators: ["DOSBox Staging (FluidSynth)", "DOSBox-X"])
+
+    static func query(_ url: URL) -> [String: String] {
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        return Dictionary(uniqueKeysWithValues: items.map { ($0.name, $0.value ?? "") })
+    }
+
+    @Test func fillsInANewIssue() {
+        let url = ProblemReport.issueURL(Self.details)
+        #expect(url.absoluteString.hasPrefix("https://github.com/SilvercodeStudio/Silverbox/issues/new?body="))
+        let body = Self.query(url)["body"] ?? ""
+        #expect(body.hasPrefix("### What happened\n\n\n### What you expected\n"))
+        #expect(
+            body.hasSuffix(
+                """
+                ---
+                Silverbox 0.3 (4) · 536e697
+                macOS 26.2 (Build 25C56), Mac15,8, Apple silicon
+                Collections:
+                - eXoDOS: 7,666 games
+                Emulators:
+                - DOSBox Staging (FluidSynth)
+                - DOSBox-X
+                """))
+    }
+
+    @Test func saysNoneForAnEmptyList() {
+        let details = ProblemReport.Details(
+            program: "Silverbox 0.3 (4)", system: "macOS", collections: [], emulators: [])
+        let body = ProblemReport.issueBody(details)
+        #expect(body.hasSuffix("Collections: none\nEmulators: none"))
+    }
+
+    @Test func fillsInANewDiscussion() {
+        let url = ProblemReport.feedbackURL(program: "Silverbox 0.3 (4)", system: "macOS 26.2")
+        #expect(url.absoluteString.hasPrefix("https://github.com/SilvercodeStudio/Silverbox/discussions/new?"))
+        let query = Self.query(url)
+        #expect(query["category"] == "general")
+        #expect(query["body"]?.hasSuffix("---\nSilverbox 0.3 (4)\nmacOS 26.2") == true)
+    }
+
+    @Test func namesTheMac() {
+        #expect(ProblemReport.system.hasPrefix("macOS "))
+    }
+}

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import SilverboxCore
 
@@ -26,6 +27,9 @@ struct AppCommands: Commands {
             Divider()
             Link("\(AppInfo.displayName) Website", destination: AppInfo.websiteURL)
             Link("eXo Project Website", destination: AboutPanel.projectURL)
+            Divider()
+            Button("Report a Problem…") { NSWorkspace.shared.open(model.problemReportURL()) }
+            Button("Send Feedback…") { NSWorkspace.shared.open(model.feedbackURL()) }
         }
         // Before the standard Find submenu, so Cmd-F reaches the search field.
         CommandGroup(before: .textEditing) {

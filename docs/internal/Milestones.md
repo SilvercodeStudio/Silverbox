@@ -168,6 +168,10 @@ Done:
 - The name Silverbox (bundle ID `app.getsilverbox.Silverbox`) and the
   floppy disk icon in amber and green, for version 0.3 (2026-10-25); the
   project, target, modules, folders and settings key renamed to match.
+- Help › Report a Problem… and Send Feedback… (GitHub issue and discussion
+  pages, filled in), the Git commit in the About window and the reports,
+  the file list in the Troubleshooting help, and `make open-app`
+  (2026-11-10).
 
 Not yet:
 
@@ -181,6 +185,7 @@ Not yet:
 - A release script shared with Silverside: archive, Developer ID signing,
   notarization, stapling, a DMG.
 - A CI workflow for `swift test` and `make lint`.
+- Turn on Discussions in the GitHub repository, for Help › Send Feedback….
 
 ## Later
 

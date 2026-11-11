@@ -6,10 +6,12 @@ enum AboutPanel {
     static let productName = AppInfo.displayName
     static let projectURL = URL(string: "https://www.retro-exo.com")!
 
+    /// "Version 0.3 (4) · 536e697-dirty". A release (an archive) leaves out
+    /// the commit unless the build had changes that were not committed.
     static var version: String {
-        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-        return "Version \(short) (\(build))"
+        var text = "Version \(AppInfo.version)"
+        if let commit = AppInfo.commit, !AppInfo.isArchive || commit.hasSuffix("-dirty") { text += " · \(commit)" }
+        return text
     }
 
     /// "© 2026 Preston Landers", from the Info.plist.

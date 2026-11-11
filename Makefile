@@ -26,7 +26,7 @@ APP_DIR ?= $(HOME)/Applications
 # Registers a copied app with Launch Services, so that the Dock and Finder show its new icon.
 LSREGISTER = /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 
-.PHONY: help build run app test core typecheck sweep format lint install-app reset site
+.PHONY: help build run app test core typecheck sweep format lint install-app open-app reset site
 
 help:
 	@echo "make build          build the app ($(CONFIG)) with xcodebuild"
@@ -39,6 +39,7 @@ help:
 	@echo "make format         reformat the Swift sources with swift-format (settings in .swift-format)"
 	@echo "make lint           report formatting problems without changing files"
 	@echo "make install-app    build the app for release (Apple silicon and Intel) and copy it to APP_DIR ($(APP_DIR))"
+	@echo "make open-app       make install-app, then open the app"
 	@echo "make reset          delete the app's settings and data, to test a first start (asks first; DATA= for a moved data folder)"
 	@echo "make site           serve the website (docs/site) at http://localhost:$(SITE_PORT)"
 	@echo "Set CONFIG=Release for a release build (Apple silicon and Intel)."
@@ -74,15 +75,26 @@ lint:
 	xcrun swift-format lint --strict --recursive $(SWIFT_SOURCES)
 
 # A universal release build of the app, copied whole; an older copy is replaced.
+# The path check guards the rm -rf: when xcodebuild prints no settings (or under
+# make -n, which still runs the lines with $(MAKE)), the path would be wrong.
 install-app:
 	@$(MAKE) build CONFIG=Release
 	@app="$$($(MAKE) app CONFIG=Release)"; \
+	case "$$app" in /*.app) [ -d "$$app" ] ;; *) false ;; esac || \
+		{ echo "No built app found (got '$$app'); nothing replaced."; exit 1; }; \
 	install -d "$(APP_DIR)"; \
 	rm -rf "$(APP_DIR)/$$(basename "$$app")"; \
 	ditto "$$app" "$(APP_DIR)/$$(basename "$$app")"; \
 	touch "$(APP_DIR)/$$(basename "$$app")"; \
 	$(LSREGISTER) -f "$(APP_DIR)/$$(basename "$$app")"; \
 	echo "Installed $(APP_DIR)/$$(basename "$$app")"
+
+# install-app, then open the app. A copy that is running must quit first,
+# because install-app replaces it.
+open-app:
+	@if pgrep -f "$(APP_DIR)/Silverbox.app/Contents/MacOS/Silverbox" >/dev/null; then \
+		echo "Quit Silverbox first: install-app replaces it."; exit 1; fi
+	@$(MAKE) install-app && open "$(APP_DIR)/Silverbox.app"
 
 # Checks that the app only uses public core API, using the package's build
 # products instead of Xcode. SwiftUI and AVFoundation come from the SDK.

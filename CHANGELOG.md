@@ -17,6 +17,10 @@ What changed in each version of Silverbox.
   (Settings › Emulators › Add ROM…). The launch options show eXo's
   instructions for a game, such as which program on the disk to open, and
   let you choose between its parts where eXo offers a menu.
+- Help › Report a Problem… opens a new GitHub issue in your browser,
+  filled in with the version, your Mac, your collections' packs and the
+  emulators found. Help › Send Feedback… opens a new discussion. Nothing
+  is sent until you submit it.
 
 ### Changed
 
@@ -29,9 +33,10 @@ What changed in each version of Silverbox.
 - Help › Silverbox Website opens getsilverbox.app. The About window is
   new: the icon on a CRT screen, how many games the library holds and how
   many are installed and played, every emulator Silverbox uses, and a
-  Website button. The welcome screen opens with the same CRT screen.
+  Website button. Test builds show the Git commit they were built from. The welcome screen opens with the same CRT screen.
 - The help covers every eXo pack, explains how music plays in games, and
-  has more troubleshooting. The Keyboard Shortcuts window now lists Play,
+  has more troubleshooting, including every file Silverbox keeps and how
+  to remove it. The Keyboard Shortcuts window now lists Play,
   Rescan Library and Show in Finder.
 
 ### Fixed
