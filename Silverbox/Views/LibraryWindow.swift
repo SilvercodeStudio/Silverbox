@@ -233,7 +233,11 @@ struct LibrarySetupView: View {
                 Button("Add Collection…") { showingPicker = true }
                     .buttonStyle(.borderedProminent)
                 if !model.collections.isEmpty {
-                    Button("Try Again") { model.reloadLibrary() }
+                    Button("Try Again") { model.tryAgain() }
+                        .help(
+                            model.disconnectedShares.isEmpty
+                                ? "Load the collections again."
+                                : "Connect to the network shares that are gone, then load the collections again.")
                 }
                 Button("Library Settings…") {
                     SettingsState.shared.show(tab: .library)

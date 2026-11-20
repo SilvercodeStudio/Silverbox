@@ -146,6 +146,12 @@ final class AppModel {
     @ObservationIgnored private var warnedMissingStore = false
     /// The file the Quick Look panel shows, if any.
     var quickLookURL: URL?
+    /// A volume the Finder is about to eject. Silverbox lets go of its files
+    /// there (the menu music, an album, Quick Look, the inspector's video) so
+    /// the eject is not refused, until the volume is gone or stays.
+    private(set) var releasingVolume: URL?
+    @ObservationIgnored private var musicStoppedForEject = false
+    @ObservationIgnored private var releaseTask: Task<Void, Never>?
     /// Bumped by Search Games (Cmd-F); the search field takes focus when it changes.
     var searchFocusRequest = 0
     /// True while the Keyboard Shortcuts window is open, so Cmd-/ toggles it.
@@ -196,6 +202,7 @@ final class AppModel {
     private var searchTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
     private var reloadTask: Task<Void, Never>?
+    private var volumeTask: Task<Void, Never>?
 
     struct AppAlert: Identifiable {
         let id = UUID()
@@ -255,6 +262,24 @@ final class AppModel {
             [weak self] _ in
             MainActor.assumeIsolated { self?.applicationActiveChanged(true) }
         }
+        // A share or a drive that mounts after launch can bring back a
+        // collection or the local data folder.
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification] {
+            NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) {
+                [weak self] notification in
+                let volume = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL
+                let mounted = notification.name == NSWorkspace.didMountNotification
+                MainActor.assumeIsolated { self?.volumeChanged(volume, mounted: mounted) }
+            }
+        }
+        // An eject from the Finder is refused while an app has a file open
+        // on the volume; macOS says so first.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willUnmountNotification, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let volume = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL else { return }
+            MainActor.assumeIsolated { self?.releaseFiles(on: volume) }
+        }
         checkEmulators()
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
@@ -281,6 +306,91 @@ final class AppModel {
     private func applyDataRoot() {
         let root = settings.localStorePath.map { URL(fileURLWithPath: $0, isDirectory: true) }
         AppPaths.customRoot = root.flatMap { Self.volumeIsMissing(for: $0) ? nil : $0 }
+    }
+
+    /// Looks again at the collections and the local data folder when a
+    /// volume that holds one of them mounts or unmounts, such as a NAS share
+    /// that comes back after sleep. Collections that could not load, or a
+    /// data folder that was out of reach, load again; the others keep what
+    /// is on show, and Settings says which folders are there. Several shares
+    /// of a NAS mount together, and SMB can connect again just after, so
+    /// this waits a moment for the last of them.
+    private func volumeChanged(_ volume: URL?, mounted: Bool) {
+        if let volume, let releasing = releasingVolume, Self.isOnVolume(releasing, volume) {
+            // The ejected volume is gone, or a volume at its place is back.
+            releasingVolume = nil
+            releaseTask?.cancel()
+        }
+        if mounted, musicStoppedForEject {
+            musicStoppedForEject = false
+            updateMusic()
+        }
+        if mounted { recordRemountURLs() }
+        let collections = settings.enabledCollections
+        let dataFolder = settings.localStorePath.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        if let volume {
+            let root = volume.standardizedFileURL.path
+            let prefix = root.hasSuffix("/") ? root : root + "/"
+            let places =
+                collections.flatMap { [$0.rootURL.path] + [$0.downloadPath].compactMap { $0 } }
+                + [dataFolder?.path].compactMap { $0 }
+            guard
+                places.map({ URL(fileURLWithPath: $0).standardizedFileURL.path })
+                    .contains(where: { $0 == root || $0.hasPrefix(prefix) })
+            else { return }
+        }
+        volumeTask?.cancel()
+        volumeTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard let self, !Task.isCancelled else { return }
+            let loaded = Set(self.library?.snapshots.map(\.collection.id) ?? [])
+            let collectionMissing = collections.contains { !loaded.contains($0.id) }
+            let dataFolderBack =
+                dataFolder.map { AppPaths.customRoot == nil && !Self.volumeIsMissing(for: $0) } ?? false
+            if collectionMissing || dataFolderBack {
+                self.reloadLibrary()
+            } else {
+                self.rootReports = Dictionary(
+                    uniqueKeysWithValues: self.settings.enabledCollections.map { ($0.id, $0.root.inspect()) })
+            }
+        }
+    }
+
+    /// Closes Silverbox's files on a volume the Finder is about to eject:
+    /// the menu music (paused music still holds its file), an album, the
+    /// Quick Look panel and the inspector's video. Running games keep theirs.
+    /// The music comes back when the volume mounts again, or after a while
+    /// when the eject did not happen.
+    private func releaseFiles(on volume: URL) {
+        releasingVolume = volume
+        if let url = music.currentURL, Self.isOnVolume(url, volume) {
+            music.stop()
+            musicStoppedForEject = true
+        }
+        if let url = album.currentTrack?.url, Self.isOnVolume(url, volume) {
+            album.stop()
+        }
+        if let url = quickLookURL, Self.isOnVolume(url, volume) {
+            quickLookURL = nil
+        }
+        releaseTask?.cancel()
+        releaseTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(10))
+            guard let self, !Task.isCancelled, self.releasingVolume == volume else { return }
+            // Still mounted: another app kept the volume, or the eject was cancelled.
+            self.releasingVolume = nil
+            if self.musicStoppedForEject {
+                self.musicStoppedForEject = false
+                self.updateMusic()
+            }
+        }
+    }
+
+    /// True when `url` is `volume` or inside it.
+    static func isOnVolume(_ url: URL, _ volume: URL) -> Bool {
+        let path = url.standardizedFileURL.path
+        let root = volume.standardizedFileURL.path
+        return path == root || path.hasPrefix(root.hasSuffix("/") ? root : root + "/")
     }
 
     /// True for a path under /Volumes whose volume is not mounted.
@@ -480,6 +590,7 @@ final class AppModel {
             self.searchIndex = index
             self.versionIndex = versions
             self.loadState = .loaded
+            self.recordRemountURLs()
             self.refreshVisibleGames()
             if ProcessInfo.processInfo.environment["SILVERBOX_LOG"] != nil {
                 let summary = ordered.map { "\($0.collection.name)=\($0.games.count)" }.joined(separator: ", ")
@@ -1254,7 +1365,10 @@ final class AppModel {
         Task { [weak self] in
             let url = await media.music(for: game)
             guard let self, self.selectedGameID == game.id else { return }
-            if let url {
+            if let url, let volume = self.releasingVolume, Self.isOnVolume(url, volume) {
+                self.music.stop()
+                self.musicStoppedForEject = true
+            } else if let url {
                 self.music.play(url: url)
             } else {
                 self.music.pause()

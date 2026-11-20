@@ -100,6 +100,10 @@ struct AppSettings: Codable, Equatable {
     /// Which of the two app icons the Dock and the About window show.
     var appIcon: AppIconVariant = .amber
     var appearance: AppAppearance = .system
+    /// How to mount each network share that holds a collection or the local
+    /// data folder, keyed by its mount point (`/Volumes/eXoDOS_ro`), as
+    /// macOS reported it while mounted (`smb://user@server/share`).
+    var remountURLs: [String: String] = [:]
 
     static let defaultsKey = "Silverbox.settings"
 
@@ -134,6 +138,7 @@ struct AppSettings: Codable, Equatable {
         inspectorShown = try c.decodeIfPresent(Bool.self, forKey: .inspectorShown) ?? true
         appIcon = try c.decodeIfPresent(AppIconVariant.self, forKey: .appIcon) ?? .amber
         appearance = try c.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
+        remountURLs = try c.decodeIfPresent([String: String].self, forKey: .remountURLs) ?? [:]
     }
 
     static func load(from defaults: UserDefaults = .standard) -> AppSettings {
@@ -194,7 +199,7 @@ struct AppSettings: Codable, Equatable {
             musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder, sortAscending,
             showHiddenGames,
             inspectorShown,
-            appIcon, appearance
+            appIcon, appearance, remountURLs
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -220,6 +225,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(inspectorShown, forKey: .inspectorShown)
         try c.encode(appIcon, forKey: .appIcon)
         try c.encode(appearance, forKey: .appearance)
+        try c.encode(remountURLs, forKey: .remountURLs)
     }
 
     var enabledCollections: [LibraryCollection] { collections.filter(\.isEnabled) }

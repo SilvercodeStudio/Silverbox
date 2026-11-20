@@ -120,6 +120,19 @@ inside a path or code span.
   has path substitutions (Windows prefix to Mac folder) for relocated `Games`
   folders and drive-letter paths. Parsed libraries are cached as JSON under
   `LibraryCache/` keyed by the data files' sizes and dates; "Rescan" clears it.
+  When a volume that holds a collection, its download or the local data
+  folder mounts or unmounts, `AppModel.volumeChanged` waits 3 s, then
+  reloads if a collection had not loaded or the data folder was out of
+  reach, and otherwise only refreshes `rootReports`. On
+  `willUnmountNotification` (a Finder eject), `releaseFiles(on:)` closes
+  what Silverbox holds open there (the menu music, even paused; an album;
+  Quick Look; `GameVideoPlayer` through `releasingVolume`) so the eject
+  is not refused, and the music comes back when the volume mounts again
+  or after 10 s if it stays. `AppModel+Volumes` records each network
+  share's `volumeURLForRemounting` in `settings.remountURLs` (keyed by
+  mount point) after a load and a mount; Try Again and Settings'
+  Connect mount the missing ones with `NetFSMountURLAsync` (password
+  dialog allowed), and the mount notification reloads.
 - Two roots. Every library (collection folder) is read-only as far as the app is
   concerned; it may live on a read-only volume. Everything bulky the app writes
   goes to the local data folder (`LocalStore` plus `AppPaths.dataRoot`, default

@@ -82,7 +82,15 @@ What changed in each version of Silverbox.
   macOS synthesizer. Settings › Display & Sound now shows which one plays,
   and notices a change while it is open.
 - A collection whose folder is missing, or is not a library, says so in
-  plain words in Settings.
+  plain words in Settings. When its drive or network share connects,
+  for example after the Mac wakes, the collection loads by itself a few
+  seconds later; so does a local data folder on that drive.
+- A collection on a network share that is not connected has a Connect
+  button in Settings › Library, and Try Again in the window connects too:
+  Silverbox remembers each share it has read from.
+- The Finder can eject a collection's drive or share while Silverbox is
+  open. Before, the menu music kept a file open there, even when paused,
+  and the Finder refused.
 - Adding a collection that Silverbox set up in a separate folder, such as
   one in the local data folder's Collections, finds the download's game
   archives again. Before, its games could not be installed.

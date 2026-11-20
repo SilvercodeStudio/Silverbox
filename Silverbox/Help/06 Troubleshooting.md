@@ -6,7 +6,9 @@ Right-click the game and choose **Show Last Launch Log…**: the sheet shows the
 
 ## A collection says its folder is not there
 
-The collection's folder was moved or renamed, or its drive is not connected. Connect the drive, or choose the folder again in Settings › Library. If the collection was set up inside the local data folder and you moved or renamed that folder, choose the data folder again instead: its collections follow it.
+The collection's folder was moved or renamed, or its drive is not connected. Connect the drive or the network share: Silverbox notices and loads the collection a few seconds later. For a network share it has used before, **Connect** in Settings › Library (or **Try Again** when no collection loaded) connects to the share for you, as the Finder's Connect to Server does; it asks for a password only when the Keychain has none. Otherwise choose the folder again in Settings › Library.
+
+You can eject a collection's drive or share in the Finder while Silverbox is open: Silverbox first stops the menu music and closes the video, album or Quick Look it has open there, and starts the music again when the drive comes back. A game running from the drive must quit first. If the collection was set up inside the local data folder and you moved or renamed that folder, choose the data folder again instead: its collections follow it.
 
 ## Saves are not kept
 

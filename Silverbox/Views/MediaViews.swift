@@ -29,14 +29,24 @@ struct FullImageView: View {
 
 struct GameVideoPlayer: View {
     let url: URL
+    @Environment(AppModel.self) private var model
     @State private var player: AVPlayer?
+
+    /// False while the Finder ejects the video's volume, so the file is let go.
+    private var mayOpen: Bool {
+        model.releasingVolume.map { !AppModel.isOnVolume(url, $0) } ?? true
+    }
 
     var body: some View {
         VideoPlayer(player: player)
-            .onAppear { player = AVPlayer(url: url) }
+            .onAppear { if mayOpen { player = AVPlayer(url: url) } }
             .onDisappear {
                 player?.pause()
                 player = nil
+            }
+            .onChange(of: mayOpen) { _, open in
+                player?.pause()
+                player = open ? AVPlayer(url: url) : nil
             }
     }
 }

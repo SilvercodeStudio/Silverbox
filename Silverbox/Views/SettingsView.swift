@@ -245,7 +245,16 @@ struct CollectionEditor: View {
                     Button("Choose…") { pickingRoot = true }
                 }
                 if let error = model.loadErrors[collection.id] {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.bad).font(.caption)
+                    HStack {
+                        Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.bad)
+                            .font(.caption)
+                        Spacer()
+                        Button(model.disconnectedShares.isEmpty ? "Try Again" : "Connect") { model.tryAgain() }
+                            .help(
+                                model.disconnectedShares.isEmpty
+                                    ? "Load the collections again."
+                                    : "Connect to the network shares that are gone, then load the collections again.")
+                    }
                 }
                 if let report = model.rootReports[collection.id] {
                     LibraryRootReportView(report: report)
