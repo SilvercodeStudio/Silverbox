@@ -3,19 +3,37 @@
 # top-most EditorConfig file
 root = true
 
-# Unix-style newlines with a newline ending every file
+# Unix-style newlines with a newline ending every file, and no spaces or tabs at the ends of
+# lines (make lint checks that).
 [*]
 insert_final_newline = true
+trim_trailing_whitespace = true
 
 # Matches multiple files with brace expansion notation
 # Set default charset
 [*.{js,swift,py,html,css,vue,jsonc,json,scss}]
 charset = utf-8
 
+# As swift-format has it (.swift-format)
+[*.swift]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
 # 4 space indentation
 [*.py]
 indent_style = space
 indent_size = 4
 
-[*.md]
-trim_trailing_whitespace = true
+[Makefile]
+indent_style = tab
+
+# Kept as their authors or tools wrote them: license texts, vendored code, and drawings.
+[{LICENSE,NOTICE,*.svg}]
+trim_trailing_whitespace = false
+
+[Silverbox/Licenses/**]
+trim_trailing_whitespace = false
+
+[{Sources/CStbVorbis/**,Sources/CXmpLite/**}]
+trim_trailing_whitespace = false

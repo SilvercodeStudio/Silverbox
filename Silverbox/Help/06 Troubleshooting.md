@@ -71,7 +71,7 @@ The local data folder is in the same place, unless Settings › Library moves it
 Elsewhere:
 
 - `~/Library/Preferences/app.getsilverbox.Silverbox.plist`: the settings and window positions.
-- `~/Library/Caches/app.getsilverbox.Silverbox`: the Help window's cache, and in `Thumbnails` the small copies of box art and screenshots (up to about 300 MB; the oldest go first). Library › Rescan Library deletes the copies, and you can delete the folder at any time.
+- `~/Library/Caches/app.getsilverbox.Silverbox`: the Help window's cache, and in `Thumbnails` the small copies of box art and screenshots (up to about 300 MB; the oldest go first). Library › Rescan Library deletes the copies, and you can delete the folder at any time. An update that is downloading waits in the `org.sparkle-project.Sparkle` folder there.
 
 Silverbox changes a collection only when you ask: a game download or "Install in place" puts the game in the collection, and setting up a download in place writes the setup there.
 

@@ -116,6 +116,11 @@ final class AppModel {
     /// Lets one game download run at a time.
     @ObservationIgnored let downloadGate = DownloadGate()
     var alert: AppAlert?
+    /// Updates through Sparkle, in a build that `make dist` made. Made in `init`, so that its
+    /// checks start at launch.
+    @ObservationIgnored private(set) lazy var updater = AppUpdater { [weak self] install in
+        self?.postponeRelaunch(install) ?? false
+    }
 
     /// Columns in the game grid, reported by the grid view for arrow keys.
     var gridColumns = 1
@@ -254,6 +259,7 @@ final class AppModel {
         if !settings.enabledCollections.isEmpty {
             reloadLibrary()
         }
+        _ = updater
     }
 
     /// Uses another local data folder (`nil` for the default). Nothing is
@@ -550,6 +556,9 @@ final class AppModel {
                 Task { @MainActor in self.play(match) }
             } else if UserDefaults.standard.bool(forKey: "autoConfigure") {
                 Task { @MainActor in self.configure(match) }
+            } else if UserDefaults.standard.bool(forKey: "openInfo") {
+                // `-openInfo 1` opens its game info sheet, for the site's screenshot.
+                pendingInfoGame = match
             }
         }
         if let selectedGameID, !games.contains(where: { $0.id == selectedGameID }) {
@@ -989,6 +998,32 @@ final class AppModel {
             configText: launch.configURL.flatMap { try? String(contentsOf: $0, encoding: .utf8) },
             logPath: session.logURL?.path, logExcerpt: LaunchReport.lastLines(of: log),
             appVersion: AppInfo.versionLine)
+    }
+
+    // MARK: - Updates
+
+    /// True while quitting would cut work short or ask first: an installation, download or setup,
+    /// an uninstall, or a game that is running.
+    var hasWorkUnderWay: Bool {
+        hasRunningJobs || launcher.isRunning || !FileOperationCoordinator.shared.activeOperations.isEmpty
+    }
+
+    /// An update that is ready relaunches the app at once, unless work is under way: then it
+    /// waits for the work to end, and says so.
+    private func postponeRelaunch(_ install: @escaping () -> Void) -> Bool {
+        guard hasWorkUnderWay else { return false }
+        if alert == nil {
+            alert = AppAlert(
+                title: "The update waits for your games and installations",
+                message:
+                    "\(AppInfo.displayName) installs the update and opens again when every game has quit and every installation, download and setup is done."
+            )
+        }
+        Task { @MainActor in
+            while hasWorkUnderWay { try? await Task.sleep(for: .seconds(2)) }
+            install()
+        }
+        return true
     }
 
     // MARK: - Installing

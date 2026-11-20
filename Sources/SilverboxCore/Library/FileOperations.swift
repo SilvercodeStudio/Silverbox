@@ -68,6 +68,14 @@ nonisolated public final class FileOperationCoordinator: @unchecked Sendable {
         return FileOperationLease(coordinator: self, id: id)
     }
 
+    /// The operations that hold paths now: installs, uninstalls, setup, and running games. An
+    /// update's relaunch waits until there are none.
+    public var activeOperations: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return entries.values.map(\.operation)
+    }
+
     public func conflict(for urls: [URL]) -> FileOperationConflict? {
         let paths = urls.map(FileOperations.identity(of:))
         lock.lock()

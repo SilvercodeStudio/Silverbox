@@ -236,8 +236,10 @@ struct FileSafetyTests {
         }
         #expect(throws: FileOperationConflict.self) { try coordinator.acquire([real], operation: "setup") }
         let independent = try coordinator.acquire([real.appendingPathComponent("Mini2")], operation: "other game")
+        #expect(coordinator.activeOperations.sorted() == ["install", "other game"])
         independent.release()
         lease.release()
+        #expect(coordinator.activeOperations.isEmpty)
         let retry = try coordinator.acquire([alias.appendingPathComponent("Mini")], operation: "retry")
         retry.release()
     }

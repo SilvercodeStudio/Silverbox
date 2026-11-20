@@ -12,10 +12,11 @@ enum BundledLicense {
 }
 
 /// Who made what the app builds on: the eXo team's collections, the
-/// emulators it starts, and the two decoders it includes, with their
-/// licenses.
+/// emulators it starts, and the two decoders and the updater it includes,
+/// with their licenses.
 struct AcknowledgmentsSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var showingLicense = false
 
     private static let libraries: [(name: String, authors: String, file: String, url: String)] = [
         (
@@ -25,6 +26,10 @@ struct AcknowledgmentsSheet: View {
         (
             "libxmp-lite", "Claudio Matsuoka and Hipolito Carraro Jr", "libxmp-lite",
             "https://github.com/libxmp/libxmp"
+        ),
+        (
+            "Sparkle", "Andy Matuschak and the Sparkle Project", "Sparkle",
+            "https://sparkle-project.org"
         ),
     ]
 
@@ -79,6 +84,7 @@ struct AcknowledgmentsSheet: View {
             }
             Divider()
             HStack {
+                Button("License…") { showingLicense = true }
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
             }
@@ -86,6 +92,7 @@ struct AcknowledgmentsSheet: View {
         }
         .frame(width: 560, height: 520)
         .background(Theme.window)
+        .sheet(isPresented: $showingLicense) { LicenseSheet() }
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

@@ -11,4 +11,6 @@ The name "Silverbox" and the icon and logo artwork (Silverbox/AppIcon.icon, Silv
 
 The vendored decoders under Sources/CStbVorbis and Sources/CXmpLite keep their own licenses, in the LICENSE file beside each.
 
+The app includes Sparkle (https://sparkle-project.org), which installs its updates. Sparkle is under its own license, the MIT License, with the licenses of the code it includes; the app shows them in About › Acknowledgments.
+
 The eXoDOS, eXoWin3x, eXoWin9x and other eXo collections are the work of the eXo team and are not part of this program. The eXoDOS cover in the About window (the eXoDOSCover image set) is the eXo team's artwork, shown to credit them. It is not covered by this license.

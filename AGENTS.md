@@ -39,8 +39,17 @@ the app as a collection of classic Mac games.
   `$SILVERBOX_TEST_LIBRARY`) exists.
 - `docs/site/` — the website, getsilverbox.app: static HTML and CSS on
   GitHub Pages (`.github/workflows/pages.yml`), built like Silverside's
-  site. Its README covers the files, publishing and screenshots. Keep its
-  claims in step with the README and the help.
+  site. Its README covers the files, publishing and screenshots
+  (`make site-shots`, from the scenes in `docs/site/tools/scenes`). Keep
+  its claims in step with the README and the help. The update feed,
+  `docs/site/appcast.xml`, is written only by `make dist`.
+- `Packaging/` — what `make dist` uses: `ExportOptions.plist` (Developer
+  ID export) and the disk image's window (`dmg_settings.py`, the
+  background pictures and the script that draws them).
+- `scripts/` — `version.sh` (the version; `make lint` checks it),
+  `dist.sh` (`make dist`), `release.sh` (a release, run by the maintainer
+  only), `check_feed.py`, and the build phases' scripts. A release is in
+  `docs/internal/Releasing.md`.
 - `Package.swift` at the repo root defines the `SilverboxCore` library and the
   vendored C targets. The Xcode app target links the `SilverboxCore` product as a
   local package dependency (the repo root added through File › Add Package
@@ -55,12 +64,17 @@ make test                        # swift test: core tests (fast; real-library te
 make core                        # swift build: core only
 make sweep                       # translate every eXoDOS config in the mounted library, print a summary
 make format                      # swift-format the Swift sources (settings in .swift-format)
-make lint                        # report formatting problems without changing files
+make lint                        # report formatting, trailing whitespace and version problems without changing files
 make install-app                 # universal Release build copied to ~/Applications (APP_DIR=... elsewhere)
 make open-app                    # install-app, then open the app (quit the installed copy first)
 make reset                       # delete the app's settings and local data folder (asks first; YES=1 skips)
+make dist                        # Developer ID, notarized disk image and update feed in build/dist (see Releasing.md)
 make site                        # serve the website (docs/site) at http://localhost:8001
+make site-shots                  # take the site's screenshots again, scene by scene (you capture each window)
 ```
+
+Never run `scripts/release.sh`, tag, push or publish a release: the
+maintainer does those by hand. Never run make as root.
 
 `make run` resolves the built app through `xcodebuild -showBuildSettings`,
 so it shares Xcode's DerivedData.
@@ -362,13 +376,28 @@ inside a path or code span.
 - About. `AboutView` follows Silverside's About window: the icon on a dark
   CRT band (`CRTHero`, like the website's), an accent rule, name and
   version, library counts from `sidebarCounts`, the eXo credit with the
-  eXoDOS cover, and Acknowledgments, License and Website buttons
-  (`AppInfo.websiteURL`, also Help › Silverbox Website). It opens
-  `AcknowledgmentsSheet` and `LicenseSheet`; the
-  texts come from `Silverbox/Licenses/*.txt`, copies of the repository's
-  `NOTICE`, `LICENSE` and the vendored decoders' licenses that
-  `ProjectFilesTests` keeps identical. The license is the GNU GPL; the
-  name and icon artwork are not covered by it.
+  eXoDOS cover, Acknowledgments, Website and Leave a Tip buttons, and the
+  copyright with a link to Silvercode Studio. The addresses are in
+  `SilverboxLinks` (core): the website (also Help › Silverbox Website),
+  the studio, and the studio's tip page with `?from=silverbox` (also Help
+  › Support Silverbox). The tip link is in no other place in the app, so a
+  free app does not nag. `AcknowledgmentsSheet` has the License… button
+  for `LicenseSheet`; the texts come from `Silverbox/Licenses/*.txt`,
+  copies of the repository's `NOTICE`, `LICENSE` and the vendored
+  decoders' licenses that `ProjectFilesTests` keeps identical, and
+  Sparkle's `LICENSE`. The license is the GNU GPL; the name and icon
+  artwork are not covered by it.
+- Updates. Sparkle (2.10.1, the app target only) through `AppUpdater`,
+  which starts only in an archive (`SilverboxArchive`), so a build from
+  source never replaces itself. Check for Updates… in the app menu and
+  Settings › General › Updates. `AppModel.postponeRelaunch` holds an
+  update's relaunch while `hasWorkUnderWay` (jobs, running games, and
+  any `FileOperationCoordinator` reservation) and says so once.
+  `Silverbox/Info.plist` has the signed feed's URL
+  (`getsilverbox.app/appcast.xml`) and public key; the build phase
+  "Remove Sparkle's XPC services" (`scripts/remove-sparkle-xpc.sh`)
+  strips them from an archive. `AppUpdater` compiles without the package
+  (`canImport`); `make dist` refuses such an app.
 - Version and commit. The app target's "Record the Git commit" build phase
   runs `scripts/record-commit.sh`, which writes `scripts/commit-id.sh`'s
   commit (`c2b2f09`, `-dirty` with uncommitted changes) into the built
@@ -474,8 +503,8 @@ inside a path or code span.
 
 ## Constraints
 
-- **Dependencies:** ask before adding one. Today there are none outside the
-  two vendored C decoders. Declare package dependencies in `Package.swift`
+- **Dependencies:** ask before adding one. Today there are the two vendored
+  C decoders and Sparkle (agreed 2026-11-19, app target only). Declare package dependencies in `Package.swift`
   (remote packages pinned by `Package.resolved`, which is committed);
   dependencies of the app target alone go through Xcode's Add Package
   Dependencies, which the user does. Prefer vendoring small, stable C
@@ -504,10 +533,11 @@ inside a path or code span.
   Both require macOS 15 Sequoia. Do not use APIs from later releases without
   `if #available` (as `MenuMusicPlayer` does for macOS 27). The tests run
   only on the current macOS here, so read the availability of each new API.
-- **Network:** the app's only network use is the Lite game download, which
+- **Network:** the app's network use is the Lite game download, which
   aria2 does over BitTorrent when the user installs such a game, sharing
-  nothing once the files are complete. Ask before adding any other (an
-  update check, scraping), and keep it polite: a descriptive User-Agent, a
+  nothing once the files are complete, and Sparkle's update check (once a
+  day if the user agrees, sending the app's and Sparkle's versions only).
+  Ask before adding any other (scraping, a crash reporter), and keep it polite: a descriptive User-Agent, a
   cache, and the service's rate limit. The website's privacy page and FAQ
   describe what the app sends; keep them in step.
 
@@ -530,7 +560,12 @@ inside a path or code span.
   `opt-right`, `cmd-y`) before the screenshot, to test navigation, and
   `-screenshotSettle 20` waits that many seconds after them (1.5 by
   default), for a job they start, such as Return on the install sheet;
-  `-helpPage 07` opens that help page. A `-libraryPath` folder set up from a
+  `-helpPage 07` opens that help page. For the site's screenshot scenes:
+  `-keyPresses` works without `-screenshotPath` too, `-windowSize
+  1320x840` sizes the main window, `-noLibrary 1` starts with no
+  collection (the welcome), `-inspectorScroll extras` scrolls the
+  inspector, `-openInfo 1` opens the selected title's game info sheet,
+  and `-plainVersion 1` shows the About version without the commit. A `-libraryPath` folder set up from a
   download finds the download through its setup record. If the last session closed the main
   window, macOS restores no window and the screenshot never comes; add
   `-ApplePersistenceIgnoreState YES`. Example:

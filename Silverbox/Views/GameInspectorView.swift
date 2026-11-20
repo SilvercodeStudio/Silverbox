@@ -26,6 +26,21 @@ struct GameInspectorContent: View {
     @State private var notesExpanded = false
 
     var body: some View {
+        ScrollViewReader { proxy in
+            scrollingContent
+                #if DEBUG
+                    // `-inspectorScroll extras` scrolls to the extras, for the site's screenshot.
+                    .task {
+                        guard let target = UserDefaults.standard.string(forKey: "inspectorScroll"), !target.isEmpty
+                        else { return }
+                        try? await Task.sleep(for: .seconds(1))
+                        proxy.scrollTo(target, anchor: .center)
+                    }
+                #endif
+        }
+    }
+
+    private var scrollingContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -83,6 +98,7 @@ struct GameInspectorContent: View {
                         SectionTitle("Extras")
                         ExtrasList(game: game, limit: 6)
                     }
+                    .id("extras")
                     FilesSection(game: game)
                     if let alternates = model.library.map({ $0.alternateNames(for: game) }), !alternates.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {

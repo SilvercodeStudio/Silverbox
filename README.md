@@ -14,27 +14,34 @@ GSplus, with the settings eXo uses on Windows.
 
 The games, media and emulators are not part of this project.
 
+See also:
+
+- [getsilverbox.app](https://getsilverbox.app), the official site.
+- [silvercode.studio](https://silvercode.studio), the studio that makes
+  Silverbox, and its other apps.
+- [CHANGELOG.md](CHANGELOG.md), the changes in each version.
+
 ## FAQ
 
 ### What is this?
 
-Silverbox is an emulator front-end (launcher) for Apple Mac computers that 
+Silverbox is an emulator front-end (launcher) for Apple Mac computers that
 is designed to allow you to enjoy the [eXo projects](https://www.retro-exo.com)
-(retro game collections such as eXoDOS and eXoWin9x) directly on your Mac 
+(retro game collections such as eXoDOS and eXoWin9x) directly on your Mac
 without needing a Windows PC.
 
-Silverbox provides an experience on Mac similar to what Windows users get with 
+Silverbox provides an experience on Mac similar to what Windows users get with
 LaunchBox: an integrated game and media browser that lets you view game collections,
 see game descriptions and details, view images, read game manuals, magazines, and
 books, and listen to music and game soundtracks. However, to actually play the games,
 you will need to download additional Mac versions of game emulators like DOSBox
-that are not provided with Silverbox. 
+that are not provided with Silverbox.
 
 (Note: Silverbox is not affiliated with or endorsed by the eXo Project.)
 
 ### What is the eXo project?
 
-eXo is an incredible community project to preserve games and media from the 
+eXo is an incredible community project to preserve games and media from the
 1980s-1990s era on various systems including MS-DOS / IBM PC, early Windows,
 Apple IIgs, and others including the ScummVM (adventure game) project.
 They offer various [collections](https://www.retro-exo.com/index2.html)
@@ -49,8 +56,8 @@ See the [eXo FAQ](https://www.retro-exo.com/FAQ.html) for more details.
 
 Silverbox does **not** include the actual eXo project downloads, or any Mac emulators. To get started:
 
-1. Get a BitTorrent client such as 
-[qBittorrent](https://www.qbittorrent.org/download) or 
+1. Get a BitTorrent client such as
+[qBittorrent](https://www.qbittorrent.org/download) or
 [Transmission](https://transmissionbt.com/).
 
 2. Visit [retro-exo.com](https://www.retro-exo.com/index2.html)
@@ -67,7 +74,7 @@ torrent; later ones start in seconds.
 
 Currently, Silverbox supports the following collections:
 
-   - [eXoDOS](https://www.retro-exo.com/exodos.html) MS-DOS games from 
+   - [eXoDOS](https://www.retro-exo.com/exodos.html) MS-DOS games from
      the 1980s and 1990s.
    - [eXoWin3x](https://www.retro-exo.com/win3x.html) Windows 3.1-era
      games, educational materials and other multimedia.
@@ -104,7 +111,7 @@ folder. If you choose the latter, your eXo download is not changed.
 Yes, if you download your eXo collections to somewhere that is accessible
 to both your Mac and Windows PCs, such as a NAS or other network share,
 you can share the installation between both systems. However, don't open
-the same folder on multiple PCs at the same time unless the Mac uses a 
+the same folder on multiple PCs at the same time unless the Mac uses a
 separate folder for unpacked files.
 
 ### Can I use this for other consoles (SNES, etc.)?
@@ -120,7 +127,7 @@ LaunchBox.
 ### Who are you?
 
 I am a software engineer with decades of industry experience, who is interested
-in classic game and media preservation. 
+in classic game and media preservation.
 
 Note: this app was developed with extensive AI coding tool assistance, under
 my close supervision and direction.
@@ -209,6 +216,11 @@ installation under `Saves/Installations`; older backups remain available
 for restore. Favorites and play history keep one previous readable copy,
 and a damaged file is preserved before recovery.
 
+**Updates.** The released app checks for a new version once a day, if you
+agree, and installs it with [Sparkle](https://sparkle-project.org). The
+check sends Silverbox's and Sparkle's versions only. A copy built from
+source does not update itself.
+
 ## Build
 
 Open `Silverbox.xcodeproj` and run the "Silverbox" scheme, or use the Makefile:
@@ -220,12 +232,17 @@ make build                # build only; CONFIG=Release for a release build
 make test                 # core tests (swift test)
 make sweep                # translate every eXoDOS config in the mounted library
 make format               # reformat the Swift sources with swift-format
-make lint                 # report formatting problems without changing files
+make lint                 # report formatting, whitespace and version problems
 make install-app          # universal Release build copied to ~/Applications
 make open-app             # install-app, then open the app
 make reset                # delete the app's settings and local data folder, to test a first start
 make site                 # serve the website (docs/site) at http://localhost:8001
+make site-shots           # take the website's screenshots again
+make dist                 # the signed, notarized disk image (for the maintainer)
 ```
+
+A release is described in
+[docs/internal/Releasing.md](docs/internal/Releasing.md).
 
 The core library (XML parsing, media lookup, config translation, music
 decoders) is a Swift package at the repo root, so `swift build` and
@@ -254,6 +271,10 @@ and a note on its origin:
 
 macOS plays the other music formats itself.
 
+The app also includes [Sparkle](https://sparkle-project.org) (MIT, with the
+licenses of the code it includes), which installs its updates. It is a
+Swift package of the app target only.
+
 ## License
 
 Silverbox is free software under the GNU General Public License, version 3
@@ -264,6 +285,11 @@ of the eXo team and are not part of Silverbox.
 
 Contributions come in under the MIT License, and ship in Silverbox under the
 GPL; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Support Silverbox
+
+Silverbox is free. If you find it useful, you can
+[leave a tip](https://silvercode.studio/sponsor?from=silverbox).
 
 ## To do
 

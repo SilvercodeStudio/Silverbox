@@ -2,7 +2,7 @@
 
 What changed in each version of Silverbox.
 
-## 0.3
+## 0.5 (not released yet)
 
 ### Added
 
@@ -24,19 +24,28 @@ What changed in each version of Silverbox.
 - Box art and screenshots from a network share load much faster after
   the first time: Silverbox keeps small copies of them on this Mac (up to
   about 300 MB). Rescan Library deletes them.
+- Silverbox can update itself. Silverbox › Check for Updates… looks for a
+  new version, and Settings › General can check once a day. An update
+  waits for running games and installations before Silverbox opens again.
+  Only the copy from getsilverbox.app checks; one built from the source
+  code does not.
+- Help › Support Silverbox and the About window's Leave a Tip button open
+  a page where you can leave a tip. Silverbox stays free.
 
 ### Changed
 
 - Silverbox is free software under the GNU General Public License,
-  version 3 or later. About › License shows the copyright notice and the
-  full text of the license. Contributions come in under the terms in
-  CONTRIBUTING.md.
+  version 3 or later. About › Acknowledgments › License… shows the
+  copyright notice and the full text of the license. Contributions come
+  in under the terms in CONTRIBUTING.md.
 - A new app icon: a floppy disk, in amber or green. The highlight colours
   match it.
 - Help › Silverbox Website opens getsilverbox.app. The About window is
   new: the icon on a CRT screen, how many games the library holds and how
-  many are installed and played, every emulator Silverbox uses, and a
-  Website button. Test builds show the Git commit they were built from. The welcome screen opens with the same CRT screen.
+  many are installed and played, every emulator Silverbox uses, Website
+  and Leave a Tip buttons, and a link to Silvercode Studio, which makes
+  Silverbox. Test builds show the Git commit they were built from. The
+  welcome screen opens with the same CRT screen.
 - The help covers every eXo pack, explains how music plays in games, and
   has more troubleshooting, including every file Silverbox keeps and how
   to remove it. The Keyboard Shortcuts window now lists Play,
@@ -64,7 +73,6 @@ What changed in each version of Silverbox.
 - Favorites and play history keep a previous readable copy, preserve damaged
   files for recovery, report save failures and finish saving before quitting.
   If the last save fails, you can stay and try again or quit without it.
-
 - Collections set up inside the local data folder follow it when you move
   or rename that folder and choose it again in Settings. Before, they could
   not be found.

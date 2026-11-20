@@ -104,6 +104,19 @@ struct GeneralSettingsView: View {
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
+            Section("Updates") {
+                if model.updater.isAvailable {
+                    @Bindable var updater = model.updater
+                    Toggle("Check for updates automatically", isOn: $updater.checksAutomatically)
+                    Text(
+                        "Once a day, \(AppInfo.displayName) asks getsilverbox.app for the newest version. Check for Updates… in the \(AppInfo.displayName) menu asks at once."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text("This copy was built from its source code, so it does not check for updates.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)

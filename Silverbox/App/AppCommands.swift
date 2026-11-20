@@ -15,6 +15,11 @@ struct AppCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.displayName)") { openWindow(id: "about") }
+            // Only in a build that make dist made: a build from source does not update itself.
+            if model.updater.isAvailable {
+                Button("Check for Updates…", action: model.updater.checkForUpdates)
+                    .disabled(!model.updater.canCheckForUpdates)
+            }
         }
         CommandGroup(replacing: .newItem) {}
         CommandGroup(replacing: .help) {
@@ -27,6 +32,7 @@ struct AppCommands: Commands {
             Divider()
             Link("\(AppInfo.displayName) Website", destination: AppInfo.websiteURL)
             Link("eXo Project Website", destination: AboutPanel.projectURL)
+            Link("Support \(AppInfo.displayName)", destination: SilverboxLinks.sponsor)
             Divider()
             Button("Report a Problem…") { NSWorkspace.shared.open(model.problemReportURL()) }
             Button("Send Feedback…") { NSWorkspace.shared.open(model.feedbackURL()) }

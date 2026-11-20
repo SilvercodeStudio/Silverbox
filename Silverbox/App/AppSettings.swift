@@ -154,6 +154,12 @@ struct AppSettings: Codable, Equatable {
             }
             settings.transient = true
         }
+        // `-noLibrary 1` starts with no collection, as a first start does, for a screenshot of
+        // the welcome. The saved collections stay as they are.
+        if defaults.bool(forKey: "noLibrary") {
+            settings.collections = []
+            settings.transient = true
+        }
         // `-dataPath <folder>` sends installs, caches, logs and the user's
         // state to a scratch folder for this run only, so a test never
         // touches the real data.

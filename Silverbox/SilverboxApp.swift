@@ -61,7 +61,7 @@ struct SilverboxApp: App {
 /// Names shown to the user.
 enum AppInfo {
     static let displayName = "Silverbox"
-    static let websiteURL = URL(string: "https://getsilverbox.app")!
+    static let websiteURL = SilverboxLinks.website
     static let repositoryURL = ProblemReport.repository
 
     /// "0.3 (4)": the version and the build number, which is left out when

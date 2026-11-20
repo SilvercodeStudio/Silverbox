@@ -10,13 +10,21 @@ enum AboutPanel {
     /// the commit unless the build had changes that were not committed.
     static var version: String {
         var text = "Version \(AppInfo.version)"
+        #if DEBUG
+            // `-plainVersion 1` shows the version as a clean release does, for screenshots.
+            if UserDefaults.standard.bool(forKey: "plainVersion") { return text }
+        #endif
         if let commit = AppInfo.commit, !AppInfo.isArchive || commit.hasSuffix("-dirty") { text += " · \(commit)" }
         return text
     }
 
-    /// "© 2026 Preston Landers", from the Info.plist.
-    static var copyright: String {
-        Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
+    /// "© 2026 Preston Landers · Silvercode Studio", with a link to the studio. The copyright
+    /// stays the author's, as in NOTICE; the studio's name comes after it.
+    static var copyrightLine: AttributedString {
+        let copyright = Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
+        var studio = AttributedString("Silvercode Studio")
+        studio.link = SilverboxLinks.studio
+        return AttributedString(copyright.isEmpty ? "" : "\(copyright) · ") + studio
     }
 }
 
@@ -26,7 +34,6 @@ enum AboutPanel {
 struct AboutView: View {
     @Environment(AppModel.self) private var model
     @State private var showingAcknowledgments = false
-    @State private var showingLicense = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,12 +56,12 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
                     Button("Acknowledgments…") { showingAcknowledgments = true }
-                    Button("License…") { showingLicense = true }
                     Button("Website") { NSWorkspace.shared.open(AppInfo.websiteURL) }
+                    Button("Leave a Tip") { NSWorkspace.shared.open(SilverboxLinks.sponsor) }
                 }
                 .controlSize(.large)
                 .padding(.top, 6)
-                Text(AboutPanel.copyright).font(.callout).foregroundStyle(Theme.textSecondary)
+                Text(AboutPanel.copyrightLine).font(.callout).foregroundStyle(Theme.textSecondary)
             }
             .padding(.horizontal, 32)
             .padding(.top, 24)
@@ -63,7 +70,6 @@ struct AboutView: View {
         .frame(width: 460)
         .background(Theme.window)
         .sheet(isPresented: $showingAcknowledgments) { AcknowledgmentsSheet() }
-        .sheet(isPresented: $showingLicense) { LicenseSheet() }
     }
 
     /// What the library holds, once it has loaded. Played counts only when

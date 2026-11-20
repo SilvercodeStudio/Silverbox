@@ -11,6 +11,7 @@ Open Settings with Command-Comma.
 - **Playing** — whether to show the launch options dialog before each game.
 - **Library view** — whether hidden games appear in the library.
 - **Game controller** — the controllers Silverbox sees.
+- **Updates** — check for a new version of Silverbox once a day. At its second launch, Silverbox asks whether to; this box changes the answer. **Check for Updates…** in the Silverbox menu checks at once. An update that arrives while a game runs, or while a game installs, downloads or uninstalls, waits for it to end before Silverbox opens again. A copy built from the source code does not check, and has no Check for Updates….
 
 ## Library
 

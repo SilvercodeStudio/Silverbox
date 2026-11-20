@@ -6,20 +6,25 @@
     /// Debug aid: launch with `-screenshotPath /tmp/shot.png [-screenshotDelay 8]`
     /// to render the main window to a PNG after the library loads, then quit.
     /// Rendering is done from the view hierarchy, so it needs no screen
-    /// recording permission.
+    /// recording permission. `-keyPresses "down down space"` presses keys
+    /// after the delay, also without a screenshot path, and `-windowSize
+    /// 1320x840` gives the main window that size: both for the site's
+    /// screenshot scenes (`make site-shots`), which the user captures with
+    /// the window's own frame and corners.
     enum DebugScreenshot {
         private static var scheduled = false
 
         static func scheduleIfRequested() {
-            guard !scheduled, let path = UserDefaults.standard.string(forKey: "screenshotPath"), !path.isEmpty else {
-                return
-            }
+            guard !scheduled else { return }
             scheduled = true
-            let configured = UserDefaults.standard.double(forKey: "screenshotDelay")
-            let delay = configured > 0 ? configured : 8
+            resizeMainWindowIfRequested()
+            let path = UserDefaults.standard.string(forKey: "screenshotPath") ?? ""
             // `-keyPresses "down down space"` presses keys first, to test navigation.
             let presses = (UserDefaults.standard.string(forKey: "keyPresses") ?? "")
                 .split(separator: " ").compactMap { KeyPress.Key.parse(String($0)) }
+            guard !path.isEmpty || !presses.isEmpty else { return }
+            let configured = UserDefaults.standard.double(forKey: "screenshotDelay")
+            let delay = configured > 0 ? configured : 8
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 NSApp.activate()
                 for (offset, press) in presses.enumerated() {
@@ -33,6 +38,7 @@
                         KeyPress.send(press.0, modifiers: press.1, force: true)
                     }
                 }
+                guard !path.isEmpty else { return }
                 // `-screenshotSettle 90` waits longer after the keys, for a job they start.
                 let settle = UserDefaults.standard.double(forKey: "screenshotSettle")
                 DispatchQueue.main.asyncAfter(
@@ -41,6 +47,22 @@
                     capture(to: URL(fileURLWithPath: path))
                     NSApp.terminate(nil)
                 }
+            }
+        }
+
+        /// `-windowSize 1320x840`: the main window's size in points, centered on its screen. It
+        /// waits a moment, so the window has its restored frame first. The main window is the
+        /// largest one at that time.
+        private static func resizeMainWindowIfRequested() {
+            let parts = (UserDefaults.standard.string(forKey: "windowSize") ?? "").split(separator: "x")
+            guard parts.count == 2, let width = Double(parts[0]), let height = Double(parts[1]) else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard
+                    let window = NSApp.windows.filter({ $0.isVisible && !($0 is NSPanel) })
+                        .max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height })
+                else { return }
+                window.setContentSize(NSSize(width: width, height: height))
+                window.center()
             }
         }
 

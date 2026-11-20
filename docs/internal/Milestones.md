@@ -174,6 +174,15 @@ Done:
   pages, filled in), the Git commit in the About window and the reports,
   the file list in the Troubleshooting help, and `make open-app`
   (2026-11-10).
+- From Silverside's 0.9.7 to 0.9.9 (2026-11-19, code done, not yet tried
+  with a real release): Sparkle updates (`AppUpdater`, Check for Updates…,
+  Settings › General, the relaunch held for games and jobs), `make dist`
+  (Developer ID, notarized app and disk image with its own background,
+  the signed feed), `scripts/version.sh`, `scripts/release.sh`,
+  `docs/internal/Releasing.md`, `make lint` checks for whitespace and the
+  version, the tip and Silvercode Studio links (About, Help, README, site),
+  `make site-shots` with a scene for each screenshot, and the link preview
+  image.
 
 Not yet:
 
@@ -182,10 +191,16 @@ Not yet:
   active. The core failure cases have automated regression coverage.
 - The website for getsilverbox.app: `docs/site`, the Pages workflow and
   `make site` are in place (2026-10-25). Still to do: current screenshots in
-  both appearances, the Pages and DNS setup, and the download link once
-  there is a signed build.
-- A release script shared with Silverside: archive, Developer ID signing,
-  notarization, stapling, a DMG.
+  both appearances (`make site-shots`), the Pages and DNS setup, and, at
+  the first release, the "Coming soon" banner out and the download links
+  to the disk image.
+- In Xcode, for Sparkle: add the package (2.10.1, exact) to the app
+  target, set Current Project Version to `$(MARKETING_VERSION)`, set the
+  Info.plist File to `Silverbox/Info.plist`, add the "Remove Sparkle's XPC
+  services" build phase; then make the `silverbox` key and put its public
+  half in `Silverbox/Info.plist` (`Releasing.md`).
+- A first `ALLOW_DIRTY=1 FEED=0 make dist`, then the first release, and an
+  update from it to the next on another Mac.
 - A CI workflow for `swift test` and `make lint`.
 - Turn on Discussions in the GitHub repository, for Help › Send Feedback….
 
