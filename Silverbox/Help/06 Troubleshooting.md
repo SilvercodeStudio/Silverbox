@@ -20,7 +20,7 @@ Box art and screenshots on a network share load slowly the first time. Silverbox
 
 ## The emulator is not found
 
-Set the emulator's location in Settings › Emulators: DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight, RetroArch, Dolphin, MAME or Mednafen. Either the app or the program inside it can be chosen. Emulators in the Applications folder are found without this.
+Set the emulator's location in Settings › Emulators: DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight, GSplus, RetroArch, Dolphin, MAME or Mednafen. Either the app or the program inside it can be chosen. Emulators in the Applications folder are found without this.
 
 ## General MIDI music sounds wrong
 
@@ -33,6 +33,12 @@ aria2 asks the torrent's trackers for other computers that share the game, one t
 ## A console game says its core is not installed
 
 RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloader). Settings › Emulators shows the cores folder Silverbox reads and how many cores it found; choose another folder there if RetroArch keeps its cores elsewhere. The platform list on the same tab lets you pick any installed core for a platform.
+
+## A game in RetroArch crashes, or shows nothing
+
+Many RetroArch cores need BIOS or ROM files from the original computer or console, which no one may ship: Hatari (Atari ST) needs `tos.img`, for example. They go in RetroArch's system folder (RetroArch › Settings › Directory › System/BIOS). For a game from a LaunchBox library, Silverbox copies the files the core needs from the library's own RetroArch (`Emulators\RetroArch\system` on Windows) into that folder when they are missing there; it never replaces a file. When neither has a file the core needs, the game shows **BIOS missing**; rest the pointer on it for the file's name. Open **Show Last Launch Log…** for RetroArch's own messages: a core that finds no BIOS usually says which file it wants.
+
+RetroArch sends the keyboard to its own controls. For a computer game that needs typing, turn on Game Focus in RetroArch; its key is Scroll Lock, which Mac keyboards lack, so choose another in RetroArch › Settings › Input › Hotkeys. Escape quits RetroArch.
 
 ## Menu music does not play
 

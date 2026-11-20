@@ -126,11 +126,6 @@ nonisolated extension LaunchPlanner {
         return nil
     }
 
-    /// RetroArch's system folder for cores that take eXo's ROMs.
-    var ifRetroArchSystemDirectory: URL {
-        (localStore?.directory ?? scratchDirectory).appendingPathComponent("RetroArch/system", isDirectory: true)
-    }
-
     /// `eXo/util/launch_if.bat`.
     public var ifLauncherFile: URL { snapshot.root.utilDirectory.appendingPathComponent("launch_if.bat") }
 
@@ -305,32 +300,23 @@ nonisolated extension LaunchPlanner {
                 throw LaunchPlanError.ifVersionUnsupported(problem)
             }
             let base = scratchDirectory.appendingPathComponent(Self.safeFileName(game.launchBoxID))
-            // A core that takes eXo's ROMs gets its own system folder,
-            // through a config RetroArch adds to its own for this launch.
-            if let copies = ifEXoROMCopies(for: core, into: ifRetroArchSystemDirectory) {
-                let append = base.appendingPathExtension("cfg")
-                var arguments = ["--appendconfig", append.path, "-L", coreURL.path]
-                if options.fullscreen { arguments.append("-f") }
-                arguments.append(file.path)
-                return LaunchPlan(
-                    game: game, variant: version, emulator: emulator, arguments: arguments,
-                    workingDirectory: file.deletingLastPathComponent(), configURL: append,
-                    configText: "system_directory = \"\(ifRetroArchSystemDirectory.path)\"\n", sourceConfigURL: file,
-                    notes: [], fileCopies: copies)
-            }
+            // A core that takes eXo's ROMs gets them in RetroArch's system
+            // folder, where they are missing. Not through `--appendconfig`:
+            // RetroArch saves an appended system folder into its own config.
+            let romCopies = retroArch?.systemDirectory.flatMap { ifEXoROMCopies(for: core, into: $0) } ?? []
             // A fliplist (eXo's list of a C64 game's disks) becomes an m3u
             // playlist, so RetroArch can swap disks; eXo's start disk first.
             let fliplist = file.deletingLastPathComponent().appendingPathComponent("fliplist.vfl")
             let playlist = Self.playlist(fromFliplist: fliplist, startingWith: file)
             let configURL = base.appendingPathExtension(playlist == nil ? "txt" : "m3u")
-            var arguments = ["-L", coreURL.path]
+            var arguments = ["--verbose", "-L", coreURL.path]
             if options.fullscreen { arguments.append("-f") }
             arguments.append(playlist == nil ? file.path : configURL.path)
             return LaunchPlan(
                 game: game, variant: version, emulator: emulator, arguments: arguments,
                 workingDirectory: file.deletingLastPathComponent(), configURL: configURL,
                 configText: playlist ?? "RetroArch \(core) opens \(file.path)\n", sourceConfigURL: file,
-                notes: playlist == nil ? [] : ["Disks are in RetroArch's Disk Control menu."])
+                notes: playlist == nil ? [] : ["Disks are in RetroArch's Disk Control menu."], fileCopies: romCopies)
         case .unsupported(let system):
             throw LaunchPlanError.ifVersionUnsupported(system)
         }

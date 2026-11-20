@@ -146,6 +146,15 @@ inside a path or code span.
   that are installed (`RetroArchSetup` finds cores through `retroarch.cfg`,
   with aliases for renamed cores). `RomLaunchPlanner` builds the command
   line. Never call another front-end such as OpenEmu.
+  BIOS files: `RetroArchSetup.firmware(forCore:)` reads the core's `.info`
+  list; `RomLaunchPlanner.firmwareCheck` copies the missing ones from the
+  library's own RetroArch (`libraryRetroArchSystemDirectory`: its
+  `retroarch.cfg`'s `system_directory`, else `system` beside
+  `retroarch.exe`) into RetroArch's system folder, never replacing a
+  file (`EmulatorLaunch.fileCopies`), and the inspector's "BIOS missing"
+  chip names required ones found nowhere. Never pass RetroArch
+  `--appendconfig`: with `config_save_on_exit` (the default) it saves the
+  appended settings into the user's `retroarch.cfg` when it quits.
 - eXo packs. `EXoPack` names the projects whose games install from zips:
   eXoDOS (`!dos/<folder>`, unpacked to `eXoDOS/<folder>`), eXoWin3x
   (`!win3x/<folder>`, eXoDOS-shaped; each game zip holds its own Windows 3.1),
@@ -223,8 +232,8 @@ inside a path or code span.
   like) open in Spatterlight with `open -W -a` (it ignores files passed as
   arguments), 8-bit versions go to the RetroArch cores in
   `ifRetroArchCores` (a VICE `fliplist.vfl` becomes an m3u playlist;
-  atari800 gets eXo's Altirra ROMs in its own system folder through
-  `--appendconfig`; PUAE needs a Kickstart in RetroArch's system folder),
+  atari800 gets eXo's Altirra ROMs copied into RetroArch's system folder
+  where missing; PUAE needs a Kickstart there),
   everything else is `unsupported` (`LaunchVariant.unsupportedReason`, which
   also names a missing core or ROM). The app's `launchPlanner(_:)` passes
   `settings.retroArchSetup`. The default version is the best `preference`:
@@ -310,6 +319,10 @@ inside a path or code span.
   open `LaunchLogSheet`. A non-zero exit opens it by itself. "Copy as
   Markdown" builds a `LaunchReport` (core, `LaunchReport.swift`) from the
   session, the config at `EmulatorLaunch.configURL` and the log's end.
+  RetroArch runs with `--verbose`, so the log has its and the core's
+  messages (a missing BIOS). After a start, `GameLauncher` brings the
+  emulator to the front once it is an app, if Silverbox is still in front:
+  RetroArch otherwise opens behind and pauses.
 - Lite downloads. eXoDOS Lite has no game zips or GameData zips; it ships
   the full collection's torrent in `eXo/util/aria/` (`LibraryRoot.torrentURLs`),
   which setup unpacks from `OPTDOS.zip` inside `util.zip`; a full download
@@ -402,7 +415,7 @@ inside a path or code span.
   runs `scripts/record-commit.sh`, which writes `scripts/commit-id.sh`'s
   commit (`c2b2f09`, `-dirty` with uncommitted changes) into the built
   Info.plist as `SilverboxCommit`, and `SilverboxArchive` for an archive.
-  `AppInfo.versionLine` ("Silverbox 0.3 (4) · c2b2f09") goes into launch
+  `AppInfo.versionLine` ("Silverbox 0.5 · c2b2f09") goes into launch
   and problem reports; the About window leaves a clean commit out of an
   archive. The phase needs the target's user script sandboxing off.
 - Reports. Help › Report a Problem… and Send Feedback… open GitHub's new
@@ -494,8 +507,12 @@ inside a path or code span.
   (the user's download): set up on the Mac, then ZZT's Revenge downloaded,
   installed and played in the app (2026-10-26); its torrent lists all
   7,666 games.
-- **Not yet verified:** launches of console, computer and arcade games
-  (RetroArch, Dolphin, MAME, Mednafen) and eXoIF's RetroArch versions.
+- **Partly verified** (2026-11-20, the user's LaunchBox library,
+  RetroArch Nightly): games start in PUAE, AppleWin, atari800, Stella,
+  ProSystem and ParaLLEl N64. Hatari, VICE and Mupen64Plus-Next did not
+  (see Milestones, M10).
+- **Not yet verified:** launches in Dolphin, MAME and Mednafen, most
+  RetroArch platforms, and eXoIF's RetroArch versions.
   Say so when a change touches
   these, and do not describe them as working in the README or the help.
 - The real-library tests check values read from eXo's own files. Do not

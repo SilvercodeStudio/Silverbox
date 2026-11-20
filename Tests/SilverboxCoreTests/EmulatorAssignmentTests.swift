@@ -223,7 +223,8 @@ struct RomLaunchPlannerTests {
         let rom = ConsoleFixture.rootURL.appendingPathComponent("Games/Nintendo Entertainment System/Test Blaster.zip")
         #expect(
             launch.arguments == [
-                "-L", retroArch.coresDirectory!.appendingPathComponent("fceumm_libretro.dylib").path, rom.path,
+                "--verbose", "-L", retroArch.coresDirectory!.appendingPathComponent("fceumm_libretro.dylib").path,
+                rom.path,
             ])
         #expect(launch.workingDirectory == rom.deletingLastPathComponent())
         #expect(launch.notes.contains { $0.contains("archive") })
@@ -232,7 +233,7 @@ struct RomLaunchPlannerTests {
         let fullscreen = try planner.plan(
             game: game, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
             options: LaunchOptions(fullscreen: true))
-        #expect(fullscreen.arguments[2] == "-f")
+        #expect(fullscreen.arguments[3] == "-f")
 
         // A game-level `-L` in LaunchBox asks for another core, which is missing here.
         let other = try #require(snapshot.game(id: ConsoleFixture.otherCoreID))
@@ -241,6 +242,78 @@ struct RomLaunchPlannerTests {
                 game: other, resolved: resolved, emulator: retroArch.installation, retroArch: retroArch,
                 options: LaunchOptions())
         }
+    }
+
+    /// BIOS files come from the library's own RetroArch (LaunchBox's
+    /// `Emulators\RetroArch\system`) into RetroArch's system folder, and the
+    /// ones found nowhere are named.
+    @Test func copiesBIOSFilesFromTheLibrarysRetroArch() throws {
+        let fm = FileManager.default
+        let scratch = try FixtureLibrary.scratchDirectory()
+        let library = scratch.appendingPathComponent("Library", isDirectory: true)
+        try fm.copyItem(at: ConsoleFixture.rootURL, to: library)
+        let libraryRetroArch = library.appendingPathComponent("Emulators/RetroArch", isDirectory: true)
+        let librarySystem = libraryRetroArch.appendingPathComponent("system", isDirectory: true)
+        try fm.createDirectory(at: librarySystem, withIntermediateDirectories: true)
+        try Data("bios".utf8).write(to: librarySystem.appendingPathComponent("DISKSYS.ROM"))
+
+        let home = scratch.appendingPathComponent("RetroArch", isDirectory: true)
+        try fm.createDirectory(at: home, withIntermediateDirectories: true)
+        var retroArch = try ConsoleFixture.fakeRetroArch(in: home)
+        let system = home.appendingPathComponent("system", isDirectory: true)
+        retroArch.systemDirectory = system
+        try """
+        firmware_count = 3
+        firmware0_desc = "disksys.rom (Family Computer Disk System BIOS)"
+        firmware0_path = "disksys.rom"
+        firmware0_opt = "false"
+        firmware1_desc = "gamegenie.nes (Game Genie add-on cartridge)"
+        firmware1_path = "gamegenie.nes"
+        firmware1_opt = "true"
+        firmware2_desc = "nes/palette.pal (A palette)"
+        firmware2_path = "nes/palette.pal"
+        firmware2_opt = "false"
+        """.write(
+            to: retroArch.infoDirectory!.appendingPathComponent("fceumm_libretro.info"), atomically: true,
+            encoding: .utf8)
+        #expect(retroArch.firmware(forCore: "fceumm").map(\.isOptional) == [false, true, false])
+
+        let snapshot = try LibraryLoader(root: LibraryRoot(url: library)).load()
+        let planner = RomLaunchPlanner(snapshot: snapshot)
+        #expect(
+            planner.libraryRetroArchSystemDirectory?.resolvingSymlinksInPath().path
+                == librarySystem.resolvingSymlinksInPath().path)
+        let resolver = EmulatorAssignmentResolver(
+            snapshots: [snapshot], installedKinds: [.retroArch], retroArch: retroArch)
+        let game = try #require(snapshot.game(id: ConsoleFixture.blasterID))
+        let launch = try planner.plan(
+            game: game, resolved: resolver.resolve(platform: game.platform), emulator: retroArch.installation,
+            retroArch: retroArch, options: LaunchOptions())
+        // The copy keeps the name the core asks for; the optional file found
+        // nowhere is not missing.
+        #expect(launch.fileCopies.map(\.destination) == [system.appendingPathComponent("disksys.rom")])
+        #expect(
+            launch.notes.contains("Copies disksys.rom from the library's RetroArch into RetroArch's system folder."))
+        #expect(launch.notes.contains { $0.contains("nes/palette.pal (A palette)") })
+        try launch.copyFiles()
+        #expect(fm.contents(atPath: system.appendingPathComponent("disksys.rom").path) == Data("bios".utf8))
+
+        var check = planner.firmwareCheck(core: "fceumm_libretro", retroArch: retroArch)
+        #expect(check.copies.isEmpty)
+        #expect(check.missing.map(\.path) == ["nes/palette.pal"])
+        try fm.createDirectory(at: system.appendingPathComponent("NES"), withIntermediateDirectories: true)
+        try Data().write(to: system.appendingPathComponent("NES/Palette.pal"))
+        check = planner.firmwareCheck(core: "fceumm_libretro", retroArch: retroArch)
+        #expect(check.problem(core: "fceumm_libretro", systemDirectory: system) == nil)
+
+        // The library's retroarch.cfg can name another folder; `:` is RetroArch's own.
+        let bios = libraryRetroArch.appendingPathComponent("bios", isDirectory: true)
+        try fm.createDirectory(at: bios, withIntermediateDirectories: true)
+        try #"system_directory = ":\bios""#.write(
+            to: libraryRetroArch.appendingPathComponent("retroarch.cfg"), atomically: true, encoding: .utf8)
+        #expect(
+            planner.libraryRetroArchSystemDirectory?.resolvingSymlinksInPath().path
+                == bios.resolvingSymlinksInPath().path)
     }
 
     @Test func plansDolphinAndMAMELaunches() throws {

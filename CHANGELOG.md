@@ -90,6 +90,19 @@ What changed in each version of Silverbox.
   packs.
 - Artwork added to a region folder, such as `Box - Front/North America`,
   now shows without Rescan Library.
+- Games that start in RetroArch open in front of Silverbox. Before, its
+  window could open behind, where RetroArch pauses, so the game seemed to
+  hang. The launch log now shows RetroArch's messages, such as a missing
+  BIOS file.
+- Games from a LaunchBox library that start in RetroArch get the BIOS
+  files their core needs from the library's own RetroArch, copied into
+  RetroArch's system folder when they are missing there. A game whose
+  core needs a file found in neither place says "BIOS missing".
+- eXoIF's Atari 8-bit versions no longer change RetroArch's system folder
+  setting. eXo's Atari ROMs are copied into RetroArch's system folder
+  instead, where it has none.
+- Silverbox finds RetroArch Nightly, the build for Apple silicon, in the
+  Applications folder.
 
 ## 0.2
 

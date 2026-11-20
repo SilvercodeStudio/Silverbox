@@ -912,6 +912,7 @@ final class AppModel {
             let launch = try RomLaunchPlanner(snapshot: snapshot).plan(
                 game: game, resolved: resolved, emulator: emulator,
                 retroArch: settings.retroArchSetup, options: effectiveLaunchOptions(for: game))
+            try launch.copyFiles()
             music.pause()
             album.pause()
             try launcher.launch(launch)
@@ -919,6 +920,17 @@ final class AppModel {
             alert = AppAlert(title: "Could not start \(game.title)", message: error.localizedDescription)
             updateMusic()
         }
+    }
+
+    /// Why a RetroArch game may not start for want of a BIOS file, or nil.
+    /// Files that the library's own RetroArch has do not count: the launch
+    /// copies them.
+    func missingFirmware(for game: Game, resolved: ResolvedEmulatorAssignment) -> String? {
+        guard let assignment = resolved.assignment, assignment.emulator == .retroArch, let core = assignment.core,
+            let retroArch = settings.retroArchSetup, let snapshot = snapshot(for: game)
+        else { return nil }
+        return RomLaunchPlanner(snapshot: snapshot).firmwareCheck(core: core, retroArch: retroArch)
+            .problem(core: core, systemDirectory: retroArch.systemDirectory)
     }
 
     /// Documents (books, magazines, soundtracks) open in their default app;

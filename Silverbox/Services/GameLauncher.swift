@@ -111,6 +111,27 @@ final class GameLauncher {
         sessions.append(
             GameSession(
                 id: id, launch: plan, startedAt: Date(), logURL: logURL, processIdentifier: process.processIdentifier))
+        bringToFrontWhenReady(process.processIdentifier)
+    }
+
+    /// Started as a plain process, some emulators open their window behind
+    /// Silverbox, and RetroArch then pauses ("Don't run in background").
+    /// Brings the emulator to the front once macOS knows it as an app, unless
+    /// it came forward by itself or you went to another app meanwhile.
+    private func bringToFrontWhenReady(_ processIdentifier: Int32) {
+        Task { @MainActor in
+            for _ in 0..<20 {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard NSApp.isActive else { return }
+                if let app = NSRunningApplication(processIdentifier: processIdentifier), app.isFinishedLaunching,
+                    app.activationPolicy == .regular
+                {
+                    NSApp.yieldActivation(to: app)
+                    app.activate()
+                    return
+                }
+            }
+        }
     }
 
     private func finish(id: UUID, status: Int32) {

@@ -27,7 +27,7 @@ The license page carries the text of the repository's `NOTICE` and links to `LIC
 
 ## Publishing
 
-`.github/workflows/pages.yml` uploads this folder to Pages on every push to `main` that touches it. Setup, once:
+`.github/workflows/pages.yml` uploads this folder to Pages on every push to `main` that touches it. The site is live at https://getsilverbox.app, with a "Coming soon" banner until the first release (`docs/internal/Releasing.md`). The setup, done once:
 
 1. Settings › Pages › Build and deployment › Source: **GitHub Actions**.
 2. Settings › Pages › Custom domain: `getsilverbox.app`, then Enforce HTTPS once the certificate is issued.
@@ -68,4 +68,4 @@ swift docs/site/tools/shot.swift ~/Desktop/capture.png docs/site/images/library-
 | `game-info` | Ultima V's game info sheet (Command-I) |
 | `display-sound` | Settings › Display & Sound, at 1200 and 600 wide |
 
-The current screenshots come from the design mockup and are older than the app; replace them before the site goes live.
+The current screenshots come from the design mockup and are older than the app; replace them after the UI polish, before the first release.

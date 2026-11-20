@@ -66,4 +66,6 @@ Games from a LaunchBox library, such as a console collection, start in the emula
 
 A platform without a choice of its own follows the library's `Emulators.xml`, mapped to the Mac emulators installed here: the RetroArch core named there is used when it is installed, a renamed core such as FBNeo stands in for its old name, and a core with no Mac build (the Dolphin core, for example) hands over to the standalone app. Settings › Emulators lists every platform with its status, and lets you pick another emulator or core, or add arguments.
 
+Cores that need BIOS files get them from the library's own RetroArch, the one LaunchBox uses on Windows: Silverbox copies the files a core lists from its `system` folder into RetroArch's system folder on this Mac, when they are missing there. A game whose core needs a file found in neither place shows "BIOS missing".
+
 Full screen follows the Display & Sound setting. RAR archives cannot be opened by any of these emulators, and Dolphin needs plain disc images rather than zip files.

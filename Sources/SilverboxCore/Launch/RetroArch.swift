@@ -26,6 +26,22 @@ nonisolated public struct RetroArchCore: Hashable, Sendable, Identifiable, Codab
     }
 }
 
+/// A BIOS or other file a core reads from RetroArch's system folder, as its
+/// `.info` file lists it.
+nonisolated public struct RetroArchFirmware: Hashable, Sendable {
+    /// The path in the system folder, such as `tos.img`.
+    public var path: String
+    /// RetroArch's description, such as `tos.img (TOS 1.02 US aka Mega TOS)`.
+    public var description: String
+    public var isOptional: Bool
+
+    public init(path: String, description: String, isOptional: Bool) {
+        self.path = path
+        self.description = description
+        self.isOptional = isOptional
+    }
+}
+
 /// Where RetroArch keeps its cores and core info on this Mac.
 nonisolated public struct RetroArchSetup: Sendable, Hashable {
     public var installation: EmulatorInstallation
@@ -46,10 +62,41 @@ nonisolated public struct RetroArchSetup: Sendable, Hashable {
     /// True when RetroArch's system folder holds `name`, matched without
     /// regard to case.
     public func hasSystemFile(_ name: String) -> Bool {
-        guard let systemDirectory,
-            let names = try? FileManager.default.contentsOfDirectory(atPath: systemDirectory.path)
-        else { return false }
-        return names.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+        systemFile(name) != nil
+    }
+
+    /// The file at `relativePath` (such as `tos.img` or `np2kai/font.bmp`)
+    /// in RetroArch's system folder, matched without regard to case.
+    public func systemFile(_ relativePath: String) -> URL? {
+        systemDirectory.flatMap { Self.file(relativePath, in: $0) }
+    }
+
+    /// The file at `relativePath` under `folder`, each part matched without
+    /// regard to case; nil when it is not there.
+    public static func file(_ relativePath: String, in folder: URL) -> URL? {
+        let fm = FileManager.default
+        let direct = folder.appendingPathComponent(relativePath)
+        if fm.fileExists(atPath: direct.path) { return direct }
+        var url = folder
+        for component in relativePath.split(separator: "/").map(String.init) {
+            guard let names = try? fm.contentsOfDirectory(atPath: url.path),
+                let match = names.first(where: { $0.caseInsensitiveCompare(component) == .orderedSame })
+            else { return nil }
+            url.appendPathComponent(match)
+        }
+        return url
+    }
+
+    /// The BIOS and other system files a core's `.info` file lists.
+    public func firmware(forCore name: String) -> [RetroArchFirmware] {
+        let info = coreInfo(named: Self.coreName(from: name))
+        let count = Int(info["firmware_count"] ?? "") ?? 0
+        return (0..<count).compactMap { index in
+            guard let path = info["firmware\(index)_path"], !path.isEmpty else { return nil }
+            return RetroArchFirmware(
+                path: path, description: info["firmware\(index)_desc"] ?? path,
+                isOptional: info["firmware\(index)_opt"]?.lowercased() == "true")
+        }
     }
 
     /// RetroArch's user folder on macOS.

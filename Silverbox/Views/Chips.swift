@@ -102,6 +102,10 @@ struct GameStatusChips: View {
                     : Chip(
                         text: problemLabel(resolved), tone: .warning, systemImage: "exclamationmark.triangle",
                         help: resolved.problem))
+            if resolved.isReady, let problem = model.missingFirmware(for: game, resolved: resolved) {
+                chips.append(
+                    Chip(text: "BIOS missing", tone: .warning, systemImage: "exclamationmark.triangle", help: problem))
+            }
         case .scummVM:
             if let installation = model.scummVMInstallation(for: game, variant: nil), installation.exists {
                 chips.append(Chip(text: installation.kind.displayName, tone: .good, systemImage: "cpu"))

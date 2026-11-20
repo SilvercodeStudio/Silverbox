@@ -181,6 +181,10 @@ nonisolated public enum EmulatorLocator {
             urls += [
                 URL(fileURLWithPath: "/Applications/RetroArch.app/Contents/MacOS/RetroArch"),
                 home.appendingPathComponent("Applications/RetroArch.app/Contents/MacOS/RetroArch"),
+                // The nightly build (Homebrew's retroarch-metal@nightly), the
+                // one for Apple silicon.
+                URL(fileURLWithPath: "/Applications/RetroArch Nightly.app/Contents/MacOS/RetroArch"),
+                home.appendingPathComponent("Applications/RetroArch Nightly.app/Contents/MacOS/RetroArch"),
                 home.appendingPathComponent(
                     "Library/Application Support/Steam/steamapps/common/RetroArch/RetroArch.app/Contents/MacOS/RetroArch"
                 ),

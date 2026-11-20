@@ -297,6 +297,7 @@ What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
 milestones, with what is done and what is not, are in
 [docs/internal/Milestones.md](docs/internal/Milestones.md).
 
+- A round of testing and UI polish, then the first public release.
 - Exercise the new file safeguards with real running games: overlapping
   Windows 98 launch attempts and quitting with an active game or job. The
   automated tests cover reservations, interrupted installs, backup failures
@@ -304,14 +305,19 @@ milestones, with what is done and what is not, are in
 - Launch console, computer and arcade games for real with RetroArch, Dolphin,
   MAME and Mednafen. The planner and the emulator assignments exist; nothing
   has been played yet.
-- ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
-  XML beside them, plus single titles configured by hand.
 - More eXo packs. eXoWin3x, eXoDemoScene, eXoScummVM and eXoAppleIIGS
   launch, and eXoIF launches its story-file, MS-DOS and most
   8-bit versions (about 1,500 of 2,331 games). Still to do: eXoIF's BBC
   Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or native
   emulators).
   Later: the eXoScummVM hint files (UHS).
-- tvOS client app: a full-screen, controller-first view on top of the grid and the
-  controller input that exist today.
+
+Later:
+
+- Couch mode: a full-screen, controller-first view on top of the grid and
+  the controller input that exist today, and perhaps a tvOS app built on it.
+- An iPhone and iPad companion that browses the library from the Mac.
+- Download whole eXo packs from the app; today a BitTorrent client does it.
 - Metadata and media scraping for games outside the eXo collections.
+- ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
+  XML beside them, plus single titles configured by hand.

@@ -140,9 +140,21 @@ Done:
 
 Not yet:
 
-- Play the games for real: nothing has been played through these routes.
-- ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
-  XML, and single titles set up by hand.
+- Play the games for real. First tries (2026-11-20, the user's LaunchBox
+  library): Atari 800 games play in atari800 (RetroArch Nightly) once in
+  front; RetroArch opened behind Silverbox and paused, and is now brought
+  forward. Hatari crashed at start without `tos.img`; BIOS files now come
+  from the library's own RetroArch (`Emulators/RetroArch/system`, which
+  has `tos.img` and the Kickstarts), with a "BIOS missing" chip for the
+  rest. Second round (RetroArch Nightly 1.22.2): games start in PUAE
+  (Amiga, with the copied Kickstarts), AppleWin (Apple II; the core
+  crashes when RetroArch quits), atari800, Stella (2600), ProSystem
+  (7800) and ParaLLEl N64. Not yet: Atari ST (the library's `tos.img` is
+  EmuTOS 512K, and Hatari's TOS crashes at boot; a real TOS 1.02 or 1.04
+  is wanted), C64 in VICE (RetroArch never runs a frame: "Content ran
+  for 0 seconds"), and Mupen64Plus-Next (no picture on Apple silicon).
+
+After 1.0: ROM-folder collections (see Later).
 
 ## 11. Polish and release — in progress
 
@@ -174,39 +186,41 @@ Done:
   pages, filled in), the Git commit in the About window and the reports,
   the file list in the Troubleshooting help, and `make open-app`
   (2026-11-10).
-- From Silverside's 0.9.7 to 0.9.9 (2026-11-19, code done, not yet tried
-  with a real release): Sparkle updates (`AppUpdater`, Check for Updates…,
-  Settings › General, the relaunch held for games and jobs), `make dist`
-  (Developer ID, notarized app and disk image with its own background,
-  the signed feed), `scripts/version.sh`, `scripts/release.sh`,
-  `docs/internal/Releasing.md`, `make lint` checks for whitespace and the
-  version, the tip and Silvercode Studio links (About, Help, README, site),
-  `make site-shots` with a scene for each screenshot, and the link preview
-  image.
+- From Silverside's 0.9.7 to 0.9.9 (2026-11-19): Sparkle updates
+  (`AppUpdater`, Check for Updates…, Settings › General, the relaunch held
+  for games and jobs), `make dist` (Developer ID, notarized app and disk
+  image with its own background, the signed feed), `scripts/version.sh`,
+  `scripts/release.sh`, `docs/internal/Releasing.md`, `make lint` checks
+  for whitespace and the version, the tip and Silvercode Studio links
+  (About, Help, README, site), `make site-shots` with a scene for each
+  screenshot, and the link preview image. Sparkle is set up in Xcode, the
+  `silverbox` key and the notary profile are made, and a trial
+  `ALLOW_DIRTY=1 FEED=0 make dist` gave a notarized, stapled disk image
+  that Gatekeeper accepts.
+- The website is live at getsilverbox.app (GitHub Pages, the domain and
+  HTTPS), with a "Coming soon" banner until the first release.
 
 Not yet:
 
+- A round of testing and UI polish before the first release.
 - Exercise the file-safety changes with real running emulators: conflicting
   Win9x launches, uninstall while playing, and quit while a game or job is
   active. The core failure cases have automated regression coverage.
-- The website for getsilverbox.app: `docs/site`, the Pages workflow and
-  `make site` are in place (2026-10-25). Still to do: current screenshots in
-  both appearances (`make site-shots`), the Pages and DNS setup, and, at
-  the first release, the "Coming soon" banner out and the download links
-  to the disk image.
-- In Xcode, for Sparkle: add the package (2.10.1, exact) to the app
-  target, set Current Project Version to `$(MARKETING_VERSION)`, set the
-  Info.plist File to `Silverbox/Info.plist`, add the "Remove Sparkle's XPC
-  services" build phase; then make the `silverbox` key and put its public
-  half in `Silverbox/Info.plist` (`Releasing.md`).
-- A first `ALLOW_DIRTY=1 FEED=0 make dist`, then the first release, and an
-  update from it to the next on another Mac.
+- The site's screenshots, from the app after the UI polish
+  (`make site-shots`).
+- The first release: the "Coming soon" banner out and the Download links
+  to the disk image (`Releasing.md`, "The first release"), then
+  `scripts/release.sh`; then an update from it to the next version on
+  another Mac.
 - A CI workflow for `swift test` and `make lint`.
 - Turn on Discussions in the GitHub repository, for Help › Send Feedback….
 
 ## Later
 
-- Couch mode: a full-screen, controller-first view.
+- Couch mode: a full-screen, controller-first view, and perhaps a tvOS app
+  built on it.
 - Download whole eXo packs from the app; today a BitTorrent client does it.
 - Metadata and media scraping for games outside the eXo collections.
+- ROM-folder collections: plain `Games/<Platform>` folders with no LaunchBox
+  XML, and single titles set up by hand.
 - An iPhone and iPad companion that browses the library from the Mac.

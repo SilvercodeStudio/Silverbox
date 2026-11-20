@@ -178,7 +178,8 @@ struct IFTests {
         let folder = snapshot.root.eXoDirectory.appendingPathComponent("eXoIF/\(IFFixture.folder)/C64")
         #expect(
             plan.arguments == [
-                "-L", retroArch.coresDirectory!.appendingPathComponent("vice_x64sc_libretro.dylib").path, "-f",
+                "--verbose", "-L", retroArch.coresDirectory!.appendingPathComponent("vice_x64sc_libretro.dylib").path,
+                "-f",
                 plan.configURL.path,
             ])
         // The fliplist becomes a playlist, with eXo's start disk first.
@@ -200,19 +201,27 @@ struct IFTests {
             amiga.unsupportedReason
                 == "needs the Amiga Kickstart 1.3 ROM (kick34005.A500) in RetroArch's system folder")
 
-        // atari800 gets eXo's Altirra ROMs in a system folder of its own.
+        // atari800 gets eXo's Altirra ROMs in RetroArch's system folder,
+        // without changing RetroArch's config: an appended config would be
+        // saved into retroarch.cfg when RetroArch quits.
         let atari = try #require(versions.first { $0.id == "Atari 8bit" })
         #expect(atari.isPlayable)
+        let system = try #require(retroArch.systemDirectory)
+        try Data("mine".utf8).write(to: system.appendingPathComponent("ATARIBAS.ROM"))
         let plan = try planner.plan(
             game: IFFixture.missionGame, variant: atari, emulator: retroArch.installation, options: LaunchOptions())
-        #expect(plan.arguments.prefix(2) == ["--appendconfig", plan.configURL.path])
-        #expect(plan.configText == "system_directory = \"\(planner.ifRetroArchSystemDirectory.path)\"\n")
+        #expect(!plan.arguments.contains("--appendconfig"))
         #expect(
-            plan.fileCopies.map(\.destination.lastPathComponent) == ["ATARIXL.ROM", "ATARIOSB.ROM", "ATARIBAS.ROM"])
+            plan.fileCopies.map(\.destination)
+                == ["ATARIXL.ROM", "ATARIOSB.ROM", "ATARIBAS.ROM"].map {
+                    system.appendingPathComponent($0)
+                })
         try plan.writeConfig()
+        #expect(FileManager.default.fileExists(atPath: system.appendingPathComponent("ATARIXL.ROM").path))
+        // A ROM already there stays as it is.
         #expect(
-            FileManager.default.fileExists(
-                atPath: planner.ifRetroArchSystemDirectory.appendingPathComponent("ATARIXL.ROM").path))
+            FileManager.default.contents(atPath: system.appendingPathComponent("ATARIBAS.ROM").path)
+                == Data("mine".utf8))
 
         // With a Kickstart in RetroArch's system folder, Amiga versions play.
         try Data("rom".utf8).write(to: retroArch.systemDirectory!.appendingPathComponent("kick34005.A500"))

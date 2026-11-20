@@ -16,4 +16,4 @@ This is an early version. Expect rough edges, and please report what you find.
 
 The eXo collections are projects of the eXo team. Learn more and support them at https://www.retro-exo.com. Silverbox is not affiliated with or endorsed by the eXo project. Silverbox's own website is https://getsilverbox.app (Help › Silverbox Website).
 
-Emulation is provided by DOSBox Staging (https://www.dosbox-staging.org), DOSBox-X (https://dosbox-x.com), 86Box (https://86box.net), ScummVM (https://www.scummvm.org), Spatterlight (https://ccxvii.net/spatterlight/), GSplus (https://github.com/digarok/gsplus) and RetroArch (https://www.retroarch.com). Game metadata and artwork come from the collections' LaunchBox data.
+Emulation is provided by DOSBox Staging (https://www.dosbox-staging.org), DOSBox-X (https://dosbox-x.com), 86Box (https://86box.net), ScummVM (https://www.scummvm.org), Spatterlight (https://ccxvii.net/spatterlight/), GSplus (https://github.com/digarok/gsplus), MAME (https://www.mamedev.org) and RetroArch (https://www.retroarch.com). Game metadata and artwork come from the collections' LaunchBox data.
