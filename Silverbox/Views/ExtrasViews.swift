@@ -33,6 +33,7 @@ struct ExtrasList: View {
             if let limit, !showAll, extras.count > limit {
                 Button("Show all \(extras.count) extras") { showAll = true }
                     .buttonStyle(.link)
+                    .accentLink()
                     .font(.caption)
             }
         }

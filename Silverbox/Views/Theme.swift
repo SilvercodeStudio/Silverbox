@@ -1,10 +1,11 @@
 import AppKit
+import CoreText
 import SwiftUI
 import SilverboxCore
 
 /// The look from the design prototypes, dark or light with the system or
-/// the Appearance setting, and accented in the colour of the chosen app
-/// icon: amber or green. Each colour has a value for each appearance.
+/// the Appearance setting, and accented in amber. Each colour has a value
+/// for each appearance.
 enum Theme {
     static let window = Color(light: 0xF4F4F6, dark: 0x181A1D)
     static let sidebar = Color(light: 0xE9EAED, dark: 0x202226)
@@ -18,15 +19,40 @@ enum Theme {
     static let textSecondary = Color(light: 0x5B5F67, dark: 0xA3A7AE)
     static let textTertiary = Color(light: 0x777C84, dark: 0x8C9199)
     /// Status tones: a thing that is ready, one that needs attention, and
-    /// one that is broken. Kept apart from the amber accent so that a
-    /// warning never looks like a highlight.
+    /// one that is broken. They colour a glyph or a fill, and the text
+    /// beside it stays in a text colour (`StatusLabel`, `Chip`). The warning
+    /// is yellow, apart from the amber accent, so that it never looks like
+    /// an action.
     static let good = Color(light: 0x237A3C, dark: 0x5BC46E)
-    static let warning = Color(light: 0xB8561A, dark: 0xF08A4B)
+    /// The fill of the warning triangle, whose "!" is ``warningMark``, as
+    /// in the caution icon of macOS: the yellow alone is too pale on a
+    /// light window to carry the shape.
+    static let warning = Color(light: 0xF2B200, dark: 0xFFD426)
+    static let warningMark = Color(hex: 0x1B1404)
     static let bad = Color(light: 0xC1272D, dark: 0xF2655C)
-    static var accent: Color { ThemeAccent.shared.variant.accent }
+    /// The one accent, for actions and selection: the amber of the app
+    /// icon, darker on a light background so that it reads as text and
+    /// outlines. `AccentColor` in the asset catalog has the same values,
+    /// for the system's controls.
+    static let accentHex: (light: UInt32, dark: UInt32) = (0xB46E12, 0xE99A3A)
+    static let accent = Color(light: accentHex.light, dark: accentHex.dark)
     /// Text on an accent fill, such as the Play button.
-    static var accentText: Color { ThemeAccent.shared.variant.accentText }
+    static let accentText = Color(hex: 0x1B1404)
     static let mono = Font.system(size: 11, design: .monospaced)
+
+    /// VT323, the terminal face of the website's headlines, for the two
+    /// big titles (About and the welcome) and nothing smaller than 32 pt.
+    /// The font is in `Silverbox/Fonts`; without it, the system's
+    /// monospaced face takes its place.
+    static func display(size: CGFloat) -> Font {
+        displayFontRegistered ? .custom("VT323", fixedSize: size) : .system(size: size * 0.8, design: .monospaced)
+    }
+
+    /// Makes the bundled font known to this process, once.
+    private static let displayFontRegistered: Bool = {
+        guard let url = Bundle.main.url(forResource: "VT323-Regular", withExtension: "ttf") else { return false }
+        return CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+    }()
 
     /// A stable hue for a title, used for placeholder tiles and header tints.
     static func hue(for title: String) -> Double {
@@ -54,30 +80,15 @@ enum Theme {
     }
 }
 
-/// The icon whose colour accents the app. Views that read ``Theme/accent``
-/// redraw when it changes.
-@Observable
-final class ThemeAccent {
-    static let shared = ThemeAccent()
-    var variant: AppIconVariant = .amber
-}
-
 extension AppIconVariant {
-    /// The icon's amber or green plastic, dark enough for dark text on it, and darker again on a light
-    /// background so that it reads as text and outlines.
-    var accentHex: (light: UInt32, dark: UInt32) {
+    /// The phosphor of the CRT band behind the icon, in the About window
+    /// and on the welcome: its glow, the screen's dark ground and the rule
+    /// under it. Decoration only: controls and status keep their colours
+    /// with either icon.
+    var phosphor: (glow: Color, ground: Color) {
         switch self {
-        case .amber: return (0xB46E12, 0xE99A3A)
-        case .green: return (0x37842C, 0x46A03A)
-        }
-    }
-
-    var accent: Color { Color(light: accentHex.light, dark: accentHex.dark) }
-
-    var accentText: Color {
-        switch self {
-        case .amber: return Color(hex: 0x1B1404)
-        case .green: return Color(hex: 0x06170B)
+        case .amber: return (Theme.accent, Color(hex: 0x14100B))
+        case .green: return (Color(light: 0x37842C, dark: 0x46A03A), Color(hex: 0x0A120B))
         }
     }
 }

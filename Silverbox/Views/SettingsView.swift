@@ -61,33 +61,32 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
-                Text(
-                    "The Dock and the About window show the chosen icon, and the app takes its colour for highlights. The Finder shows the amber icon built into the app, and only that icon follows the icon style chosen in System Settings › Appearance."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("The Dock and the About window show the chosen icon. The Finder always shows the amber one.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Appearance") {
                 Picker("Appearance", selection: $model.settings.appearance) {
                     ForEach(AppAppearance.allCases) { Text($0.displayName).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
             }
             Section("Menu music") {
                 Toggle("Play a game's music while browsing", isOn: $model.settings.musicEnabled)
-                Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
-                Toggle("Keep playing when another app is in front", isOn: $model.settings.musicInBackground)
-                Text(
-                    "MP3, Ogg Vorbis and MOD, S3M, XM and IT tracker modules play. AMF modules and VOC files are listed but skipped."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Group {
+                    Slider(value: $model.settings.musicVolume, in: 0...1) { Text("Volume") }
+                    Toggle("Keep playing when another app is in front", isOn: $model.settings.musicInBackground)
+                }
+                .disabled(!model.settings.musicEnabled)
+                .help(model.settings.musicEnabled ? "" : "Turn the music on first")
+                Text("MP3, Ogg Vorbis and tracker modules play; Help lists the formats.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             VideoPlayerSettingsSection()
             Section("Playing") {
                 Toggle("Show launch options before each game", isOn: $model.settings.showLaunchOptions)
-                Text(
-                    "The dialog offers the game's versions, full screen or window, shader or filter, and emulator, like the menus eXoDOS shows in its console window. Configure in a game's menu opens the same dialog to save choices for that game."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("The dialog offers the game's versions, full screen or a window, the shader and the emulator.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Library view") {
                 Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
@@ -99,19 +98,15 @@ struct GeneralSettingsView: View {
                     // Two controllers of one model have the same name.
                     ForEach(Array(model.gamepad.controllerNames.enumerated()), id: \.offset) { Text($0.element) }
                 }
-                Text(
-                    "Browse with the D-pad or left stick; the main button plays, the back button closes; the shoulder buttons step through a game's images and the other face buttons Quick Look an image or open the game page. See Help for the full map."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("Help › Keyboard Shortcuts shows what each button does.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Updates") {
                 if model.updater.isAvailable {
                     @Bindable var updater = model.updater
                     Toggle("Check for updates automatically", isOn: $updater.checksAutomatically)
-                    Text(
-                        "Once a day, \(AppInfo.displayName) asks getsilverbox.app for the newest version. Check for Updates… in the \(AppInfo.displayName) menu asks at once."
-                    )
-                    .font(.caption).foregroundStyle(.secondary)
+                    Text("Once a day, \(AppInfo.displayName) asks getsilverbox.app for the newest version.")
+                        .font(.caption).foregroundStyle(.secondary)
                 } else {
                     Text("This copy was built from its source code, so it does not check for updates.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -120,12 +115,12 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+        .withoutInitialFocus()
     }
 }
 
 struct LibrarySettingsView: View {
     @Environment(AppModel.self) private var model
-    @State private var showingPicker = false
     @State private var showingLocalPicker = false
 
     /// A whole drive or the home folder gets a "Silverbox" folder of its
@@ -145,12 +140,19 @@ struct LibrarySettingsView: View {
                 ForEach($model.settings.collections) { $collection in
                     CollectionEditor(collection: $collection)
                 }
+                if model.collections.isEmpty {
+                    Text("No collections yet.").foregroundStyle(.secondary)
+                }
                 HStack {
-                    Button("Add Collection…") { showingPicker = true }
+                    Button("Add Collection…") { model.chooseCollection() }
+                    if let name = model.folderBeingRead {
+                        ProgressView().controlSize(.small)
+                        Text("Reading \(name)…").foregroundStyle(.secondary)
+                    }
                     Spacer()
-                    if let library = model.library {
+                    if let library = model.library, let titles = model.sidebarCounts.scopes[.all] {
                         Text(
-                            "\(library.games.count.formatted()) games in \(library.snapshots.count) collection\(library.snapshots.count == 1 ? "" : "s")"
+                            "\(titles.formatted()) titles in \(library.snapshots.count) collection\(library.snapshots.count == 1 ? "" : "s")"
                         )
                         .foregroundStyle(.secondary)
                     }
@@ -160,38 +162,50 @@ struct LibrarySettingsView: View {
                             model.collections.isEmpty
                                 ? "Add a collection first" : "Read every collection again, with its images and media")
                 }
-                Text(
-                    "A collection is an eXoDOS install or any LaunchBox library folder; you can also drop one here from the Finder. Rescan after you add or update packs."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("A collection is an eXo download or any LaunchBox library folder. You can also drop one here.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Local data folder") {
                 HStack {
-                    Text(model.localStore.directory.path)
-                        .font(Theme.mono)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    Spacer()
-                    Button("Choose…") { showingLocalPicker = true }
-                    if model.settings.localStorePath != nil {
-                        Button("Use Default") { model.setDataFolder(nil) }
+                    Picker("Keep data in", selection: dataFolderBinding) {
+                        Text("The default folder").tag(DataFolderChoice.standard)
+                        if let custom = model.settings.localStorePath {
+                            Text(custom.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                                .tag(DataFolderChoice.custom)
+                        }
+                        Divider()
+                        Text("Other…").tag(DataFolderChoice.other)
                     }
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([model.localStore.directory])
                     }
+                    .disabled(!dataFolderExists)
+                    .help(dataFolderExists ? model.localStore.directory.path : "The folder is not there yet")
                 }
-                if model.settings.localStorePath != nil,
-                    !FileManager.default.fileExists(atPath: model.localStore.directory.path)
-                {
-                    Label(
-                        "This folder is not available right now. Is the drive connected? Installs, soundtracks and caches wait until it is.",
-                        systemImage: "exclamationmark.triangle"
-                    )
-                    .foregroundStyle(Theme.warning)
-                    .font(.caption)
+                // On this row alone, so that its message stays out of the collections' folder dialogs.
+                .fileImporter(isPresented: $showingLocalPicker, allowedContentTypes: [.folder]) { result in
+                    if case .success(let url) = result {
+                        let folder = Self.dataFolder(for: url)
+                        try? LocalStore(directory: folder).ensureDirectories()
+                        model.setDataFolder(folder.path)
+                    }
+                }
+                .fileDialogMessage("Choose the folder for installed games, saves and caches.")
+                .fileDialogConfirmationLabel("Choose")
+                if model.settings.localStorePath != nil, !dataFolderExists {
+                    if AppModel.volumeIsMissing(for: model.localStore.directory) {
+                        StatusLabel(
+                            "The drive with this folder is not connected. Installs, soundtracks and caches wait for it.",
+                            tone: .warning
+                        )
+                        .font(.caption)
+                    } else {
+                        Text("\(AppInfo.displayName) makes this folder when it first needs it.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 Text(
-                    "Installed games, save backups, edited configs, unpacked soundtracks, caches, launch configs and logs are kept here, so the collections can stay read-only; an external drive works. Favorites, play history and settings stay on this Mac. Choosing another folder does not move what is already there. If you moved or renamed this folder, choose it again: the collections set up inside it follow."
+                    "Installed games, saves and caches are kept here, so a collection can stay read-only. Choosing another folder does not move what is there."
                 )
                 .font(.caption).foregroundStyle(.secondary)
                 Picker("Install games to", selection: $model.settings.installLocation) {
@@ -205,19 +219,32 @@ struct LibrarySettingsView: View {
         .formStyle(.grouped)
         .padding(.vertical, 8)
         .watchingForEmulators()
+        .withoutInitialFocus()
         .dropDestination(for: URL.self) { urls, _ in
             model.addDroppedFolders(urls)
         }
-        .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { model.addFolder(url) }
-        }
-        .fileImporter(isPresented: $showingLocalPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result {
-                let folder = Self.dataFolder(for: url)
-                try? LocalStore(directory: folder).ensureDirectories()
-                model.setDataFolder(folder.path)
+    }
+
+    /// The pop-up's entries: the default folder, the chosen one, and
+    /// "Other…", which is never the selection: it opens the folder chooser.
+    private enum DataFolderChoice: Hashable { case standard, custom, other }
+
+    private var dataFolderExists: Bool {
+        FileManager.default.fileExists(atPath: model.localStore.directory.path)
+    }
+
+    private var dataFolderBinding: Binding<DataFolderChoice> {
+        Binding(
+            get: { model.settings.localStorePath == nil ? .standard : .custom },
+            set: { choice in
+                switch choice {
+                case .standard: model.setDataFolder(nil)
+                case .custom: break
+                // After the menu has closed.
+                case .other: DispatchQueue.main.async { showingLocalPicker = true }
+                }
             }
-        }
+        )
     }
 }
 
@@ -228,26 +255,37 @@ struct CollectionEditor: View {
     @State private var expanded = false
     @State private var pickingRoot = false
     @State private var pickingSubstitution: UUID?
+    @State private var confirmingRemoval = false
 
     var body: some View {
         DisclosureGroup(isExpanded: $expanded) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    TextField("Name", text: $collection.name)
-                        .frame(maxWidth: 240)
-                    Toggle("Enabled", isOn: $collection.isEnabled)
-                    Spacer()
-                    Button("Remove", role: .destructive) { model.removeCollection(id: collection.id) }
-                }
-                HStack {
-                    Text(collection.rootPath).font(Theme.mono).lineLimit(1).truncationMode(.middle)
-                    Spacer()
-                    Button("Choose…") { pickingRoot = true }
+                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 8) {
+                    GridRow {
+                        Text("Name").foregroundStyle(.secondary)
+                        TextField("Name", text: $collection.name)
+                            .labelsHidden()
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 260)
+                    }
+                    GridRow {
+                        Text("Folder").foregroundStyle(.secondary)
+                        HStack {
+                            Text(collection.rootPath).font(Theme.mono).lineLimit(1).truncationMode(.middle)
+                                .help(collection.rootPath)
+                            Spacer()
+                            Button("Choose…") { pickingRoot = true }
+                        }
+                    }
+                    GridRow {
+                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                        Toggle("Show in the library", isOn: $collection.isEnabled)
+                            .toggleStyle(.checkbox)
+                    }
                 }
                 if let error = model.loadErrors[collection.id] {
                     HStack {
-                        Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.bad)
-                            .font(.caption)
+                        StatusLabel(error, tone: .bad).font(.caption)
                         Spacer()
                         Button(model.disconnectedShares.isEmpty ? "Try Again" : "Connect") { model.tryAgain() }
                             .help(
@@ -257,7 +295,7 @@ struct CollectionEditor: View {
                     }
                 }
                 if let report = model.rootReports[collection.id] {
-                    LibraryRootReportView(report: report)
+                    LibraryRootReportDisclosure(report: report)
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Path substitutions").font(.subheadline.weight(.semibold))
@@ -288,6 +326,13 @@ struct CollectionEditor: View {
                         collection.substitutions.append(PathSubstitution(windowsPrefix: "Games", macPath: ""))
                     }
                 }
+                Divider()
+                HStack {
+                    Text("Removing a collection deletes nothing: its folder, and the games installed from it, stay.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Remove Collection…", role: .destructive) { confirmingRemoval = true }
+                }
             }
             .padding(.vertical, 6)
         } label: {
@@ -295,10 +340,16 @@ struct CollectionEditor: View {
                 Text(collection.name).fontWeight(.semibold)
                 if !collection.isEnabled { Text("(disabled)").foregroundStyle(.secondary) }
                 Spacer()
-                if let snapshot = model.library?.snapshot(id: collection.id) {
-                    Text("\(snapshot.games.count.formatted()) games").foregroundStyle(.secondary)
+                if let subtitle = model.sidebarCounts.collections[collection.id] {
+                    Text(subtitle).foregroundStyle(.secondary)
                 }
             }
+        }
+        .confirmationDialog("Remove “\(collection.name)” from \(AppInfo.displayName)?", isPresented: $confirmingRemoval)
+        {
+            Button("Remove", role: .destructive) { model.removeCollection(id: collection.id) }
+        } message: {
+            Text("The collection's folder stays as it is, and so do the games installed from it. You can add it again.")
         }
         .fileImporter(isPresented: $pickingRoot, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { collection.rootPath = url.path }
@@ -330,7 +381,7 @@ struct EmulatorSettingsView: View {
                     ForEach(EmulatorPolicy.allCases) { Text($0.displayName).tag($0) }
                 }
                 Text(
-                    "eXoDOS picks a DOSBox build per game (0.74, ECE, Staging, SVN Daum or DOSBox-X). “Match” maps Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging. You can override any game in its info sheet."
+                    "eXoDOS names a DOSBox build for each game. “Match” runs its Daum and DOSBox-X games in DOSBox-X, and the rest in DOSBox Staging."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
@@ -341,42 +392,39 @@ struct EmulatorSettingsView: View {
                 }
             }
             Section("eXoWin9x games") {
-                Text(
-                    "eXoWin9x games start Windows 98 in DOSBox-X. About thirty need a full PC with a 3dfx Voodoo card; eXo runs those in 86Box."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("eXoWin9x games start Windows 98 in DOSBox-X. About thirty need 86Box, for its 3dfx Voodoo card.")
+                    .font(.caption).foregroundStyle(.secondary)
+                // 86Box alone is not enough: without this line, its "Ready" reads as an all-clear.
+                if model.emulatorInstallation(.dosboxX)?.exists != true {
+                    StatusLabel("DOSBox-X is not installed. The other eXoWin9x games need it.", tone: .warning)
+                        .font(.callout)
+                }
                 EmulatorPathRow(kind: .box86, picking: $picking)
             }
             Section("eXoScummVM games") {
-                Text(
-                    "eXoScummVM games run in ScummVM, with eXo's settings for each game. Their saves and ScummVM settings are kept in the local data folder, apart from your own ScummVM settings."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("Saves and settings for these games are kept apart from your own ScummVM's.")
+                    .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .scummVM, picking: $picking)
-                Text(
-                    "A few games use engines that ScummVM leaves out of its release builds until they are finished. Choose a daily build (a second ScummVM app) to play them; it is used only for those games."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("A few games need an engine that only ScummVM's daily builds have. Choose one here for them.")
+                    .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .scummVMDaily, picking: $picking)
             }
             Section("eXoIF games") {
                 Text(
-                    "Each eXoIF game comes in versions for several systems. Text-adventure story files (Infocom and other Z-code, Glulx, TADS, Hugo, Level 9, Magnetic Scrolls, Adrift) open in Spatterlight; MS-DOS versions run in DOSBox; Commodore, ZX Spectrum, Apple II, Atari 8-bit, Amstrad CPC and Amiga versions run in RetroArch (below). Other systems are not supported yet."
+                    "Story files open in Spatterlight, MS-DOS versions run in DOSBox, and 8-bit computer versions run in RetroArch."
                 )
                 .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .spatterlight, picking: $picking)
             }
             Section("eXoAppleIIGS games") {
-                Text(
-                    "Most eXoAppleIIGS games run in GSplus, with eXo's settings and the Apple IIGS ROM that eXo ships."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("Most eXoAppleIIGS games run in GSplus, with the Apple IIGS ROM that eXo ships.")
+                    .font(.caption).foregroundStyle(.secondary)
                 EmulatorPathRow(kind: .gsplus, picking: $picking)
                 AppleIIGSROMRow()
             }
             Section("Consoles, computers and arcade") {
                 Text(
-                    "Games from a LaunchBox library start in the emulator assigned to their platform. RetroArch covers most platforms through its cores, Dolphin runs GameCube and Wii, MAME runs arcade sets and Mednafen covers a few more consoles. A platform without a choice of its own follows the library's Emulators.xml, mapped to the Mac emulators found here."
+                    "Games from a LaunchBox library start in their platform's emulator: your choice under Platforms, else the library's own, matched to the Mac emulators found here."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }
@@ -393,6 +441,7 @@ struct EmulatorSettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.vertical, 8)
+        .withoutInitialFocus()
         .fileImporter(
             isPresented: Binding(get: { picking != nil }, set: { if !$0 { picking = nil } }),
             allowedContentTypes: [.applicationBundle, .unixExecutable]
@@ -435,31 +484,43 @@ struct EmulatorSettingsView: View {
     }
 }
 
-/// Where one emulator is installed, with Choose and Auto-detect.
+/// One emulator: the app that was found, with its icon and version, or what
+/// its absence costs and where to get it; Choose and Auto-detect beside it.
 struct EmulatorPathRow: View {
     let kind: EmulatorKind
     @Binding var picking: EmulatorKind?
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        @Bindable var model = model
         let installation = model.emulatorInstallation(kind)
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(installation?.executableURL.path ?? "Not found")
-                    .font(Theme.mono)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                if let installation {
-                    Label(
-                        installation.exists ? "Ready" : "Executable missing",
-                        systemImage: installation.exists ? "checkmark.circle.fill" : "xmark.circle"
-                    )
-                    .font(.caption)
-                    .foregroundStyle(installation.exists ? Theme.good : Theme.bad)
-                } else if let url = URL(string: kind.website) {
-                    Link("Download from \(url.host ?? kind.website)", destination: url).font(.caption)
+        let found = installation?.exists == true
+        HStack(spacing: 10) {
+            if let installation, found {
+                let app = EmulatorApp(installation)
+                Image(nsImage: app.icon).resizable().interpolation(.high).frame(width: 32, height: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(app.name + (app.version.map { " \($0)" } ?? ""))
+                    StatusLabel("Ready", tone: .good, textStyle: Theme.textSecondary).font(.caption)
                 }
+                .help(installation.executableURL.path)
+            } else {
+                Image(systemName: "questionmark.app.dashed")
+                    .font(.system(size: 26, weight: .light))
+                    .foregroundStyle(Theme.textTertiary)
+                    .frame(width: 32, height: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(installation == nil ? "\(kind.displayName) is not installed" : "The chosen file is gone")
+                    HStack(spacing: 8) {
+                        if let cost = model.gamesNeedingLine(kind) {
+                            Text(cost).foregroundStyle(.secondary).help(model.gamesNeedingBreakdown(kind))
+                        }
+                        if let url = URL(string: kind.website) {
+                            Link("Get it from \(url.host ?? kind.website)", destination: url).accentLink()
+                        }
+                    }
+                    .font(.caption)
+                }
+                .help(installation?.executableURL.path ?? "")
             }
             Spacer()
             Button("Choose…") { picking = kind }
@@ -470,9 +531,34 @@ struct EmulatorPathRow: View {
     }
 }
 
+/// An emulator as the user knows it: the app's name, icon and version, not
+/// the path of the executable inside it.
+struct EmulatorApp {
+    let name: String
+    let version: String?
+    let icon: NSImage
+
+    init(_ installation: EmulatorInstallation) {
+        if let app = installation.appBundleURL {
+            name = FileManager.default.displayName(atPath: app.path).replacingOccurrences(of: ".app", with: "")
+            version = Bundle(url: app)?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            icon = NSWorkspace.shared.icon(forFile: app.path)
+        } else {
+            // A command-line program, such as Homebrew's: its Cellar folder names the version.
+            let resolved = installation.executableURL.resolvingSymlinksInPath()
+            name = installation.kind.displayName
+            let parts = resolved.pathComponents
+            version = parts.firstIndex(of: "Cellar").flatMap { parts.indices.contains($0 + 2) ? parts[$0 + 2] : nil }
+            icon = NSWorkspace.shared.icon(forFile: resolved.path)
+        }
+    }
+}
+
 /// One row per platform with ROM games: which emulator and core run it.
 struct PlatformAssignmentsView: View {
     @Environment(AppModel.self) private var model
+    @State private var onlyProblems = false
+    @State private var filter = ""
 
     var body: some View {
         let resolver = model.emulatorResolver()
@@ -481,9 +567,32 @@ struct PlatformAssignmentsView: View {
             Text("No console, computer or arcade platforms are loaded. Add a LaunchBox library in the Library tab.")
                 .font(.caption).foregroundStyle(.secondary)
         } else {
-            ForEach(model.romPlatforms) { platform in
-                PlatformAssignmentRow(
-                    platform: platform, resolved: resolver.resolve(platform: platform.name), cores: cores)
+            let rows = model.romPlatforms.map { (platform: $0, resolved: resolver.resolve(platform: $0.name)) }
+            let problems = rows.count { !$0.resolved.isReady }
+            let shown = rows.filter {
+                (!onlyProblems || !$0.resolved.isReady)
+                    && (filter.isEmpty || $0.platform.name.localizedCaseInsensitiveContains(filter))
+            }
+            HStack {
+                Picker("Show", selection: $onlyProblems) {
+                    Text("All \(rows.count)").tag(false)
+                    Text("Not ready (\(problems))").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                Spacer()
+                TextField("Filter platforms", text: $filter)
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 180)
+            }
+            if shown.isEmpty {
+                Text(onlyProblems && problems == 0 ? "Every platform is ready." : "No platform matches.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(shown, id: \.platform.id) { row in
+                PlatformAssignmentRow(platform: row.platform, resolved: row.resolved, cores: cores)
             }
         }
     }
@@ -494,6 +603,7 @@ struct PlatformAssignmentRow: View {
     let resolved: ResolvedEmulatorAssignment
     let cores: [RetroArchCore]
     @Environment(AppModel.self) private var model
+    @State private var showingOptions = false
 
     private var userAssignment: PlatformEmulatorAssignment? { model.settings.platformAssignment(for: platform.name) }
     private var effectiveKind: EmulatorKind? { userAssignment?.emulator ?? resolved.assignment?.emulator }
@@ -512,30 +622,81 @@ struct PlatformAssignmentRow: View {
                 }
                 .labelsHidden()
                 .frame(width: 112)
-                if effectiveKind == .retroArch {
-                    Picker("Core", selection: coreBinding) {
-                        Text("Choose a core").tag(String?.none)
-                        ForEach(missingCores, id: \.self) { Text("\($0) (missing)").tag(String?.some($0)) }
-                        ForEach(cores) { Text($0.title).tag(String?.some($0.name)) }
+                // The core's column stays, empty, for the other emulators, so the rows line up.
+                Group {
+                    if effectiveKind == .retroArch {
+                        Picker("Core", selection: coreBinding) {
+                            Text("Choose a core").tag(String?.none)
+                            ForEach(missingCores, id: \.self) { Text("\($0) (missing)").tag(String?.some($0)) }
+                            ForEach(cores) { Text($0.title).tag(String?.some($0.name)) }
+                        }
+                        .labelsHidden()
+                    } else {
+                        Color.clear.frame(height: 1)
                     }
-                    .labelsHidden()
-                    .frame(width: 236)
+                }
+                .frame(width: 220)
+                Button {
+                    showingOptions = true
+                } label: {
+                    Image(
+                        systemName: userAssignment?.arguments.isEmpty == false
+                            ? "ellipsis.circle.fill" : "ellipsis.circle")
+                }
+                .buttonStyle(.borderless)
+                .disabled(userAssignment == nil)
+                .help(
+                    userAssignment == nil
+                        ? "Choose an emulator first. Automatic takes the library's arguments."
+                        : "Extra arguments for the emulator"
+                )
+                .popover(isPresented: $showingOptions, arrowEdge: .trailing) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Extra arguments for \(platform.name)").font(.headline)
+                        TextField("Extra arguments", text: argumentsBinding)
+                            .labelsHidden()
+                            .font(Theme.mono)
+                            .textFieldStyle(.roundedBorder)
+                        Text(
+                            "Added to the emulator's command line, before the game. Put a value with spaces in double quotes."
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14)
+                    .frame(width: 360)
                 }
             }
-            if userAssignment != nil {
-                TextField("Extra arguments", text: argumentsBinding)
-                    .font(Theme.mono)
-                    .textFieldStyle(.roundedBorder)
+            HStack(alignment: .firstTextBaseline) {
+                StatusLabel(status, tone: resolved.isReady ? .good : .warning, textStyle: Theme.textSecondary)
+                    .font(.caption)
+                Spacer()
+                fix
             }
-            Label(status, systemImage: resolved.isReady ? "checkmark.circle.fill" : "exclamationmark.triangle")
-                .font(.caption)
-                .foregroundStyle(resolved.isReady ? Theme.good : Theme.warning)
         }
         .padding(.vertical, 2)
     }
 
+    /// What to do about a platform that is not ready: get the emulator, or
+    /// open RetroArch to download the core.
+    @ViewBuilder private var fix: some View {
+        if !resolved.isReady, let kind = resolved.assignment?.emulator {
+            if let installation = model.emulatorInstallation(kind), installation.exists {
+                if kind == .retroArch, let app = installation.appBundleURL {
+                    Button("Open RetroArch") {
+                        NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+                    }
+                    .controlSize(.small)
+                    .help("Download the core in RetroArch: Online Updater › Core Downloader.")
+                }
+            } else if let url = URL(string: kind.website) {
+                Link("Get \(kind.displayName)", destination: url).font(.caption).accentLink()
+            }
+        }
+    }
+
     private var detail: String {
-        var text = platform.gameCount == 1 ? "1 game" : "\(platform.gameCount) games"
+        var text = platform.gameCount == 1 ? "1 game" : "\(platform.gameCount.formatted()) games"
         if let title = resolved.launchBoxEmulatorTitle {
             text += " · LaunchBox uses \(title)"
             if let core = resolved.launchBoxCore { text += " with \(core)" }
@@ -629,10 +790,8 @@ struct DisplaySettingsView: View {
                 Picker("Window size", selection: $model.settings.launchOptions.windowSize) {
                     ForEach(LaunchOptions.WindowSize.allCases) { Text($0.displayName).tag($0) }
                 }
-                Text(
-                    "Automatic lets DOSBox Staging size the window for your screen. DOSBox-X then uses the size in the game's config, which eXoDOS sets for a 1080p desktop."
-                )
-                .font(.caption).foregroundStyle(.secondary)
+                Text("Automatic lets DOSBox Staging size the window; DOSBox-X uses the size in the game's config.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Picture") {
                 Picker("Aspect ratio correction", selection: $model.settings.launchOptions.aspect) {
@@ -658,6 +817,7 @@ struct DisplaySettingsView: View {
         .formStyle(.grouped)
         .padding(.vertical, 8)
         .watchingForEmulators()
+        .withoutInitialFocus()
     }
 }
 
@@ -671,15 +831,13 @@ struct FluidSynthStatus: View {
         if model.emulatorInstallation(.dosboxStaging)?.exists == true {
             let available = model.fluidSynthAvailable
             VStack(alignment: .leading, spacing: 4) {
-                Label(
+                StatusLabel(
                     available ? "FluidSynth ready in DOSBox Staging" : "No FluidSynth in DOSBox Staging",
-                    systemImage: available ? "checkmark.circle.fill" : "exclamationmark.triangle"
-                )
-                .foregroundStyle(available ? Theme.good : Theme.warning)
+                    tone: available ? .good : .warning)
                 Text(
                     available
                         ? "General MIDI games play with the eXoDOS Sound Canvas SoundFont."
-                        : "General MIDI games use the macOS synthesizer instead. DOSBox Staging 0.83 and later have FluidSynth built in; for an older version, install FluidSynth with Homebrew (brew install fluid-synth)."
+                        : "General MIDI games use the macOS synthesizer instead. Update DOSBox Staging to 0.83 or later, or install FluidSynth: brew install fluid-synth."
                 )
                 .foregroundStyle(.secondary)
             }
@@ -695,14 +853,14 @@ struct DownloaderStatus: View {
     var body: some View {
         let downloader = model.torrentDownloader
         VStack(alignment: .leading, spacing: 4) {
-            Label(
-                downloader.map { "aria2 ready: \($0.executable.path)" } ?? "aria2 not found",
-                systemImage: downloader == nil ? "exclamationmark.triangle" : "checkmark.circle.fill"
+            StatusLabel(
+                downloader == nil ? "aria2 is not installed" : "aria2 ready",
+                tone: downloader == nil ? .warning : .good
             )
-            .foregroundStyle(downloader == nil ? Theme.warning : Theme.good)
+            .help(downloader?.executable.path ?? "")
             Text(
-                "eXo's Lite editions leave out the game archives. When you install such a game, \(AppInfo.displayName) downloads it from the eXo torrent with aria2, as eXo does on Windows, and stops sharing when the download ends."
-                    + (downloader == nil ? " Install aria2 with Homebrew: brew install aria2." : "")
+                "aria2 downloads each game of an eXo Lite collection from the eXo torrent when you install it."
+                    + (downloader == nil ? " Install it with Homebrew: brew install aria2." : "")
             )
             .foregroundStyle(.secondary)
         }
@@ -720,16 +878,14 @@ struct AppleIIGSROMRow: View {
         let found = model.hasAppleIIGSROM
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label(
+                StatusLabel(
                     found ? "Apple IIGS ROM for MAME added" : "Apple IIGS ROM for MAME missing",
-                    systemImage: found ? "checkmark.circle.fill" : "exclamationmark.triangle"
-                )
-                .foregroundStyle(found ? Theme.good : Theme.warning)
+                    tone: found ? .good : .warning)
                 Spacer()
                 Button(found ? "Replace…" : "Add ROM…") { picking = true }
             }
             Text(
-                "eXo runs 74 games in MAME (brew install mame). Current MAME needs one ROM file that eXo's older set lacks: \(AppleIIGSCharacterROM.fileName), 16 KB, the Apple IIGS character ROM. \(AppInfo.displayName) cannot include it. Choose the file, or a zip that holds it, such as apple2gs.zip from a current MAME ROM set; a copy goes into the MAME folder in the local data folder."
+                "eXo runs 74 games in MAME, which needs one ROM that eXo's set lacks: \(AppleIIGSCharacterROM.fileName). Choose the file, or a zip that holds it, such as apple2gs.zip from a current MAME ROM set."
             )
             .font(.caption).foregroundStyle(.secondary)
         }

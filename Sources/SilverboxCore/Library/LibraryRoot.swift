@@ -166,3 +166,58 @@ nonisolated public struct LibraryRootReport: Hashable, Sendable {
         items.filter(\.isRequired).allSatisfy(\.exists)
     }
 }
+
+/// What a folder the user chose for a collection turned out to be.
+nonisolated public enum LibraryFolderChoice: Hashable, Sendable {
+    /// The folder is a collection or an eXo download.
+    case library(URL)
+    /// The folder is a level off: inside a collection (`eXo`, `Data`,
+    /// `Content`) or the folder that holds exactly one. The collection is
+    /// taken in its place.
+    case corrected(URL)
+    /// The folder holds several collections; the user is to choose one.
+    case several([URL])
+    case notALibrary
+
+    /// The collection to add, when there is exactly one.
+    public var url: URL? {
+        switch self {
+        case .library(let url), .corrected(let url): return url
+        case .several, .notALibrary: return nil
+        }
+    }
+
+    /// True for an eXo download or a LaunchBox-format library.
+    public static func isLibrary(_ url: URL) -> Bool {
+        EXoDownload.hasPacks(url) || LibraryRoot(url: url).inspect().isUsable
+    }
+
+    /// Finds the collection the user meant: the folder, the folder around
+    /// it (up to two levels, for `eXo/eXoDOS` or `Data/Platforms`), or the
+    /// one collection among the folders inside it.
+    public static func resolve(_ url: URL) -> LibraryFolderChoice {
+        let url = url.standardizedFileURL
+        if isLibrary(url) { return .library(url) }
+        var parent = url
+        for _ in 0..<2 {
+            let next = parent.deletingLastPathComponent()
+            guard next.path != parent.path, next.path != "/" else { break }
+            parent = next
+            if isLibrary(parent) { return .corrected(parent) }
+        }
+        let children =
+            (try? FileManager.default.contentsOfDirectory(
+                at: url, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])) ?? []
+        let libraries =
+            children
+            .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+            .prefix(200)
+            .filter(isLibrary)
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        switch libraries.count {
+        case 0: return .notALibrary
+        case 1: return .corrected(libraries[0].standardizedFileURL)
+        default: return .several(libraries.map(\.standardizedFileURL))
+        }
+    }
+}

@@ -29,7 +29,10 @@ struct SidebarView: View {
             ForEach(model.library?.snapshots ?? [], id: \.collection.id) { snapshot in
                 Section {
                     OutlineGroup(snapshot.tree, children: \.outlineChildren) { node in
-                        Label(node.title, systemImage: node.systemImage)
+                        // A playlist drops the words the rows above it say; its help has them all.
+                        let short = counts.titles[snapshot.collection.id]?[node.ref]
+                        Label(short ?? node.title, systemImage: node.systemImage)
+                            .help(short == nil ? "" : node.title)
                             .badge(counts.nodes[snapshot.collection.id]?[node.ref] ?? 0)
                             .tag(LibraryScope.node(collectionID: snapshot.collection.id, ref: node.ref))
                     }
@@ -40,11 +43,11 @@ struct SidebarView: View {
                             Text(subtitle).font(.caption2).foregroundStyle(Theme.textTertiary)
                         }
                     }
+                    .help(counts.collectionHelp[snapshot.collection.id] ?? "")
                 }
             }
         }
         .listStyle(.sidebar)
-        // Sidebar icons take the app's accent from the asset catalog otherwise.
         .listItemTint(Theme.accent)
         .scrollContentBackground(.hidden)
         .background(Theme.sidebar)

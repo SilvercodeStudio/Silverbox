@@ -13,4 +13,6 @@ The vendored decoders under Sources/CStbVorbis and Sources/CXmpLite keep their o
 
 The app includes Sparkle (https://sparkle-project.org), which installs its updates. Sparkle is under its own license, the MIT License, with the licenses of the code it includes; the app shows them in About › Acknowledgments.
 
+The app includes the font VT323 (Silverbox/Fonts/VT323-Regular.ttf), by Peter Hull, for its headlines. The font is under its own license, the SIL Open Font License, Version 1.1, in Silverbox/Licenses/VT323.txt; the app shows it in About › Acknowledgments.
+
 The eXoDOS, eXoWin3x, eXoWin9x and other eXo collections are the work of the eXo team and are not part of this program. The eXoDOS cover in the About window (the eXoDOSCover image set) is the eXo team's artwork, shown to credit them. It is not covered by this license.

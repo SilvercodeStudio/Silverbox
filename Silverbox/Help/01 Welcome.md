@@ -8,7 +8,7 @@ The games, media and emulators are not part of Silverbox. You need:
 - DOSBox Staging for eXoDOS, eXoWin3x and eXoDemoScene games, and DOSBox-X for eXoWin9x games and the DOS games that eXo runs in DOSBox-X.
 - For the other packs: 86Box (about thirty eXoWin9x games), ScummVM (eXoScummVM), Spatterlight (eXoIF), GSplus (eXoAppleIIGS) and RetroArch (eXoIF's 8-bit versions, and consoles). The eXoAppleIIGS games that eXo runs in MAME also need MAME and one ROM file you supply.
 
-Until you add a collection, the window shows these two steps, with each emulator found or a link to get it. Emulators you install while Silverbox is open show up without a restart.
+Until you add a collection, the window shows three steps: add a collection, choose the folder where installed games go, and check the emulators. It names what eXoDOS needs, found or with a link to get it; the emulators for the other packs are under "For the other packs". Emulators you install while Silverbox is open show up without a restart.
 
 This is an early version. Expect rough edges, and please report what you find.
 

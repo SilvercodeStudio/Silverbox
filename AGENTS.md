@@ -393,15 +393,35 @@ inside a path or code span.
 - Sidebar. Rows carry `.badge` counts from `AppModel.sidebarCounts`,
   recounted off the main thread shortly after the library or the user's
   state changes (playlists are not counted); each collection's header shows
-  its game count and "read-only", and `DataFolderFooter` shows the local
-  data folder. Empty states use `ContentUnavailableView`.
+  its count of titles (games, and the books, magazines, soundtracks and
+  videos beside them; `Game.isGame` tells them apart) and "read-only",
+  the same line as in Settings › Library, and `DataFolderFooter` shows
+  the local data folder. A playlist's row drops the words above it
+  (`LibraryNode.sidebarTitle(under:packs:)`: "MT-32" for "eXoDOS Games
+  with MT-32", "Installed Demos" for "Installed eXoDemoScene Demos"; a
+  pack's name goes from anywhere in the title, a row's title only from
+  the start) and has the whole name as its help. Empty states use
+  `ContentUnavailableView`.
+- Search. It stays in the selected scope, so the subtitle counts against
+  `AppModel.scopeGameCount`, and `LibraryQuery.rankedBySearch` orders
+  the result by `SearchRank`: a term that is a word of the title, then
+  the start of a word ("Ultima" before "Ultimate"), then inside a word,
+  then the matches by developer, publisher or another name.
+- Game page. `GameDetailView` takes the content column (Command-Down, the
+  inspector's button). The inspector is hidden beside it
+  (`AppModel.inspectorHasAPlace`) and comes back with the library, so the
+  page has the status chips and the favorite and edit buttons itself.
+  `MainActionStyle` draws Install and Play in the accent; Play's version
+  menu is its trailing segment, drawn by the menu's label, because a
+  `Menu` takes neither `.borderedProminent` nor a custom button style.
 - List view. Column headers for Title, Year and Developer sort through
   `settings.sortOrder` and `settings.sortAscending`, the same settings as
   the toolbar's Sort menu; `Game.sortYear` and `sortDeveloper` give
   `KeyPathComparator` non-optional keys.
 - About. `AboutView` follows Silverside's About window: the icon on a dark
   CRT band (`CRTHero`, like the website's), an accent rule, name and
-  version, library counts from `sidebarCounts`, the eXo credit with the
+  version (a click copies `AppInfo.versionLine`; the commit is in its
+  help), library counts from `sidebarCounts`, the eXo credit with the
   eXoDOS cover, Acknowledgments, Website and Leave a Tip buttons, and the
   copyright with a link to Silvercode Studio. The addresses are in
   `SilverboxLinks` (core): the website (also Help › Silverbox Website),
@@ -429,21 +449,41 @@ inside a path or code span.
   commit (`c2b2f09`, `-dirty` with uncommitted changes) into the built
   Info.plist as `SilverboxCommit`, and `SilverboxArchive` for an archive.
   `AppInfo.versionLine` ("Silverbox 0.5 · c2b2f09") goes into launch
-  and problem reports; the About window leaves a clean commit out of an
-  archive. The phase needs the target's user script sandboxing off.
+  and problem reports; the About window shows the version alone, with
+  the commit in the line's help. The phase needs the target's user script sandboxing off.
 - Reports. Help › Report a Problem… and Send Feedback… open GitHub's new
   issue and new discussion pages for `ProblemReport.repository`, filled in
   by `ProblemReport` (core) from `AppModel+Reports`: the version, the Mac,
   each collection's packs and game count, and the emulators found. No
   paths or collection names. The app sends nothing itself; the privacy
   page says so.
-- Status chips. `Chip` and `ChipRow` (`Chips.swift`) state one fact each in
-  a tone: `Theme.good`, `.warning` or `.bad`, kept apart from the accent.
-  Use these tones for status, never `.red` or `.orange`. `GameStatusChips`
+- Status. The accent (amber) is for actions and selection: the main
+  button, the selection, links (`.accentLink()`). Status never takes it.
+  A status has a glyph in a tone (`StatusTone`: `Theme.good`, `.warning`,
+  which is yellow, or `.bad`) and its text in a text colour: `StatusLabel`
+  for a line, `Chip` and `ChipRow` (`Chips.swift`) for a capsule, both
+  through `StatusGlyph`, which draws the warning triangle with a dark "!"
+  on its yellow (the yellow alone is too pale on a light window). Use
+  these for status, never `.red` or `.orange`, and never
+  `Label(…).foregroundStyle(Theme.warning)`. `GameStatusChips`
   in the inspector header says whether the game is installed, which
   emulator runs it and whether that emulator is present. Keep chip text to
   a few words and put the whole reason in its `help`; a control that is
   disabled says why in `.help` too.
+- Focus. Windows and sheets open with `.withoutInitialFocus()`
+  (`WindowFocus.swift`), so that keyboard navigation in System Settings
+  does not put a focus ring on the first button or link.
+- Settings text. A group's note is one sentence; the details go in help
+  page 05. A pop-up button that could also take any folder or app has
+  "Other…" as its last entry (the video player, the local data folder),
+  not a Choose… button beside it. The welcome's data folder step is the
+  exception: it shows the folder with Choose… and Use Default, because a
+  first-time user is to see the path and both actions at once. An
+  emulator shows as an app (`EmulatorApp`: name, version, icon), with its
+  path as help; a missing one says how many games need it
+  (`sidebarCounts.gamesNeeding`, by pack or platform, which follows the
+  DOSBox policy and the platform choices; the line's help has the
+  breakdown).
 - Emulator status. `AppModel.checkEmulators()` records what is installed
   (`EmulatorCheck`) at start, when the app comes to the front and every two
   seconds while Settings › Library, › Emulators, › Display & Sound,
@@ -456,14 +496,31 @@ inside a path or code span.
   `model.retroArchSetup` or `emulatorResolver()`, which read the check, not
   `settings.emulatorInstallation(_:)`, so they redraw when it changes.
 - First start. With no collection, the content column shows `WelcomeView`,
-  under the same `CRTHero` band as the About window:
-  Add Collection (`addFolder` takes an eXo download or a set-up
-  collection), the emulators each pack needs, and aria2 for eXoDOS Lite.
+  under the same `CRTHero` band as the About window, in three steps:
+  Add Collection, the local data folder, and the emulators eXoDOS needs
+  with aria2 (the other packs' behind a disclosure); a step that is done
+  has a check mark (the data folder step unless a chosen folder is out of
+  reach, since the default needs no choice). `AppModel.hasGamesToBrowse` is false then and after a
+  failed load, and the window leaves out the search, the view controls
+  and the inspector. Every Add Collection… button calls
+  `AppModel.chooseCollection()`: an open panel with a message, then
+  `LibraryFolderChoice.resolve` (core), which takes the collection when
+  the folder is a level off (`eXo`, `Data`, or the folder around one
+  collection), then `addFolder` (an eXo download or a set-up collection).
+  `folderBeingRead` names the folder while that goes on.
 - Launching: `LaunchPlanner` maps `eXo/eXoDOS` paths to the local games folder
   for locally installed games, adds overlay mounts for library-installed games
   on read-only volumes, prefers an edited config from `Overrides/`, and layers
   the global `LaunchOptions` plus per-game `LaunchOverrides` (remembered from
   the launch options dialog) on top of the translated config.
+- Display font. `Theme.display(size:)` is VT323, the website's headline
+  face, for the two big titles only (About's "Silverbox" and "Welcome to
+  Silverbox"), never under 32 pt. The file is
+  `Silverbox/Fonts/VT323-Regular.ttf` (version 2.000, from
+  github.com/google/fonts, `ofl/vt323`; upstream
+  github.com/phoikoi/VT323), registered for the process at first use,
+  with its license in `Silverbox/Licenses/VT323.txt`. Do not put a
+  Markdown note beside it: every `.md` file in the bundle is a help page.
 - Help pages are Markdown files in `Silverbox/Help/` (ordered by their numeric
   prefix, title from the first `#` heading), rendered by `MarkdownHTML` in the
   Help window: headings, lists, pipe tables, code and links. Add or edit
@@ -488,10 +545,15 @@ inside a path or code span.
   --export-image` makes them; make them again when an icon changes. A
   Dock icon set at run time is a flat image, so only the bundle icon
   (amber) follows the system's icon style (dark, clear, tinted). The
-  chosen icon also sets the accent: `Theme.accent` and `Theme.accentText`
-  read `ThemeAccent.shared` (observable, set by `AppModel.applyAppIcon`), and each scene applies
-  `.tint(Theme.accent)` for controls. Use `Theme.accent`, not
-  `Color.accentColor` (the asset catalog's fixed amber). Every `Theme`
+  chosen icon also colours the CRT band behind it in the About window
+  and the welcome (`AppIconVariant.phosphor`: glow, ground and rule),
+  which is decoration. The
+  accent is amber with either icon: `Theme.accent` and `Theme.accentText`
+  for our own views, and the asset catalog's `AccentColor`, with the same
+  light and dark values, for the system's controls. No scene applies
+  `.tint`: with it, every pop-up value and button title took the accent.
+  Use `Theme.accent`, not `Color.accentColor`, which follows the accent
+  the user chose in System Settings. Every `Theme`
   colour has a light and a dark value (`Color(light:dark:)`, a dynamic
   `NSColor`), and the Appearance setting sets `NSApp.appearance`
   (`AppModel.applyAppearance`); do not force a colour scheme on a view. The
@@ -534,7 +596,8 @@ inside a path or code span.
 ## Constraints
 
 - **Dependencies:** ask before adding one. Today there are the two vendored
-  C decoders and Sparkle (agreed 2026-11-19, app target only). Declare package dependencies in `Package.swift`
+  C decoders, Sparkle (agreed 2026-11-19, app target only) and the VT323
+  font file (agreed 2026-11-20). Declare package dependencies in `Package.swift`
   (remote packages pinned by `Package.resolved`, which is committed);
   dependencies of the app target alone go through Xcode's Add Package
   Dependencies, which the user does. Prefer vendoring small, stable C
@@ -547,7 +610,8 @@ inside a path or code span.
 - **Licensing:** the code is under the GNU General Public License, version 3
   or later (`LICENSE`, the FSF's text verbatim). `NOTICE` has the
   copyright notice and what the license does not cover: the name and the
-  icon artwork, the vendored decoders (their own licenses), and the eXo
+  icon artwork, the vendored decoders and the VT323 font (their own
+  licenses), and the eXo
   team's collections and the eXoDOS cover. The app shows the notice, the
   license and the vendored licenses from `Silverbox/Licenses/`, which
   `ProjectFilesTests` keeps identical to the originals. Credit new outside
@@ -594,8 +658,11 @@ inside a path or code span.
   `-keyPresses` works without `-screenshotPath` too, `-windowSize
   1320x840` sizes the main window, `-noLibrary 1` starts with no
   collection (the welcome), `-inspectorScroll extras` scrolls the
-  inspector, `-openInfo 1` opens the selected title's game info sheet,
-  and `-plainVersion 1` shows the About version without the commit. A `-libraryPath` folder set up from a
+  inspector, and `-openInfo 1` opens the selected title's game info sheet.
+  `-screenshotScroll 0.5` scrolls the Settings window (any window but the
+  main one) that far down before the screenshot; 1 is the end. `-appIcon
+  green` (or `amber`) sets the app icon for the run, and `-openPage 1`
+  opens the selected title's game page. A `-libraryPath` folder set up from a
   download finds the download through its setup record. If the last session closed the main
   window, macOS restores no window and the screenshot never comes; add
   `-ApplePersistenceIgnoreState YES`. Example:

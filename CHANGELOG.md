@@ -32,20 +32,70 @@ What changed in each version of Silverbox.
 - Help › Support Silverbox and the About window's Leave a Tip button open
   a page where you can leave a tip. Silverbox stays free.
 
+- Add Collection… takes the right folder when you choose one a level
+  off: a folder inside a collection, such as `eXo` or `Data`, or the
+  folder around one collection. The welcome screen and Settings say so
+  while a chosen folder is read.
+- Settings › Emulators shows what a missing emulator costs ("666 games
+  need it", with the packs they come from when the pointer rests on it;
+  the number follows your DOSBox setting), says so when eXoWin9x lacks
+  DOSBox-X, and its list of platforms can show only those that are not
+  ready, or those with a name you type. A platform whose RetroArch core
+  is missing has an Open RetroArch button.
+
 ### Changed
 
+- The accent is amber with either app icon. The green icon now changes
+  the Dock and the About window only, so green always means "installed",
+  "found" or "ready". Pop-up buttons and plain buttons have the standard
+  macOS look; amber is for the main button, the selection and links.
+- Status has a colored mark and plain text: a green check, a yellow
+  warning triangle with a dark "!" or a red cross. A warning no longer looks like a
+  button.
+- A search counts against the section it searches ("13 of 517"), and
+  lists the best title matches first: "Ultima" before "Ultimate", and
+  both before a match by developer or publisher.
+- A game page takes the place of the inspector, which showed the same
+  things beside it, and has the status chips and the favorite and edit
+  buttons itself. Its picture has no black bars beside it.
+- "Silverbox" in the About window and "Welcome to Silverbox" are in
+  VT323, the terminal font of the website's headlines. With the green
+  icon, the CRT band behind the icon glows green.
+- The sidebar counts each collection's titles, which include its books,
+  magazines, soundtracks and videos, and Settings › Library shows the
+  same number. Playlists under a pack drop the repeated words: "MT-32",
+  not "eXoDOS Games with MT-32", and "Installed Demos".
+- The inspector: one "Never played" line for a game you have not played,
+  one "Runs in" line for the emulator, Files closed until you open it, a
+  fade where the row of thumbnails goes on, and the version menu as the
+  second half of the Play button. "Not installed" and "Not Rated" are gone.
+- The welcome screen has three steps: add a collection, choose where
+  installed games go, and check the emulators. It names what eXoDOS
+  needs; the other packs' emulators are one click away. A finished step
+  has a check mark. Before a collection is added, the window leaves out
+  the search field, the view controls and the inspector.
+- Settings: emulators appear as apps, with icon and version, not as file
+  paths. Each collection shows a summary of its parts ("All 16 parts
+  found") and opens to its name, folder and substitutions; Remove
+  Collection… asks first. The video player and the local data folder
+  each have one pop-up button with Other…. The volume is dimmed while
+  the music is off. The notes under the groups are shorter; the help has
+  the details.
+- The Keyboard Shortcuts window groups the keys (Browsing, Game, Media,
+  Music, View) and names the buttons of the controller that is connected.
+- Windows and sheets open without a focus ring on their first button or
+  link.
 - Silverbox is free software under the GNU General Public License,
   version 3 or later. About › Acknowledgments › License… shows the
   copyright notice and the full text of the license. Contributions come
   in under the terms in CONTRIBUTING.md.
-- A new app icon: a floppy disk, in amber or green. The highlight colours
-  match it.
+- A new app icon: a floppy disk, in amber or green.
 - Help › Silverbox Website opens getsilverbox.app. The About window is
   new: the icon on a CRT screen, how many games the library holds and how
   many are installed and played, every emulator Silverbox uses, Website
   and Leave a Tip buttons, and a link to Silvercode Studio, which makes
-  Silverbox. Test builds show the Git commit they were built from. The
-  welcome screen opens with the same CRT screen.
+  Silverbox. A click on the version copies it, with the Git commit of
+  the build. The welcome screen opens with the same CRT screen.
 - The help covers every eXo pack, explains how music plays in games, and
   has more troubleshooting, including every file Silverbox keeps and how
   to remove it. The Keyboard Shortcuts window now lists Play,

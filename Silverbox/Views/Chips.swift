@@ -1,10 +1,80 @@
 import SwiftUI
 import SilverboxCore
 
+/// Whether a thing is fine, needs attention or is broken.
+enum StatusTone {
+    case neutral, good, warning, bad
+
+    var color: Color {
+        switch self {
+        case .neutral: Theme.textSecondary
+        case .good: Theme.good
+        case .warning: Theme.warning
+        case .bad: Theme.bad
+        }
+    }
+
+    /// The glyph that says the same as the colour, for a status line.
+    var systemImage: String {
+        switch self {
+        case .neutral: "circle"
+        case .good: "checkmark.circle.fill"
+        case .warning: "exclamationmark.triangle.fill"
+        case .bad: "xmark.circle.fill"
+        }
+    }
+}
+
+/// A tone's glyph in its colour. The warning triangle has a dark "!" on
+/// its yellow, so that it reads on a light window too.
+struct StatusGlyph: View {
+    var tone: StatusTone
+    /// Another glyph than the tone's own.
+    var systemImage: String?
+
+    var body: some View {
+        let name = systemImage ?? tone.systemImage
+        if name == "exclamationmark.triangle.fill" {
+            Image(systemName: name)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(Theme.warningMark, tone == .warning ? Theme.warning : tone.color)
+        } else {
+            Image(systemName: name).foregroundStyle(tone.color)
+        }
+    }
+}
+
+/// One line of status: a glyph in the tone's colour, and the text in a text
+/// colour. The accent is for actions and selection, so status never takes it.
+struct StatusLabel: View {
+    var text: String
+    var tone: StatusTone
+    /// Another glyph than the tone's own.
+    var systemImage: String?
+    var textStyle = Theme.textPrimary
+
+    init(_ text: String, tone: StatusTone, systemImage: String? = nil, textStyle: Color = Theme.textPrimary) {
+        self.text = text
+        self.tone = tone
+        self.systemImage = systemImage
+        self.textStyle = textStyle
+    }
+
+    var body: some View {
+        // Not a Label: a form gives a label's icon a wide column of its own.
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+            StatusGlyph(tone: tone, systemImage: systemImage)
+            Text(text).foregroundStyle(textStyle).fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// A small capsule that states one fact, in a tone that says whether it is
-/// fine, needs attention or is broken.
+/// fine, needs attention or is broken. The tone colours the glyph and the
+/// fill; the text stays in the text colour.
 struct Chip: View {
-    enum Tone { case neutral, good, warning, bad }
+    typealias Tone = StatusTone
 
     var text: String
     var tone = Tone.neutral
@@ -20,36 +90,25 @@ struct Chip: View {
             if isWorking {
                 ProgressView().controlSize(.mini)
             } else if let systemImage {
-                Image(systemName: systemImage).font(.caption2.bold())
+                Group {
+                    if tone == .neutral {
+                        Image(systemName: systemImage).foregroundStyle(Theme.textPrimary)
+                    } else {
+                        StatusGlyph(tone: tone, systemImage: systemImage)
+                    }
+                }
+                .font(.caption2.bold())
             }
             Text(text)
         }
         .font(.system(size: 11, weight: .medium))
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
-        .foregroundStyle(foreground)
+        .foregroundStyle(Theme.textPrimary)
         .padding(.horizontal, 9)
         .padding(.vertical, 3)
-        .background(background, in: Capsule())
+        .background(tone.color.opacity(tone == .neutral ? 0.15 : 0.16), in: Capsule())
         .help(help ?? "")
-    }
-
-    private var foreground: Color {
-        switch tone {
-        case .neutral: Theme.textPrimary
-        case .good: Theme.good
-        case .warning: Theme.warning
-        case .bad: Theme.bad
-        }
-    }
-
-    private var background: Color {
-        switch tone {
-        case .neutral: Theme.textSecondary.opacity(0.15)
-        case .good: Theme.good.opacity(0.14)
-        case .warning: Theme.warning.opacity(0.16)
-        case .bad: Theme.bad.opacity(0.14)
-        }
     }
 }
 
@@ -64,7 +123,7 @@ struct ChipRow<Content: View>: View {
     }
 }
 
-/// What a game needs before it plays, and what it is: installed or not,
+/// What a game needs before it plays, and what it is: installed,
 /// the emulator that will run it and whether that emulator is present, or
 /// the kind of item it is when it is not a game to launch.
 struct GameStatusChips: View {
@@ -83,11 +142,9 @@ struct GameStatusChips: View {
     private func chips() -> [Chip] {
         var chips: [Chip] = []
         let installed = model.isInstalled(game)
-        if game.isEXoGame, !model.isDocumentItem(game) {
-            chips.append(
-                installed
-                    ? Chip(text: "Installed", tone: .good, systemImage: "checkmark.circle")
-                    : Chip(text: "Not installed", systemImage: "square.and.arrow.down"))
+        // A game that is not installed has the Install button beside these chips, which says so.
+        if game.isEXoGame, installed, !model.isDocumentItem(game) {
+            chips.append(Chip(text: "Installed", tone: .good, systemImage: "checkmark.circle.fill"))
         }
         switch game.launchKind {
         case .soundtrack: chips.append(Chip(text: "Soundtrack", systemImage: "music.note"))
@@ -100,11 +157,13 @@ struct GameStatusChips: View {
                 resolved.isReady
                     ? Chip(text: resolved.summary, tone: .good, systemImage: "cpu")
                     : Chip(
-                        text: problemLabel(resolved), tone: .warning, systemImage: "exclamationmark.triangle",
+                        text: problemLabel(resolved), tone: .warning, systemImage: "exclamationmark.triangle.fill",
                         help: resolved.problem))
             if resolved.isReady, let problem = model.missingFirmware(for: game, resolved: resolved) {
                 chips.append(
-                    Chip(text: "BIOS missing", tone: .warning, systemImage: "exclamationmark.triangle", help: problem))
+                    Chip(
+                        text: "BIOS missing", tone: .warning, systemImage: "exclamationmark.triangle.fill",
+                        help: problem))
             }
         case .scummVM:
             if let installation = model.scummVMInstallation(for: game, variant: nil), installation.exists {
@@ -112,7 +171,7 @@ struct GameStatusChips: View {
             } else {
                 chips.append(
                     Chip(
-                        text: "ScummVM missing", tone: .warning, systemImage: "exclamationmark.triangle",
+                        text: "ScummVM missing", tone: .warning, systemImage: "exclamationmark.triangle.fill",
                         help: Self.missingHelp(.scummVM)))
             }
         case .interactiveFiction:
@@ -122,7 +181,7 @@ struct GameStatusChips: View {
                 {
                     chips.append(
                         Chip(
-                            text: "Cannot start yet", tone: .warning, systemImage: "exclamationmark.triangle",
+                            text: "Cannot start yet", tone: .warning, systemImage: "exclamationmark.triangle.fill",
                             help: "\(variant.title): \(reason)."))
                 } else {
                     chips.append(emulatorChip(model.emulatorKind(for: game)))
@@ -132,7 +191,7 @@ struct GameStatusChips: View {
             if let reason = model.appleIIGSProblem(for: game) {
                 chips.append(
                     Chip(
-                        text: "ROM missing", tone: .warning, systemImage: "exclamationmark.triangle",
+                        text: "ROM missing", tone: .warning, systemImage: "exclamationmark.triangle.fill",
                         help: reason + "."))
             } else {
                 chips.append(emulatorChip(model.appleIIGSRoute(for: game).emulator))
@@ -163,7 +222,7 @@ struct GameStatusChips: View {
             return Chip(text: kind.displayName, tone: .good, systemImage: "cpu")
         }
         return Chip(
-            text: "\(kind.displayName) missing", tone: .warning, systemImage: "exclamationmark.triangle",
+            text: "\(kind.displayName) missing", tone: .warning, systemImage: "exclamationmark.triangle.fill",
             help: Self.missingHelp(kind))
     }
 

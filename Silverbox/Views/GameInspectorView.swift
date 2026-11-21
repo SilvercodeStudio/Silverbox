@@ -87,6 +87,7 @@ struct GameInspectorContent: View {
                             if notes.count > 360 {
                                 Button(notesExpanded ? "Less" : "More") { notesExpanded.toggle() }
                                     .buttonStyle(.link)
+                                    .accentLink()
                                     .font(.caption)
                             }
                         }
@@ -165,51 +166,109 @@ struct PlayButtonRow: View {
                 } label: {
                     Label("Install…", systemImage: "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
-                        .frame(height: large ? 40 : 30)
+                        .frame(height: height)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.accent)
+                .buttonStyle(MainActionStyle())
             } else {
-                Button {
-                    if albumLoaded { model.album.togglePlayPause() } else { model.play(game) }
-                } label: {
-                    Label(
-                        albumPlaying ? "Pause" : albumLoaded ? "Resume" : model.isDocumentItem(game) ? "Open" : "Play",
-                        systemImage: albumPlaying ? "pause.fill" : "play.fill"
-                    )
-                    .frame(maxWidth: .infinity)
-                    .frame(height: large ? 40 : 30)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.accent)
-                .keyboardShortcut(.defaultAction)
-                if variants.count > 1 {
-                    Menu {
-                        ForEach(variants) { variant in
-                            Button(variant.title) { model.play(game, variant: variant) }
-                                .disabled(variant.needsWindowsHelper)
-                                .help(variant.unplayableReason ?? "")
-                        }
+                // Play, and for a game with versions a menu of them as its second segment.
+                HStack(spacing: 1) {
+                    Button {
+                        if albumLoaded { model.album.togglePlayPause() } else { model.play(game) }
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Label(
+                            albumPlaying
+                                ? "Pause" : albumLoaded ? "Resume" : model.isDocumentItem(game) ? "Open" : "Play",
+                            systemImage: albumPlaying ? "pause.fill" : "play.fill"
+                        )
+                        .frame(maxWidth: .infinity)
+                        .frame(height: height)
                     }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
-                    .help("Choose a version to play")
+                    .buttonStyle(MainActionStyle(segment: variants.count > 1 ? .leading : .whole))
+                    .keyboardShortcut(.defaultAction)
+                    if variants.count > 1 {
+                        // A menu takes none of the button styles, so its label draws the segment itself.
+                        Menu {
+                            Section("Play a version") {
+                                ForEach(variants) { variant in
+                                    Button(variant.title) { model.play(game, variant: variant) }
+                                        .disabled(variant.needsWindowsHelper)
+                                        .help(variant.unplayableReason ?? "")
+                                }
+                            }
+                        } label: {
+                            MainActionStyle.Face(segment: .trailing, isPressed: false) {
+                                Image(systemName: "chevron.down")
+                                    .font(.caption.weight(.bold))
+                                    .frame(width: 30, height: height)
+                            }
+                        }
+                        .menuStyle(.button)
+                        .buttonStyle(.plain)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .help("Choose a version to play")
+                        .accessibilityLabel("Versions")
+                    }
                 }
             }
-            Button("Configure") { model.configure(game) }
-                .help("Save launch choices for this game")
-                .frame(height: large ? 40 : 30)
+            Button {
+                model.configure(game)
+            } label: {
+                Text("Configure").frame(height: height)
+            }
+            .help("Save launch choices for this game")
             Menu {
                 GameContextMenu(game: game)
             } label: {
-                Image(systemName: "ellipsis")
+                Image(systemName: "ellipsis").frame(height: height)
             }
-            .menuStyle(.borderlessButton)
+            .menuStyle(.button)
+            .menuIndicator(.hidden)
             .fixedSize()
+            .help("More actions")
+            .accessibilityLabel("More actions")
         }
-        .foregroundStyle(Theme.accentText)
+    }
+
+    private var height: CGFloat { large ? 40 : 30 }
+
+}
+
+/// The look of a game's main button, Install or Play: filled with the
+/// accent, as a default button is, at the height the row gives it. Play can
+/// be the leading segment of two, with the version menu as the trailing one.
+struct MainActionStyle: ButtonStyle {
+    enum Segment { case whole, leading, trailing }
+    var segment = Segment.whole
+
+    func makeBody(configuration: Configuration) -> some View {
+        Face(segment: segment, isPressed: configuration.isPressed) { configuration.label }
+    }
+
+    struct Face<Label: View>: View {
+        let segment: Segment
+        let isPressed: Bool
+        @ViewBuilder var label: Label
+        @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.controlActiveState) private var activeState
+
+        var body: some View {
+            let outer: CGFloat = 8
+            let shape = UnevenRoundedRectangle(
+                topLeadingRadius: segment == .trailing ? 0 : outer,
+                bottomLeadingRadius: segment == .trailing ? 0 : outer,
+                bottomTrailingRadius: segment == .leading ? 0 : outer,
+                topTrailingRadius: segment == .leading ? 0 : outer, style: .continuous)
+            label
+                .fontWeight(.medium)
+                .foregroundStyle(Theme.accentText)
+                // As tall as the bordered buttons beside it, whose bezel adds this to their label.
+                .padding(.vertical, 4)
+                .background(Theme.accent.opacity(isPressed ? 0.75 : 1), in: shape)
+                // Quieter in a window that is not in front, as the system's default button is.
+                .opacity(!isEnabled ? 0.45 : activeState == .inactive ? 0.7 : 1)
+                .contentShape(shape)
+        }
     }
 }
 
@@ -218,13 +277,20 @@ struct StatsRow: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        HStack(spacing: 0) {
-            Stat(label: "Last played", value: Formatters.date(model.lastPlayed(game)))
-            Stat(label: "Play time", value: Formatters.playTime(model.playTimeSeconds(game)))
-            Stat(label: "Times played", value: String(model.playCount(game)))
+        // Three empty values say less than one line.
+        if model.lastPlayed(game) == nil, model.playCount(game) == 0, model.playTimeSeconds(game) == 0 {
+            Label("Never played", systemImage: "clock")
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.textTertiary)
+        } else {
+            HStack(spacing: 0) {
+                Stat(label: "Last played", value: Formatters.date(model.lastPlayed(game)))
+                Stat(label: "Play time", value: Formatters.playTime(model.playTimeSeconds(game)))
+                Stat(label: "Times played", value: String(model.playCount(game)))
+            }
+            .padding(12)
+            .background(Theme.panelRaised, in: RoundedRectangle(cornerRadius: 8))
         }
-        .padding(12)
-        .background(Theme.panelRaised, in: RoundedRectangle(cornerRadius: 8))
     }
 
     struct Stat: View {
@@ -248,7 +314,7 @@ struct TagRow: View {
     var body: some View {
         let tags =
             game.playlistTags.map { ($0, "list.bullet") } + game.themeTags.map { ("Theme: \($0)", "tag") }
-            + game.seriesNames.map { ($0, "square.stack") }
+            + game.seriesNames.map { ($0, "tag") }
         if !tags.isEmpty {
             FlowLayout(spacing: 6) {
                 ForEach(tags, id: \.0) { tag in
@@ -278,60 +344,76 @@ struct MetadataGrid: View {
             row("Genre", game.genres.isEmpty ? nil : game.genres.joined(separator: ", "))
             row("Play mode", game.playMode)
             row("Players", game.maxPlayers.map(String.init))
-            row("Rating", game.rating)
+            // "Not Rated" says nothing.
+            row("Rating", game.rating?.localizedCaseInsensitiveCompare("Not Rated") == .orderedSame ? nil : game.rating)
             row("Source", game.source)
             row("Region", game.region)
             row("Version", game.version)
             if game.communityStarRatingVotes > 0, let rating = game.communityStarRating {
                 row("Community", String(format: "%.1f ★ (%d votes)", rating, game.communityStarRatingVotes))
             }
-            if game.isDOSGame {
-                row("\(game.eXoPack?.displayName ?? "eXo") runs with", build?.displayName ?? "DOSBox")
-                row("Mac emulator", model.emulatorKind(for: game).displayName)
-            } else if game.launchKind == .scummVM {
-                row(
-                    "\(game.eXoPack?.displayName ?? "eXo") runs with",
-                    "ScummVM " + (model.scummVMVersion(for: game, variants: [], variant: nil) ?? ""))
-                row("Mac emulator", model.scummVMInstallation(for: game, variant: nil)?.kind.displayName ?? "ScummVM")
-            } else if game.launchKind == .interactiveFiction {
-                row(
-                    "Mac emulator",
-                    model.isInstalled(game)
-                        ? model.emulatorKind(for: game).displayName : "Spatterlight or DOSBox, by version")
-            } else if game.launchKind == .appleIIGS {
-                let route = model.appleIIGSRoute(for: game)
-                row("eXoAppleIIGS runs with", route.eXoEmulatorName)
-                row(
-                    "Mac emulator",
-                    route.emulator.displayName
-                        + (model.appleIIGSProblem(for: game) == nil ? "" : ", once you add its ROM"))
-            } else if game.launchKind == .windows9x {
-                let kind = model.emulatorKind(for: game)
-                row("eXoWin9x runs with", "Windows 98 in \(kind.displayName)")
-                row("Mac emulator", kind.displayName)
-            } else if game.launchKind == .emulator {
-                let resolved = model.resolvedEmulator(for: game)
-                if let title = resolved.launchBoxEmulatorTitle {
-                    row("LaunchBox runs with", title + (resolved.launchBoxCore.map { " · \($0)" } ?? ""))
-                }
-                row("Mac emulator", resolved.isReady ? resolved.summary : resolved.problem ?? "None")
-            } else if game.launchKind == .soundtrack {
-                row("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
-            } else if game.launchKind == .video {
-                row("Launcher", "Video, opened by \(model.videoPlayer?.name ?? "the default video player")")
-            } else if game.launchKind == .windowsProgram, let pack = game.eXoPack {
-                row("Launcher", "\(pack.displayName) games cannot start on the Mac yet")
-            } else if game.launchKind == .windowsProgram {
-                row("Launcher", "Windows program, not supported on the Mac")
-            }
+            if let runs = runsIn(build: build) { row(runs.label, runs.value) }
             if let url = game.wikipediaURL, let link = URL(string: url) {
                 GridRow {
                     Text("Wikipedia").foregroundStyle(Theme.textTertiary)
-                    Link("Open article", destination: link)
+                    Link("Open article", destination: link).accentLink()
                 }
             }
         }
         .font(.system(size: 12))
+    }
+
+    /// One line for what starts the game: the Mac emulator, and in brackets
+    /// what the collection itself uses when that says more.
+    private func runsIn(build: EXoDOSBuild?) -> (label: String, value: String)? {
+        let pack = game.eXoPack?.displayName ?? "eXo"
+        switch game.launchKind {
+        case .scummVM:
+            let name = model.scummVMInstallation(for: game, variant: nil)?.kind.displayName ?? "ScummVM"
+            let version = model.scummVMVersion(for: game, variants: [], variant: nil)
+            return ("Runs in", name + (version.map { " (\(pack) uses ScummVM \($0))" } ?? ""))
+        case .interactiveFiction:
+            return (
+                "Runs in",
+                model.isInstalled(game)
+                    ? model.emulatorKind(for: game).displayName : "Spatterlight or DOSBox, by version"
+            )
+        case .appleIIGS:
+            let route = model.appleIIGSRoute(for: game)
+            return (
+                "Runs in",
+                route.emulator.displayName
+                    + (model.appleIIGSProblem(for: game) == nil ? "" : ", once you add its ROM")
+                    + " (\(pack) uses \(route.eXoEmulatorName))"
+            )
+        case .windows9x:
+            return ("Runs in", "\(model.emulatorKind(for: game).displayName), with Windows 98")
+        case .emulator:
+            let resolved = model.resolvedEmulator(for: game)
+            let theirs = resolved.launchBoxEmulatorTitle.map {
+                " (LaunchBox uses \($0)\(resolved.launchBoxCore.map { " · \($0)" } ?? ""))"
+            }
+            return (
+                "Runs in", (resolved.isReady ? resolved.summary : resolved.problem ?? "No emulator") + (theirs ?? "")
+            )
+        case .soundtrack:
+            return ("Album", "Soundtrack zip, played by \(AppInfo.displayName)")
+        case .video:
+            return ("Opens in", model.videoPlayer?.name ?? "the default video player")
+        case .windowsProgram:
+            return (
+                "Launcher",
+                game.eXoPack.map { "\($0.displayName) games cannot start on the Mac yet" }
+                    ?? "A Windows program, not supported on the Mac"
+            )
+        default:
+            guard game.isDOSGame else { return nil }
+            // "DOSBox Staging (eXoDOS uses 0.82.0)": the build's name without the emulator's, when it has it.
+            let emulator = model.emulatorKind(for: game).displayName
+            var theirs = build?.displayName ?? "DOSBox"
+            if theirs.hasPrefix(emulator + " ") { theirs = String(theirs.dropFirst(emulator.count + 1)) }
+            return ("Runs in", theirs == emulator ? emulator : "\(emulator) (\(pack) uses \(theirs))")
+        }
     }
 
     @ViewBuilder
@@ -346,13 +428,22 @@ struct MetadataGrid: View {
 }
 
 /// The launcher, installer and config paths, in LaunchBox's relative form.
+/// Closed until the user opens it: Game Info (Command-I) is the technical view.
 struct FilesSection: View {
     let game: Game
     @Environment(AppModel.self) private var model
+    @AppStorage("inspectorFilesExpanded") private var expanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        DisclosureGroup(isExpanded: $expanded) {
+            files.padding(.top, 6)
+        } label: {
             SectionTitle("Files")
+        }
+    }
+
+    private var files: some View {
+        VStack(alignment: .leading, spacing: 6) {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                 row("Launch", game.applicationPath)
                 row("Install", game.configurationPath)
@@ -365,8 +456,10 @@ struct FilesSection: View {
             }
             Button("Show in Finder") { model.revealInFinder(game) }
                 .buttonStyle(.link)
+                .accentLink()
                 .font(.caption)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Theme.panelRaised, in: RoundedRectangle(cornerRadius: 8))
     }

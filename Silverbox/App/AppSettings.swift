@@ -179,6 +179,9 @@ struct AppSettings: Codable, Equatable {
         if let name = defaults.string(forKey: "appearance"), let appearance = AppAppearance(rawValue: name) {
             settings.appearance = appearance
         }
+        if let name = defaults.string(forKey: "appIcon"), let icon = AppIconVariant(rawValue: name) {
+            settings.appIcon = icon
+        }
         return settings
     }
 

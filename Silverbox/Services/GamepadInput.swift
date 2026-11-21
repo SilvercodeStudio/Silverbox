@@ -10,6 +10,12 @@ import Observation
 final class GamepadInput {
     /// Names of the controllers connected right now, for Settings.
     private(set) var controllerNames: [String] = []
+    /// Whose button names the Keyboard Shortcuts window shows: the
+    /// connected controllers' when they are all of one make.
+    private(set) var buttonNames: ButtonNames = .both
+
+    /// The two ways the common controllers name their buttons.
+    enum ButtonNames { case playStation, xbox, both }
 
     @ObservationIgnored weak var model: AppModel?
     @ObservationIgnored private var observers: [any NSObjectProtocol] = []
@@ -32,6 +38,14 @@ final class GamepadInput {
     private func refreshControllers() {
         let controllers = GCController.controllers()
         controllerNames = controllers.map { $0.vendorName ?? "Game controller" }
+        let makes = Set(
+            controllers.compactMap { controller -> ButtonNames? in
+                guard let gamepad = controller.extendedGamepad else { return nil }
+                if gamepad is GCDualSenseGamepad || gamepad is GCDualShockGamepad { return .playStation }
+                if gamepad is GCXboxGamepad { return .xbox }
+                return .both
+            })
+        buttonNames = makes.count == 1 ? makes.first ?? .both : .both
         for controller in controllers {
             attach(controller)
         }

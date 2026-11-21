@@ -6,16 +6,13 @@ enum AboutPanel {
     static let productName = AppInfo.displayName
     static let projectURL = URL(string: "https://www.retro-exo.com")!
 
-    /// "Version 0.3 (4) · 536e697-dirty". A release (an archive) leaves out
-    /// the commit unless the build had changes that were not committed.
-    static var version: String {
-        var text = "Version \(AppInfo.version)"
-        #if DEBUG
-            // `-plainVersion 1` shows the version as a clean release does, for screenshots.
-            if UserDefaults.standard.bool(forKey: "plainVersion") { return text }
-        #endif
-        if let commit = AppInfo.commit, !AppInfo.isArchive || commit.hasSuffix("-dirty") { text += " · \(commit)" }
-        return text
+    /// "Version 0.5". The commit of the build is in the line's help and in
+    /// what a click copies, not in the window.
+    static var version: String { "Version \(AppInfo.version)" }
+
+    /// What the version line's help says: the commit, and that a click copies.
+    static var versionHelp: String {
+        (AppInfo.commit.map { "Commit \($0). " } ?? "") + "Click to copy the version."
     }
 
     /// "© 2026 Preston Landers · Silvercode Studio", with a link to the studio. The copyright
@@ -34,26 +31,34 @@ enum AboutPanel {
 struct AboutView: View {
     @Environment(AppModel.self) private var model
     @State private var showingAcknowledgments = false
+    @State private var copiedVersion = false
 
     var body: some View {
         VStack(spacing: 0) {
-            CRTHero(icon: model.settings.appIcon.image)
-            Theme.accent.frame(height: 3)
+            CRTHero(variant: model.settings.appIcon)
             VStack(spacing: 18) {
-                VStack(spacing: 4) {
-                    Text(AboutPanel.productName).font(.system(size: 34, weight: .bold))
-                    Text(AboutPanel.version).font(.title3).foregroundStyle(Theme.textSecondary)
+                VStack(spacing: 0) {
+                    Text(AboutPanel.productName).font(Theme.display(size: 56))
+                    Text(copiedVersion ? "Copied" : AboutPanel.version)
+                        .font(.title3)
+                        .foregroundStyle(Theme.textSecondary)
+                        .help(AboutPanel.versionHelp)
+                        .onTapGesture { copyVersion() }
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityHint(AboutPanel.versionHelp)
                 }
                 Text("Browse and play the eXo collections on your Mac.")
                     .font(.title3)
                     .multilineTextAlignment(.center)
                 stats
                 eXoCredit
-                Text("Emulation by DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight and RetroArch.")
-                    .font(.callout)
-                    .foregroundStyle(Theme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    "Games run in DOSBox Staging, DOSBox-X, ScummVM, RetroArch and the other emulators that Acknowledgments names."
+                )
+                .font(.callout)
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
                     Button("Acknowledgments…") { showingAcknowledgments = true }
                     Button("Website") { NSWorkspace.shared.open(AppInfo.websiteURL) }
@@ -62,6 +67,7 @@ struct AboutView: View {
                 .controlSize(.large)
                 .padding(.top, 6)
                 Text(AboutPanel.copyrightLine).font(.callout).foregroundStyle(Theme.textSecondary)
+                    .tint(Theme.accent)
             }
             .padding(.horizontal, 32)
             .padding(.top, 24)
@@ -69,7 +75,19 @@ struct AboutView: View {
         }
         .frame(width: 460)
         .background(Theme.window)
+        .withoutInitialFocus()
         .sheet(isPresented: $showingAcknowledgments) { AcknowledgmentsSheet() }
+    }
+
+    /// Copies "Silverbox 0.5 · c2b2f09", the line a problem report starts with.
+    private func copyVersion() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(AppInfo.versionLine, forType: .string)
+        copiedVersion = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            copiedVersion = false
+        }
     }
 
     /// What the library holds, once it has loaded. Played counts only when
@@ -102,7 +120,9 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Link(
                     AboutPanel.projectURL.host() ?? AboutPanel.projectURL.absoluteString,
-                    destination: AboutPanel.projectURL)
+                    destination: AboutPanel.projectURL
+                )
+                .accentLink()
                 Text("eXoDOS 6: Forever Voyaging")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
@@ -117,16 +137,24 @@ struct AboutView: View {
 }
 
 /// The app icon on a dark CRT screen, for the About window and the welcome:
-/// the website's band, with scanlines, a glow in the accent colour behind the
-/// icon and a darker edge. It stays dark in the light appearance, as
-/// Silverside's hero does.
+/// the website's band, with scanlines, a glow behind the icon and a darker
+/// edge, over a rule. The glow and the rule are amber or green with the
+/// chosen icon (`AppIconVariant.phosphor`). It stays dark in the light
+/// appearance, as Silverside's hero does.
 struct CRTHero: View {
-    let icon: NSImage
+    let variant: AppIconVariant
     var height: CGFloat = 232
     var iconSize: CGFloat = 190
 
     var body: some View {
-        Image(nsImage: icon)
+        VStack(spacing: 0) {
+            screen
+            variant.phosphor.glow.frame(height: 3)
+        }
+    }
+
+    private var screen: some View {
+        Image(nsImage: variant.image)
             .resizable()
             .interpolation(.high)
             .scaledToFit()
@@ -140,11 +168,11 @@ struct CRTHero: View {
                 Canvas { context, size in
                     let bounds = Path(CGRect(origin: .zero, size: size))
                     let center = CGPoint(x: size.width / 2, y: size.height - height / 2)
-                    context.fill(bounds, with: .color(Color(hex: 0x14100B)))
+                    context.fill(bounds, with: .color(variant.phosphor.ground))
                     context.fill(
                         bounds,
                         with: .radialGradient(
-                            Gradient(colors: [Theme.accent.opacity(0.28), .clear]),
+                            Gradient(colors: [variant.phosphor.glow.opacity(0.28), .clear]),
                             center: center, startRadius: 30, endRadius: 280))
                     for y in stride(from: CGFloat(0), to: size.height, by: 4) {
                         context.fill(

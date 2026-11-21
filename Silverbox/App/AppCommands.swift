@@ -111,6 +111,7 @@ struct AppCommands: Commands {
                 model.settings.inspectorShown.toggle()
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
+            .disabled(!model.inspectorHasAPlace)
             Button("Back to Library") { model.openedGameID = nil }
                 .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(model.openedGameID == nil)

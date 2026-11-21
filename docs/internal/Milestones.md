@@ -200,9 +200,41 @@ Done:
 - The website is live at getsilverbox.app (GitHub Pages, the domain and
   HTTPS), with a "Coming soon" banner until the first release.
 
+- UI review, first round (2026-11-20): amber as the one accent (the green
+  icon changes the Dock and About only), status as a colored glyph with
+  plain text (`StatusLabel`, yellow warnings), no focus ring when a window
+  opens, short playlist names and title counts in the sidebar, the
+  inspector (Never played, Runs in, Files behind a disclosure, the
+  filmstrip fade, the version menu on Play), search counted against its
+  scope with title matches first, the welcome's three steps, Settings
+  (emulators as apps, the platform filter, the collection summary, Remove
+  with a confirmation, shorter notes), grouped shortcuts with the
+  connected controller's button names, and Add Collection… that takes a
+  folder a level off (`LibraryFolderChoice`). Second round, the same
+  day: Play as a split button (`MainActionStyle`), no inspector beside a
+  game page, search ranked by word, word start and substring, the VT323
+  headlines, a green CRT band with the green icon, the emulator demand
+  by the DOSBox policy, and the warning triangle with a dark mark.
+
 Not yet:
 
-- A round of testing and UI polish before the first release.
+- The rest of the UI review:
+  - "All Games" counts every title, books and videos too, while the pack
+    rows count games: rename the row, or count games only.
+  - Click through what the screenshots cannot show: the Other… pop-ups
+    (and cancelling their panels), the Play version menu, Remove
+    Collection's confirmation, the platform filter and the arguments
+    popover, Add Collection with `eXo`, `Data` and a folder around one
+    and two collections, and Tab with keyboard navigation on.
+  - Whether the sidebar needs both the eXo Packs section and each
+    collection's tree at launch.
+  - A warning when a platform's RetroArch core does not emulate it (the
+    user's Apple IIGS platform was set to AppleWin, an Apple II core, and
+    showed Ready), and GSplus as a choice for a LaunchBox library's Apple
+    IIGS platform.
+  - The first start on a fresh macOS account: no collections, no
+    emulators, no aria2.
+- A round of testing before the first release.
 - Exercise the file-safety changes with real running emulators: conflicting
   Win9x launches, uninstall while playing, and quit while a game or job is
   active. The core failure cases have automated regression coverage.

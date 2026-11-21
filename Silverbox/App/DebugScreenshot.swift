@@ -39,6 +39,7 @@
                     }
                 }
                 guard !path.isEmpty else { return }
+                scrollIfRequested()
                 // `-screenshotSettle 90` waits longer after the keys, for a job they start.
                 let settle = UserDefaults.standard.double(forKey: "screenshotSettle")
                 DispatchQueue.main.asyncAfter(
@@ -64,6 +65,27 @@
                 window.setContentSize(NSSize(width: width, height: height))
                 window.center()
             }
+        }
+
+        /// `-screenshotScroll 0.5`: scrolls the largest scroll view of each window but the main
+        /// one that far down (1 is the end), to show the lower part of a long Settings tab.
+        private static func scrollIfRequested() {
+            let fraction = UserDefaults.standard.double(forKey: "screenshotScroll")
+            guard fraction > 0 else { return }
+            for window in NSApp.windows.dropFirst() where window.isVisible {
+                guard let content = window.contentView,
+                    let scroll = scrollViews(in: content).max(by: { $0.frame.height < $1.frame.height }),
+                    let document = scroll.documentView
+                else { continue }
+                let range = max(0, document.frame.height - scroll.contentView.bounds.height)
+                let y = document.isFlipped ? range * fraction : range * (1 - fraction)
+                scroll.contentView.scroll(to: NSPoint(x: 0, y: y))
+                scroll.reflectScrolledClipView(scroll.contentView)
+            }
+        }
+
+        private static func scrollViews(in view: NSView) -> [NSScrollView] {
+            (view as? NSScrollView).map { [$0] } ?? view.subviews.flatMap(scrollViews(in:))
         }
 
         /// Renders every visible window: the first to `url`, the others (sheets,

@@ -67,11 +67,11 @@ private struct JobRow: View {
                 ProgressView().controlSize(.small)
             }
         case .finished:
-            Label("Installed", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.good).font(.caption)
+            StatusLabel("Installed", tone: .good).font(.caption)
         case .cancelled:
             Label("Stopped", systemImage: "minus.circle").foregroundStyle(Theme.textSecondary).font(.caption)
         case .failed:
-            Label("Failed", systemImage: "xmark.circle.fill").foregroundStyle(Theme.bad).font(.caption)
+            StatusLabel("Failed", tone: .bad).font(.caption)
         }
     }
 

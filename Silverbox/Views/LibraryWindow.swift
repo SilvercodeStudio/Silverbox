@@ -17,7 +17,13 @@ struct LibraryWindow: View {
             SidebarView()
         } detail: {
             ContentColumn()
-                .inspector(isPresented: $model.settings.inspectorShown) {
+                // No inspector until there are games to select, and none beside a game page, which
+                // shows the same things. It comes back with the library.
+                .inspector(
+                    isPresented: Binding(
+                        get: { model.settings.inspectorShown && model.inspectorHasAPlace },
+                        set: { if model.inspectorHasAPlace { model.settings.inspectorShown = $0 } })
+                ) {
                     GameInspectorView()
                         .inspectorColumnWidth(min: 300, ideal: 380, max: 560)
                 }
@@ -129,52 +135,59 @@ struct ContentColumn: View {
                 }
             }
         }
-        .navigationTitle(model.openedGame?.title ?? model.scopeTitle(model.scope))
+        .navigationTitle(
+            model.hasGamesToBrowse ? model.openedGame?.title ?? model.scopeTitle(model.scope) : AppInfo.displayName
+        )
         .navigationSubtitle(subtitle)
-        .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search games")
-        .searchFocused($searchFocused)
-        .onChange(of: model.searchFocusRequest) { searchFocused = true }
+        .modifier(LibrarySearch(isOn: model.hasGamesToBrowse, searchFocused: $searchFocused))
         .toolbar {
+            // The welcome and a failed load have no games to size, sort or inspect.
             ToolbarItemGroup(placement: .primaryAction) {
-                if model.openedGame != nil {
-                    Button {
-                        model.openedGameID = nil
+                if !model.hasGamesToBrowse {
+                    EmptyView()
+                } else {
+                    if model.openedGame != nil {
+                        Button {
+                            model.openedGameID = nil
+                        } label: {
+                            Label("Back to Library", systemImage: "chevron.left")
+                        }
+                    }
+                    if model.settings.viewMode == .grid, model.openedGame == nil {
+                        Slider(value: $model.settings.tileSize, in: AppSettings.tileSizeRange) { Text("Tile size") }
+                            .frame(width: 110)
+                            .help("Tile size")
+                    }
+                    Picker("View", selection: $model.settings.viewMode) {
+                        Image(systemName: "square.grid.2x2").tag(LibraryViewMode.grid)
+                        Image(systemName: "list.bullet").tag(LibraryViewMode.list)
+                    }
+                    .pickerStyle(.segmented)
+                    .help("Grid or list")
+                    Menu {
+                        Picker("Sort by", selection: $model.settings.sortOrder) {
+                            Text("Title").tag(GameSortOrder.title)
+                            Text("Release year").tag(GameSortOrder.releaseYear)
+                            Text("Developer").tag(GameSortOrder.developer)
+                            Text("Last played").tag(GameSortOrder.lastPlayed)
+                            Text("Date added").tag(GameSortOrder.dateAdded)
+                            Text("Times played").tag(GameSortOrder.playCount)
+                            Text("Community rating").tag(GameSortOrder.communityRating)
+                        }
+                        .pickerStyle(.inline)
+                        Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
                     } label: {
-                        Label("Back to Library", systemImage: "chevron.left")
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                    }
+                    if model.openedGame == nil {
+                        Button {
+                            model.settings.inspectorShown.toggle()
+                        } label: {
+                            Label("Inspector", systemImage: "sidebar.trailing")
+                        }
+                        .help("Show or hide the inspector")
                     }
                 }
-                if model.settings.viewMode == .grid, model.openedGame == nil {
-                    Slider(value: $model.settings.tileSize, in: AppSettings.tileSizeRange) { Text("Tile size") }
-                        .frame(width: 110)
-                        .help("Tile size")
-                }
-                Picker("View", selection: $model.settings.viewMode) {
-                    Image(systemName: "square.grid.2x2").tag(LibraryViewMode.grid)
-                    Image(systemName: "list.bullet").tag(LibraryViewMode.list)
-                }
-                .pickerStyle(.segmented)
-                .help("Grid or list")
-                Menu {
-                    Picker("Sort by", selection: $model.settings.sortOrder) {
-                        Text("Title").tag(GameSortOrder.title)
-                        Text("Release year").tag(GameSortOrder.releaseYear)
-                        Text("Developer").tag(GameSortOrder.developer)
-                        Text("Last played").tag(GameSortOrder.lastPlayed)
-                        Text("Date added").tag(GameSortOrder.dateAdded)
-                        Text("Times played").tag(GameSortOrder.playCount)
-                        Text("Community rating").tag(GameSortOrder.communityRating)
-                    }
-                    .pickerStyle(.inline)
-                    Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
-                } label: {
-                    Label("Sort", systemImage: "arrow.up.arrow.down")
-                }
-                Button {
-                    model.settings.inspectorShown.toggle()
-                } label: {
-                    Label("Inspector", systemImage: "sidebar.trailing")
-                }
-                .help("Show or hide the inspector")
             }
         }
     }
@@ -182,9 +195,28 @@ struct ContentColumn: View {
     private var subtitle: String {
         guard model.loadState == .loaded, model.openedGame == nil else { return "" }
         let count = model.visibleGames.count
-        let total = model.library?.games.count ?? 0
         if model.searchText.isEmpty { return "\(count.formatted()) games" }
-        return "\(count.formatted()) of \(total.formatted()) games match “\(model.searchText)”"
+        // The search stays in the scope, so the total is the scope's.
+        return "\(count.formatted()) of \(model.scopeGameCount.formatted()) match “\(model.searchText)”"
+    }
+}
+
+/// The toolbar's search field, only while there are games to search.
+private struct LibrarySearch: ViewModifier {
+    let isOn: Bool
+    var searchFocused: FocusState<Bool>.Binding
+    @Environment(AppModel.self) private var model
+
+    func body(content: Content) -> some View {
+        @Bindable var model = model
+        if isOn {
+            content
+                .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search games")
+                .searchFocused(searchFocused)
+                .onChange(of: model.searchFocusRequest) { searchFocused.wrappedValue = true }
+        } else {
+            content
+        }
     }
 }
 
@@ -212,7 +244,6 @@ struct LibrarySetupView: View {
     let error: String
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
-    @State private var showingPicker = false
 
     var body: some View {
         VStack(spacing: 18) {
@@ -230,7 +261,7 @@ struct LibrarySetupView: View {
                     .frame(maxWidth: 480)
             }
             HStack {
-                Button("Add Collection…") { showingPicker = true }
+                Button("Add Collection…") { model.chooseCollection() }
                     .buttonStyle(.borderedProminent)
                 if !model.collections.isEmpty {
                     Button("Try Again") { model.tryAgain() }
@@ -247,8 +278,36 @@ struct LibrarySetupView: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .fileImporter(isPresented: $showingPicker, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { model.addFolder(url) }
+    }
+}
+
+/// The parts of a collection in one line ("All 16 parts found"), with the
+/// list behind a disclosure that is open when a part the app needs is
+/// missing.
+struct LibraryRootReportDisclosure: View {
+    let report: LibraryRootReport
+    @State private var expanded: Bool
+
+    init(report: LibraryRootReport) {
+        self.report = report
+        _expanded = State(initialValue: !report.isUsable)
+    }
+
+    var body: some View {
+        let found = report.items.filter(\.exists).count
+        let missing = report.items.count - found
+        DisclosureGroup(isExpanded: $expanded) {
+            LibraryRootReportView(report: report).padding(.top, 4)
+        } label: {
+            StatusLabel(
+                missing == 0
+                    ? "All \(report.items.count) parts found"
+                    : report.isUsable
+                        ? "\(found) of \(report.items.count) parts found; the rest is optional"
+                        : "\(found) of \(report.items.count) parts found; some that are needed are missing",
+                tone: report.isUsable ? .good : .bad
+            )
+            .font(.callout)
         }
     }
 }

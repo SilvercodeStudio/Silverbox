@@ -43,10 +43,7 @@ struct InstallSheet: View {
                         downloadSummary(download)
                     }
                     if let blocker {
-                        Label(blocker, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(Theme.warning)
-                            .font(.caption)
-                            .fixedSize(horizontal: false, vertical: true)
+                        StatusLabel(blocker, tone: .warning).font(.caption)
                     }
                     if plan.updateArchiveURL != nil {
                         Text("An eXoDOS update for this game will be applied after unpacking.").font(.caption)
@@ -233,9 +230,11 @@ struct GameInfoSheet: View {
                         }
                         LabeledContent("Mac emulator") {
                             HStack {
-                                Text(resolved.isReady ? resolved.summary : (resolved.problem ?? "Not ready"))
-                                    .foregroundStyle(resolved.isReady ? Theme.good : Theme.warning)
-                                    .multilineTextAlignment(.trailing)
+                                StatusLabel(
+                                    resolved.isReady ? resolved.summary : (resolved.problem ?? "Not ready"),
+                                    tone: resolved.isReady ? .good : .warning
+                                )
+                                .multilineTextAlignment(.trailing)
                                 Button("Emulator Settings…") {
                                     SettingsState.shared.show(tab: .emulators)
                                     openSettings()
@@ -274,6 +273,7 @@ struct GameInfoSheet: View {
             .padding(16)
         }
         .frame(width: 620, height: 560)
+        .withoutInitialFocus()
     }
 
     private var emulatorBinding: Binding<EmulatorKind?> {
@@ -449,9 +449,7 @@ struct LaunchOptionsSheet: View {
                         }
                         .pickerStyle(.radioGroup)
                         if let reason = selectedVariant?.unplayableReason {
-                            Label(reason, systemImage: "exclamationmark.triangle")
-                                .font(.caption)
-                                .foregroundStyle(Theme.warning)
+                            StatusLabel(reason, tone: .warning).font(.caption)
                         }
                         if let note = versionNote {
                             Text(note).font(.caption).foregroundStyle(Theme.textSecondary)

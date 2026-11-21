@@ -48,6 +48,46 @@ struct LibraryLoaderTests {
     }
 }
 
+@Suite("Choosing a library folder")
+struct LibraryFolderChoiceTests {
+    @Test func takesTheCollectionAroundAFolderInsideIt() {
+        let root = FixtureLibrary.rootURL.standardizedFileURL
+        #expect(LibraryFolderChoice.resolve(root) == .library(root))
+        #expect(LibraryFolderChoice.resolve(root.appendingPathComponent("eXo")) == .corrected(root))
+        #expect(LibraryFolderChoice.resolve(root.appendingPathComponent("Data/Platforms")) == .corrected(root))
+        #expect(LibraryFolderChoice.resolve(root.appendingPathComponent("eXo/eXoDOS")) == .corrected(root))
+        // A library inside another one is taken as it is.
+        let console = root.appendingPathComponent("ConsoleLibrary")
+        #expect(LibraryFolderChoice.resolve(console) == .library(console))
+    }
+
+    @Test func takesTheOneCollectionInsideAFolder() throws {
+        let parent = try FixtureLibrary.scratchDirectory()
+        defer { try? FileManager.default.removeItem(at: parent) }
+        #expect(LibraryFolderChoice.resolve(parent) == .notALibrary)
+
+        func makeLibrary(_ name: String) throws -> URL {
+            let library = parent.appendingPathComponent(name, isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: library.appendingPathComponent("Data/Platforms"), withIntermediateDirectories: true)
+            try "<LaunchBox/>".write(
+                to: library.appendingPathComponent("Data/Platforms.xml"), atomically: true, encoding: .utf8)
+            return library.standardizedFileURL
+        }
+        try FileManager.default.createDirectory(
+            at: parent.appendingPathComponent("Other"), withIntermediateDirectories: true)
+        let first = try makeLibrary("eXoDOS")
+        #expect(LibraryFolderChoice.resolve(parent) == .corrected(first))
+        #expect(LibraryFolderChoice.resolve(parent).url == first)
+
+        let second = try makeLibrary("eXoIF")
+        #expect(LibraryFolderChoice.resolve(parent) == .several([first, second]))
+        #expect(LibraryFolderChoice.resolve(parent).url == nil)
+        // The folder beside them belongs to neither.
+        #expect(LibraryFolderChoice.resolve(parent.appendingPathComponent("Other")) == .notALibrary)
+    }
+}
+
 @Suite("Library queries")
 struct LibraryQueryTests {
     @Test func scopes() throws {
@@ -78,6 +118,70 @@ struct LibraryQueryTests {
         let explicit = query.games(
             in: .node(collectionID: snapshot.collection.id, ref: .playlist("11111111-2222-3333-4444-555555555555")))
         #expect(explicit.map(\.launchBoxID) == [FixtureLibrary.tetrisID])
+    }
+
+    @Test func searchPutsTheBestTitleMatchesFirst() throws {
+        let snapshot = try FixtureLibrary.snapshot()
+        let query = LibraryQuery(snapshot: snapshot)
+        // "in" is in Ultima's title ("Destiny"), and only in the developers of the two others ("Inc.").
+        let found = query.sort(query.filter(query.games(in: .all), search: "in"), by: .title)
+        #expect(found.map(\.title) == ["Jeopardy! (1987)", "Super Tetris", "Ultima V: Warriors of Destiny"])
+        #expect(
+            query.rankedBySearch(found, search: " IN ").map(\.title) == [
+                "Ultima V: Warriors of Destiny", "Jeopardy! (1987)", "Super Tetris",
+            ])
+        // Every term must be in the title, and no search changes nothing.
+        #expect(query.rankedBySearch(found, search: "in jeopardy").first?.title == "Jeopardy! (1987)")
+        #expect(query.rankedBySearch(found, search: "  ") == found)
+    }
+
+    @Test func aWordOfTheTitleBeatsTheStartOfAWord() {
+        func rank(_ title: String, _ search: String) -> LibraryQuery.SearchRank {
+            LibraryQuery.searchRank(ofTitle: title, terms: search.split(separator: " ").map(String.init))
+        }
+        #expect(rank("Ultima V: Warriors of Destiny", "ultima") == .word)
+        #expect(rank("Tony La Russa's Ultimate Baseball", "ultima") == .wordStart)
+        #expect(rank("True Blood: The Karthanian Ultimatum", "ultima") == .wordStart)
+        #expect(rank("The Penultimate Fantasy", "ultima") == .inTitle)
+        #expect(rank("Afterlife", "ultima") == .elsewhere)
+        // The worst term decides, and accents and case do not count.
+        #expect(rank("Ultima V: Warriors of Destiny", "ultima warr") == .wordStart)
+        #expect(rank("Ultima V: Warriors of Destiny", "ultima origin") == .elsewhere)
+        #expect(rank("Pokémon Blue", "pokemon") == .word)
+        #expect(LibraryQuery.SearchRank.word < .wordStart)
+    }
+
+    @Test func playlistTitlesDropTheWordsAboveThem() throws {
+        func short(_ title: String, under ancestors: [String] = [], packs: [String] = ["eXoDOS", "eXoDemoScene"])
+            -> String
+        {
+            LibraryNode(ref: .playlist("p"), title: title).sidebarTitle(under: ancestors, packs: packs)
+        }
+        #expect(short("eXoDOS Games with MT-32", under: ["Computers", "MS-DOS"]) == "MT-32")
+        #expect(short("eXoDOS Games with MT-32", packs: []) == "eXoDOS Games with MT-32")
+        #expect(short("eXoDOS 3dfx Games") == "3dfx Games")
+        // A pack's name goes from the middle too; the title of a row above only from the start.
+        #expect(short("Installed eXoDemoScene Demos") == "Installed Demos")
+        #expect(short("Arcade Fighting Games", under: ["Arcade"]) == "Fighting Games")
+        #expect(short("Best of Arcade", under: ["Arcade"]) == "Best of Arcade")
+        #expect(short("Nintendo Entertainment System Hacks", under: ["Nintendo Entertainment System"]) == "Hacks")
+        // A title that is the name alone, and a platform, stay whole.
+        #expect(short("eXoDOS") == "eXoDOS")
+        #expect(
+            LibraryNode(ref: .platform("MS-DOS Books"), title: "MS-DOS Books")
+                .sidebarTitle(under: ["MS-DOS"], packs: []) == "MS-DOS Books")
+
+        let snapshot = try FixtureLibrary.snapshot()
+        let titles = LibraryNode.sidebarTitles(in: snapshot.tree, packs: ["eXoDOS"])
+        #expect(Array(titles.values) == ["MT-32"])
+    }
+
+    @Test func gamesAreNotTheBooksBesideThem() throws {
+        let snapshot = try FixtureLibrary.snapshot()
+        #expect(
+            snapshot.games.filter(\.isGame).map(\.title).sorted() == [
+                "Jeopardy! (1987)", "Super Tetris", "Ultima V: Warriors of Destiny",
+            ])
     }
 
     @Test func searchMatchesAlternateNames() throws {

@@ -60,7 +60,7 @@ struct HelpView: View {
             if let topic = topics.first(where: { $0.id == selection }) ?? topics.first {
                 HelpWebView(
                     html: MarkdownHTML.page(
-                        body: MarkdownHTML.render(topic.markdown), accent: ThemeAccent.shared.variant.accentHex))
+                        body: MarkdownHTML.render(topic.markdown), accent: Theme.accentHex))
             } else {
                 Text("No help pages are bundled.").foregroundStyle(.secondary)
             }

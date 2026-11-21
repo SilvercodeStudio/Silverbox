@@ -27,6 +27,59 @@ nonisolated public struct LibraryNode: Identifiable, Hashable, Sendable {
     }
 }
 
+nonisolated extension LibraryNode {
+    /// A playlist's title without the words that the sidebar already says
+    /// above it. A pack's name goes wherever it is a word of the title:
+    /// "eXoDOS Games with MT-32" is "MT-32", and "Installed eXoDemoScene
+    /// Demos" is "Installed Demos". The title of a row above (or the
+    /// collection's name) goes only from the start: under Arcade, "Arcade
+    /// Fighting Games" is "Fighting Games". Platforms and categories keep
+    /// their titles, and so does a playlist that would have no words left.
+    public func sidebarTitle(under ancestors: [String], packs: [String]) -> String {
+        guard case .playlist = ref else { return title }
+        var words = title.split(separator: " ").map(String.init)
+        func matches(_ name: [String], at index: Int) -> Bool {
+            index + name.count <= words.count
+                && zip(name, words[index...]).allSatisfy { $0.caseInsensitiveCompare($1) == .orderedSame }
+        }
+        // The longest name first, so that "eXoDOS" does not hide "eXoDOS Lite".
+        let longestFirst: ([String]) -> [[String]] = { names in
+            names.map { $0.split(separator: " ").map(String.init) }.filter { !$0.isEmpty }
+                .sorted { $0.joined().count > $1.joined().count }
+        }
+        var shortened = false
+        if let pack = longestFirst(packs).first(where: { name in words.indices.contains { matches(name, at: $0) } }),
+            let index = words.indices.first(where: { matches(pack, at: $0) }), words.count > pack.count
+        {
+            words.removeSubrange(index..<index + pack.count)
+            shortened = true
+        } else if let ancestor = longestFirst(ancestors).first(where: { matches($0, at: 0) }),
+            words.count > ancestor.count
+        {
+            words.removeFirst(ancestor.count)
+            shortened = true
+        }
+        guard shortened else { return title }
+        if words.count > 2, matches(["Games", "with"], at: 0) { words.removeFirst(2) }
+        return words.joined(separator: " ")
+    }
+
+    /// ``sidebarTitle(under:packs:)`` for every node of a tree whose title it shortens.
+    public static func sidebarTitles(in tree: [LibraryNode], under ancestors: [String] = [], packs: [String])
+        -> [LibraryEntityRef: String]
+    {
+        var titles: [LibraryEntityRef: String] = [:]
+        for node in tree {
+            let short = node.sidebarTitle(under: ancestors, packs: packs)
+            if short != node.title { titles[node.ref] = short }
+            titles.merge(sidebarTitles(in: node.children, under: ancestors + [node.title], packs: packs)) {
+                first, _ in first
+            }
+        }
+        return titles
+    }
+}
+
 /// Builds the sidebar tree from LaunchBox's flat parent/child rules.
 nonisolated public enum LibraryTreeBuilder {
     public static func build(

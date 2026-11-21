@@ -32,6 +32,52 @@ struct PendingSetup: Identifiable {
 
 /// Setting up eXo downloads on the Mac, without eXo's Windows setup.
 extension AppModel {
+    /// Asks for a collection's folder, and adds the one the user chooses.
+    func chooseCollection() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose an eXo download, a collection that is set up, or a LaunchBox library folder."
+        panel.prompt = "Add"
+        let done: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            self?.addChosenFolder(url)
+        }
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window, completionHandler: done)
+        } else {
+            panel.begin(completionHandler: done)
+        }
+    }
+
+    /// Adds the folder the user chose in the open panel. A folder that is a
+    /// level off (`eXo` or `Data` inside a collection, or the folder around
+    /// one collection) gives the collection it belongs to.
+    func addChosenFolder(_ url: URL) {
+        folderBeingRead = url.lastPathComponent
+        Task {
+            let choice = await Task.detached { LibraryFolderChoice.resolve(url) }.value
+            folderBeingRead = nil
+            switch choice {
+            case .library(let folder), .corrected(let folder):
+                addFolder(folder)
+            case .several(let folders):
+                alert = AppAlert(
+                    title: "\(url.lastPathComponent) holds \(folders.count) collections",
+                    message:
+                        "Add them one at a time: \(ListFormatter.localizedString(byJoining: folders.map(\.lastPathComponent)))."
+                )
+            case .notALibrary:
+                alert = AppAlert(
+                    title: "\(url.lastPathComponent) is not a library folder", message: Self.libraryFolderHelp)
+            }
+        }
+    }
+
+    static let libraryFolderHelp =
+        "A collection is an eXo download (eXoDOS, eXoWin9x and others), or any LaunchBox library folder that holds Data and Images."
+
     /// Adds a folder chosen or dropped by the user. An eXo download opens
     /// the setup sheet first, unless it is already set up.
     func addFolder(_ url: URL) {
@@ -39,7 +85,11 @@ extension AppModel {
             addCollection(url: url)
             return
         }
-        Task { await prepareSetup(for: url) }
+        folderBeingRead = url.lastPathComponent
+        Task {
+            await prepareSetup(for: url)
+            folderBeingRead = nil
+        }
     }
 
     /// Decides between adding the folder, adding an earlier Mac setup of it,

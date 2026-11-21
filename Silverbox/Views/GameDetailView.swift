@@ -20,14 +20,28 @@ struct GameDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 32) {
-                    MediaGalleryView(game: game, height: 420)
+                    MediaGalleryView(game: game, height: 420, framed: false)
                         .frame(maxWidth: 720)
                     VStack(alignment: .leading, spacing: 18) {
-                        Text(game.title)
-                            .font(.system(size: 30, weight: .heavy))
-                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(alignment: .top) {
+                            Text(game.title)
+                                .font(.system(size: 30, weight: .heavy))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                            // The inspector is hidden beside the page, so its buttons are here.
+                            InspectorIconButton(
+                                systemImage: model.isFavorite(game) ? "heart.fill" : "heart", help: "Favorite"
+                            ) {
+                                model.toggleFavorite(game)
+                            }
+                            .foregroundStyle(model.isFavorite(game) ? Theme.accent : Theme.textPrimary)
+                            InspectorIconButton(systemImage: "pencil", help: "Edit game info") {
+                                model.pendingInfoGame = game
+                            }
+                        }
                         Text(Formatters.releaseLine(game))
                             .foregroundStyle(Theme.textSecondary)
+                        GameStatusChips(game: game)
                         PlayButtonRow(game: game, large: true)
                         StatsRow(game: game)
                         TagRow(game: game)

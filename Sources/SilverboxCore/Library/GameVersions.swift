@@ -54,13 +54,7 @@ nonisolated public struct GameVersionIndex: Sendable {
     }
 
     /// Games, not the manuals, magazines, soundtracks and videos beside them.
-    static func isPlayable(_ game: Game) -> Bool {
-        guard !game.isEXoSetupScript else { return false }
-        switch game.launchKind {
-        case .document, .link, .soundtrack, .video: return false
-        default: return true
-        }
-    }
+    static func isPlayable(_ game: Game) -> Bool { game.isGame }
 
     /// "The Adventures of Robin Hood (CD-ROM)" and "Adventures of Robin
     /// Hood" give the same key.

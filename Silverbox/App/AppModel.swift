@@ -35,7 +35,13 @@ final class AppModel {
             {
                 refreshVisibleGames()
             }
-            if settings.showHiddenGames != oldValue.showHiddenGames { scheduleSidebarCounts() }
+            // The counts say how many games each emulator runs, which these settings decide.
+            if settings.showHiddenGames != oldValue.showHiddenGames
+                || settings.emulatorPolicy != oldValue.emulatorPolicy
+                || settings.platformEmulators != oldValue.platformEmulators
+            {
+                scheduleSidebarCounts()
+            }
             if settings.localStorePath != oldValue.localStorePath {
                 applyDataRoot()
                 warnedMissingStore = false
@@ -82,7 +88,15 @@ final class AppModel {
     nonisolated struct SidebarCounts {
         var scopes: [LibraryScope: Int] = [:]
         var nodes: [UUID: [LibraryEntityRef: Int]] = [:]
+        /// "10,004 titles · read-only", per collection: the same line in the
+        /// sidebar and in Settings.
         var collections: [UUID: String] = [:]
+        /// Why the line's numbers differ from the rows under it.
+        var collectionHelp: [UUID: String] = [:]
+        /// Playlist titles without the words the sidebar says above them.
+        var titles: [UUID: [LibraryEntityRef: String]] = [:]
+        /// How many games each emulator runs, by pack or platform.
+        var gamesNeeding: [EmulatorKind: [String: Int]] = [:]
     }
     private(set) var sidebarCounts = SidebarCounts()
     @ObservationIgnored private var sidebarCountsTask: Task<Void, Never>?
@@ -90,6 +104,8 @@ final class AppModel {
     var scope: LibraryScope = .all { didSet { refreshVisibleGames() } }
     var searchText = "" { didSet { scheduleSearchRefresh() } }
     private(set) var visibleGames: [Game] = []
+    /// The games of the scope before the search narrows them, for "13 of 517".
+    private(set) var scopeGameCount = 0
     var selectedGameID: String? {
         didSet {
             updateMusic()
@@ -182,6 +198,9 @@ final class AppModel {
     var pendingVideoChoice: VideoChoice?
     /// An eXo download waiting for setup, shown in the setup sheet.
     var pendingSetup: PendingSetup?
+    /// The name of a chosen folder while the app finds out what it holds,
+    /// which takes a while for a download on a share.
+    var folderBeingRead: String?
     /// The games each ScummVM executable can run, by path.
     @ObservationIgnored var scummVMGameCache: [String: ScummVMGames] = [:]
     /// The running setup's progress; nil when none runs.
@@ -402,12 +421,11 @@ final class AppModel {
 
     // MARK: - Collections and loading
 
-    /// Shows the chosen icon in the Dock, and accents the app in its colour;
-    /// nil restores the bundle icon with its appearance variants. The Finder
-    /// keeps the icon built into the bundle.
+    /// Shows the chosen icon in the Dock; nil restores the bundle icon with
+    /// its appearance variants. The Finder keeps the icon built into the
+    /// bundle, and the accent stays amber with either icon.
     private func applyAppIcon() {
         NSApplication.shared.applicationIconImage = settings.appIcon == .amber ? nil : settings.appIcon.image
-        ThemeAccent.shared.variant = settings.appIcon
     }
 
     /// Sets the appearance of every window, menu and alert; nil follows the system.
@@ -466,8 +484,8 @@ final class AppModel {
             alert = AppAlert(
                 title: rejected.count == 1 ? "\(rejected[0]) is not a library folder" : "Not library folders",
                 message:
-                    "A collection is an eXo download (eXoDOS, eXoWin9x and others), or any LaunchBox library folder that holds Data and Images. "
-                    + (rejected.count == 1 ? "" : "Skipped: \(rejected.joined(separator: ", ")).")
+                    Self.libraryFolderHelp
+                    + (rejected.count == 1 ? "" : " Skipped: \(rejected.joined(separator: ", ")).")
             )
         }
         return added > 0
@@ -632,6 +650,20 @@ final class AppModel {
 
     // MARK: - Selection and queries
 
+    /// False before a collection is added and after a load that failed:
+    /// the window then leaves out the search, the view controls and the
+    /// inspector, which have nothing to work on.
+    var hasGamesToBrowse: Bool {
+        switch loadState {
+        case .idle, .failed: return false
+        case .loading, .loaded: return true
+        }
+    }
+
+    /// The inspector shows the selected game beside the grid or the list.
+    /// A game page shows the same things, so it has none.
+    var inspectorHasAPlace: Bool { hasGamesToBrowse && openedGame == nil }
+
     var selectedGame: Game? {
         guard let selectedGameID else { return nil }
         return library?.game(id: selectedGameID)
@@ -649,16 +681,20 @@ final class AppModel {
     func refreshVisibleGames() {
         guard let query else {
             visibleGames = []
+            scopeGameCount = 0
             return
         }
         var games = query.games(in: scope, overlay: userState)
         if !settings.showHiddenGames {
             games = games.filter { !(userState.state(for: $0.launchBoxID).hidden ?? $0.hidden) }
         }
+        scopeGameCount = games.count
         games = query.filter(games, search: searchText, index: searchIndex)
         if scope != .recentlyPlayed {
             games = query.sort(games, by: settings.sortOrder, ascending: settings.sortAscending, overlay: userState)
         }
+        // The best title matches first; a match by developer or another name comes last.
+        games = query.rankedBySearch(games, search: searchText)
         visibleGames = games
         if let title = pendingSelectTitle, let match = games.first(where: { $0.title == title }) {
             pendingSelectTitle = nil
@@ -670,6 +706,9 @@ final class AppModel {
             } else if UserDefaults.standard.bool(forKey: "openInfo") {
                 // `-openInfo 1` opens its game info sheet, for the site's screenshot.
                 pendingInfoGame = match
+            } else if UserDefaults.standard.bool(forKey: "openPage") {
+                // `-openPage 1` opens its game page.
+                openedGameID = match.id
             }
         }
         if let selectedGameID, !games.contains(where: { $0.id == selectedGameID }) {
@@ -1250,8 +1289,12 @@ final class AppModel {
         }
         let overlay = userState
         let showHidden = settings.showHiddenGames
+        let resolver = emulatorResolver()
+        let policy = settings.emulatorPolicy
         let counts = await Task.detached {
-            Self.sidebarCounts(for: library, overlay: overlay, showHidden: showHidden)
+            var counts = Self.sidebarCounts(for: library, overlay: overlay, showHidden: showHidden)
+            counts.gamesNeeding = Self.gamesNeeding(in: library, policy: policy, resolver: resolver)
+            return counts
         }.value
         sidebarCounts = counts
     }
@@ -1285,10 +1328,85 @@ final class AppModel {
             snapshot.tree.forEach(walk)
             counts.nodes[snapshot.collection.id] = nodes
             let writable = FileManager.default.isWritableFile(atPath: snapshot.root.url.path)
-            counts.collections[snapshot.collection.id] =
-                "\(games.count.formatted()) games" + (writable ? "" : " · read-only")
+            // "Titles", not "games": a collection also holds books, magazines,
+            // soundtracks and videos, which the eXo Packs rows leave out.
+            let line = games.count == 1 ? "1 title" : "\(games.count.formatted()) titles"
+            counts.collections[snapshot.collection.id] = line + (writable ? "" : " · read-only")
+            var help: [String] = []
+            if games.contains(where: { !$0.isGame }) {
+                help.append("The titles are the games, and the books, magazines, soundtracks and videos beside them.")
+            }
+            let hidden = snapshot.games.count - games.count
+            if hidden > 0 {
+                help.append("\(hidden.formatted()) hidden \(hidden == 1 ? "title is" : "titles are") not counted.")
+            }
+            if !writable { help.append("The folder is read-only, so games install into the local data folder.") }
+            counts.collectionHelp[snapshot.collection.id] = help.joined(separator: " ")
+            // eXo's playlists call eXoWin9x "eXo9x".
+            let packs = Set(snapshot.games.compactMap(\.eXoPack)).flatMap {
+                $0 == .win9x ? [$0.displayName, "eXo9x"] : [$0.displayName]
+            }
+            counts.titles[snapshot.collection.id] = LibraryNode.sidebarTitles(
+                in: snapshot.tree, under: [snapshot.collection.name], packs: packs)
         }
         return counts
+    }
+
+    /// How many games each emulator runs with the settings as they are, by
+    /// pack or platform: what a missing emulator costs. The DOSBox policy
+    /// counts, so with "Always DOSBox Staging" only the eXoWin9x games need
+    /// DOSBox-X. Read from the library alone, without the files of each
+    /// game, so the eXoWin9x games that eXo runs in 86Box count for
+    /// DOSBox-X, and eXoIF and eXoAppleIIGS games for their main emulator.
+    nonisolated private static func gamesNeeding(
+        in library: Library, policy: EmulatorPolicy, resolver: EmulatorAssignmentResolver
+    ) -> [EmulatorKind: [String: Int]] {
+        var needs: [EmulatorKind: [String: Int]] = [:]
+        var platforms: [String: EmulatorKind?] = [:]
+        for snapshot in library.snapshots {
+            for game in snapshot.games where game.isGame {
+                let kind: EmulatorKind?
+                switch game.launchKind {
+                case .windows9x: kind = .dosboxX
+                case .scummVM: kind = .scummVM
+                case .interactiveFiction: kind = .spatterlight
+                case .appleIIGS: kind = .gsplus
+                case .emulator:
+                    if let known = platforms[game.platform] {
+                        kind = known
+                    } else {
+                        kind = resolver.resolve(platform: game.platform).assignment?.emulator
+                        platforms[game.platform] = kind
+                    }
+                default:
+                    guard game.isDOSGame else { continue }
+                    switch policy {
+                    case .alwaysStaging: kind = .dosboxStaging
+                    case .alwaysDOSBoxX: kind = .dosboxX
+                    case .recommended:
+                        kind = snapshot.dosboxBuild(for: game)?.recommendedEmulator ?? .dosboxStaging
+                    }
+                }
+                if let kind { needs[kind, default: [:]][game.eXoPack?.displayName ?? game.platform, default: 0] += 1 }
+            }
+        }
+        return needs
+    }
+
+    /// "666 games need it.", or nil when none does.
+    func gamesNeedingLine(_ kind: EmulatorKind) -> String? {
+        let count = sidebarCounts.gamesNeeding[kind]?.values.reduce(0, +) ?? 0
+        guard count > 0 else { return nil }
+        return count == 1 ? "1 game needs it." : "\(count.formatted()) games need it."
+    }
+
+    /// "eXoDemoScene 2,311, eXoWin9x 647, eXoDOS 19": where the count comes
+    /// from, the largest first, for the line's help.
+    func gamesNeedingBreakdown(_ kind: EmulatorKind) -> String {
+        let sources = (sidebarCounts.gamesNeeding[kind] ?? [:]).sorted { ($0.value, $1.key) > ($1.value, $0.key) }
+        var parts = sources.prefix(8).map { "\($0.key) \($0.value.formatted())" }
+        if sources.count > 8 { parts.append("and \(sources.count - 8) more platforms") }
+        return parts.joined(separator: ", ")
     }
 
     /// The Dock tile shows the mean progress of everything running, or nothing.

@@ -243,6 +243,16 @@ nonisolated extension Game {
             || folder.contains("exo\\exodos\\")
     }
 
+    /// True for a game or a demo: not the books, magazines, soundtracks,
+    /// videos and links that a collection keeps beside its games.
+    public var isGame: Bool {
+        guard !isEXoSetupScript else { return false }
+        switch launchKind {
+        case .document, .link, .soundtrack, .video: return false
+        default: return true
+        }
+    }
+
     /// True for the entry each eXo pack adds for its Windows setup script,
     /// `Setup <pack>.bat` at the top of the library, which the Mac setup
     /// replaces, and for eXoWin3x's banner entry, titled after the pack,

@@ -57,8 +57,13 @@ struct GameVideoPlayer: View {
 struct MediaGalleryView: View {
     let game: Game
     var height: CGFloat? = nil
+    /// A black frame behind the image, which fills the inspector's fixed
+    /// 4:3 box. The game page leaves it out, so an image of another shape
+    /// has no black bars beside it.
+    var framed = true
     @Environment(AppModel.self) private var model
     @State private var pixelPerfect = true
+    @State private var filmstripOverflow = FilmstripOverflow()
 
     var body: some View {
         @Bindable var model = model
@@ -66,7 +71,7 @@ struct MediaGalleryView: View {
         let index = model.galleryIndex
         VStack(spacing: 10) {
             ZStack {
-                Color(hex: 0x050607)
+                if framed || items.isEmpty { Color(hex: 0x050607) }
                 if items.indices.contains(index) {
                     let item = items[index]
                     switch item.kind {
@@ -74,7 +79,7 @@ struct MediaGalleryView: View {
                         GameVideoPlayer(url: item.url)
                     case .image:
                         FullImageView(url: item.url, pixelPerfect: pixelPerfect)
-                            .padding(8)
+                            .padding(framed ? 8 : 0)
                     }
                 } else if items.isEmpty {
                     VStack(spacing: 8) {
@@ -84,19 +89,11 @@ struct MediaGalleryView: View {
                     .foregroundStyle(Theme.textTertiary)
                 }
             }
-            .frame(height: height)
-            .aspectRatio(height == nil ? 4 / 3 : nil, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(alignment: .bottomLeading) {
-                if items.indices.contains(index) {
-                    Text(items[index].label)
-                        .font(Theme.mono)
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(6)
-                        .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 4))
-                        .padding(8)
-                }
-            }
+            .modifier(GalleryFrame(height: height))
+            .clipShape(RoundedRectangle(cornerRadius: framed ? 8 : 0))
+            .contentShape(Rectangle())
+            // The filmstrip names the image; one image alone has no filmstrip.
+            .help(items.indices.contains(index) ? items[index].label : "")
             .onTapGesture { model.quickLookCurrentMedia() }
 
             if items.count > 1 {
@@ -123,18 +120,70 @@ struct MediaGalleryView: View {
                 }
                 .buttonStyle(.borderless)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
-                            FilmstripThumb(item: item, isSelected: offset == index)
-                                .onTapGesture { model.galleryIndex = offset }
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
+                                FilmstripThumb(item: item, isSelected: offset == index)
+                                    .id(offset)
+                                    .onTapGesture { model.galleryIndex = offset }
+                            }
+                        }
+                        .padding(2)
+                    }
+                    .onScrollGeometryChange(for: FilmstripOverflow.self) { geometry in
+                        FilmstripOverflow(
+                            leading: geometry.contentOffset.x > 1,
+                            trailing: geometry.contentOffset.x + geometry.containerSize.width
+                                < geometry.contentSize.width - 1)
+                    } action: { _, overflow in
+                        filmstripOverflow = overflow
+                    }
+                    // A fade at an edge says that the strip goes on there.
+                    .mask {
+                        HStack(spacing: 0) {
+                            LinearGradient(
+                                colors: [filmstripOverflow.leading ? .clear : .black, .black], startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: 28)
+                            Color.black
+                            LinearGradient(
+                                colors: [.black, filmstripOverflow.trailing ? .clear : .black], startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: 28)
                         }
                     }
-                    .padding(2)
+                    // The arrows and the keyboard keep the current image's thumbnail in view.
+                    .onChange(of: index) { _, index in
+                        withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(index) }
+                    }
                 }
             }
         }
     }
+}
+
+/// The gallery's box: all the width at a given height, or a 4:3 box. Not
+/// `aspectRatio(nil, …)`, which keeps the shape of what is inside, so that a
+/// title screen sat in a frame cut for box art.
+private struct GalleryFrame: ViewModifier {
+    let height: CGFloat?
+
+    func body(content: Content) -> some View {
+        if let height {
+            content.frame(maxWidth: .infinity).frame(height: height)
+        } else {
+            content.aspectRatio(4 / 3, contentMode: .fit)
+        }
+    }
+}
+
+/// Whether the filmstrip has thumbnails out of view at each end.
+private struct FilmstripOverflow: Equatable {
+    var leading = false
+    var trailing = false
 }
 
 struct FilmstripThumb: View {

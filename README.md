@@ -275,6 +275,12 @@ The app also includes [Sparkle](https://sparkle-project.org) (MIT, with the
 licenses of the code it includes), which installs its updates. It is a
 Swift package of the app target only.
 
+The headlines of the About window and the welcome are in
+[VT323](https://github.com/phoikoi/VT323), a font by Peter Hull under the
+SIL Open Font License 1.1. The file, `Silverbox/Fonts/VT323-Regular.ttf`,
+is version 2.000 as Google Fonts ships it; its license is in
+`Silverbox/Licenses/VT323.txt`.
+
 ## License
 
 Silverbox is free software under the GNU General Public License, version 3

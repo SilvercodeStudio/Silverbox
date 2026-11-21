@@ -87,6 +87,50 @@ nonisolated public struct LibraryQuery: Sendable {
         }
     }
 
+    /// How well a title matches a search, best first. Each term counts by
+    /// its best place in the title, and the title by its worst term.
+    nonisolated public enum SearchRank: Int, Comparable, Sendable {
+        /// Every term is a word of the title: "ultima" in "Ultima V".
+        case word
+        /// A term only starts a word: "ultima" in "Ultimate Baseball".
+        case wordStart
+        /// A term is only inside a word: "ultima" in "Penultimate".
+        case inTitle
+        /// A term is not in the title: a match by developer, publisher or another name.
+        case elsewhere
+
+        public static func < (a: SearchRank, b: SearchRank) -> Bool { a.rawValue < b.rawValue }
+    }
+
+    public static func searchRank(ofTitle title: String, terms: [String]) -> SearchRank {
+        let title = fold(title)
+        let words = title.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+        return terms.map { term -> SearchRank in
+            if words.contains(where: { $0 == term }) { return .word }
+            if words.contains(where: { $0.hasPrefix(term) }) { return .wordStart }
+            return title.contains(term) ? .inTitle : .elsewhere
+        }.max() ?? .word
+    }
+
+    /// Orders the games a search found by ``SearchRank``: the titles with
+    /// the terms as words, then as the start of a word, then inside a word,
+    /// then the matches by developer, publisher or another name. The order
+    /// within each rank stays as it was.
+    public func rankedBySearch(_ games: [Game], search: String) -> [Game] {
+        let terms = Self.fold(search).split(separator: " ").map { String($0) }
+        guard !terms.isEmpty else { return games }
+        var ranks: [SearchRank: [Game]] = [:]
+        for game in games {
+            ranks[Self.searchRank(ofTitle: game.title, terms: terms), default: []].append(game)
+        }
+        return [SearchRank.word, .wordStart, .inTitle, .elsewhere].flatMap { ranks[$0] ?? [] }
+    }
+
+    private static func fold(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+    }
+
     public func searchText(for game: Game) -> String {
         var parts = [game.title, game.sortTitle ?? "", game.developer ?? "", game.publisher ?? ""]
         parts.append(contentsOf: library.alternateNames(for: game).map(\.name))

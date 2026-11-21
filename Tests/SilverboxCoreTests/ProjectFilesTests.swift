@@ -21,6 +21,18 @@ struct ProjectFilesTests {
         }
     }
 
+    /// The font the app bundles comes with its license, as the license asks.
+    @Test func bundledFontHasItsLicense() throws {
+        let font = Self.root.appendingPathComponent("Silverbox/Fonts/VT323-Regular.ttf")
+        #expect(FileManager.default.fileExists(atPath: font.path))
+        let license = try String(
+            contentsOf: Self.root.appendingPathComponent("Silverbox/Licenses/VT323.txt"), encoding: .utf8)
+        #expect(license.hasPrefix("Copyright 2011, The VT323 Project Authors"))
+        #expect(license.contains("SIL OPEN FONT LICENSE Version 1.1"))
+        let notice = try String(contentsOf: Self.root.appendingPathComponent("NOTICE"), encoding: .utf8)
+        #expect(notice.contains("Silverbox/Fonts/VT323-Regular.ttf"))
+    }
+
     @Test func licenseIsTheGPL() throws {
         let license = try String(contentsOf: Self.root.appendingPathComponent("LICENSE"), encoding: .utf8)
         #expect(

@@ -12,24 +12,28 @@ enum BundledLicense {
 }
 
 /// Who made what the app builds on: the eXo team's collections, the
-/// emulators it starts, and the two decoders and the updater it includes,
-/// with their licenses.
+/// emulators it starts, and the two decoders, the updater and the font it
+/// includes, with their licenses.
 struct AcknowledgmentsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingLicense = false
 
-    private static let libraries: [(name: String, authors: String, file: String, url: String)] = [
+    private static let libraries: [(name: String, authors: String, license: String, file: String, url: String)] = [
         (
-            "stb_vorbis", "Sean Barrett", "stb_vorbis",
+            "stb_vorbis", "Sean Barrett", "MIT license", "stb_vorbis",
             "https://github.com/nothings/stb"
         ),
         (
-            "libxmp-lite", "Claudio Matsuoka and Hipolito Carraro Jr", "libxmp-lite",
+            "libxmp-lite", "Claudio Matsuoka and Hipolito Carraro Jr", "MIT license", "libxmp-lite",
             "https://github.com/libxmp/libxmp"
         ),
         (
-            "Sparkle", "Andy Matuschak and the Sparkle Project", "Sparkle",
+            "Sparkle", "Andy Matuschak and the Sparkle Project", "MIT license", "Sparkle",
             "https://sparkle-project.org"
+        ),
+        (
+            "VT323, the font of the headlines", "Peter Hull", "SIL Open Font License", "VT323",
+            "https://github.com/phoikoi/VT323"
         ),
     ]
 
@@ -43,7 +47,7 @@ struct AcknowledgmentsSheet: View {
                         Text(
                             "eXoDOS, eXoWin3x, eXoWin9x, eXoDemoScene, eXoScummVM, eXoAppleIIGS and eXoIF are the work of the eXo team: the games, the metadata, the box art and the launch settings that \(AppInfo.displayName) reads. Nothing of theirs is included in this app."
                         )
-                        Link("retro-exo.com", destination: AboutPanel.projectURL)
+                        Link("retro-exo.com", destination: AboutPanel.projectURL).accentLink()
                     }
                     section("The emulators") {
                         Text(
@@ -54,7 +58,7 @@ struct AcknowledgmentsSheet: View {
                                 HStack {
                                     Text(kind.displayName)
                                     Spacer()
-                                    Link(url.host ?? kind.website, destination: url).font(.caption)
+                                    Link(url.host ?? kind.website, destination: url).font(.caption).accentLink()
                                 }
                             }
                         }
@@ -70,10 +74,10 @@ struct AcknowledgmentsSheet: View {
                                     .background(Theme.field, in: RoundedRectangle(cornerRadius: 6))
                             } label: {
                                 HStack {
-                                    Text("\(library.name), by \(library.authors). MIT license.")
+                                    Text("\(library.name), by \(library.authors). \(library.license).")
                                     Spacer()
                                     if let url = URL(string: library.url) {
-                                        Link(url.host ?? library.url, destination: url).font(.caption)
+                                        Link(url.host ?? library.url, destination: url).font(.caption).accentLink()
                                     }
                                 }
                             }
@@ -92,6 +96,7 @@ struct AcknowledgmentsSheet: View {
         }
         .frame(width: 560, height: 520)
         .background(Theme.window)
+        .withoutInitialFocus()
         .sheet(isPresented: $showingLicense) { LicenseSheet() }
     }
 
@@ -134,5 +139,6 @@ struct LicenseSheet: View {
         }
         .frame(width: 640, height: 580)
         .background(Theme.window)
+        .withoutInitialFocus()
     }
 }

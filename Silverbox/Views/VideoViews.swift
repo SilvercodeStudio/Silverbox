@@ -90,24 +90,38 @@ struct VideoPlayerSettingsSection: View {
             players.contains { $0.url == chosen.url } ? nil : chosen
         }
         Section("Videos") {
-            HStack {
-                Picker("Video player", selection: $model.settings.videoPlayerPath) {
-                    Text("macOS default" + (systemDefault.map { " (\($0.name))" } ?? "")).tag(String?.none)
-                    Divider()
-                    ForEach(players + (custom.map { [$0] } ?? [])) { player in
-                        Text(player.name).tag(Optional(player.url.path))
-                    }
+            Picker("Video player", selection: playerBinding) {
+                Text("macOS default" + (systemDefault.map { " (\($0.name))" } ?? "")).tag(String?.none)
+                Divider()
+                ForEach(players + (custom.map { [$0] } ?? [])) { player in
+                    Text(player.name).tag(Optional(player.url.path))
                 }
-                Button("Choose…") {
+                Divider()
+                Text("Other…").tag(Optional(Self.other))
+            }
+            Text("QuickTime Player cannot play some videos, such as VP9; VLC plays them all.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    /// The tag of "Other…", which is never stored: it opens the app chooser.
+    private static let other = "other"
+
+    private var playerBinding: Binding<String?> {
+        Binding(
+            get: { model.settings.videoPlayerPath },
+            set: { path in
+                guard path == Self.other else {
+                    model.settings.videoPlayerPath = path
+                    return
+                }
+                // After the menu has closed.
+                DispatchQueue.main.async {
                     if let app = ExternalPlayer.choose(message: "Choose the app that plays videos", prompt: "Choose") {
                         model.settings.videoPlayerPath = app.path
                     }
                 }
             }
-            Text(
-                "Play opens videos in this app. QuickTime Player cannot play some of them, such as MP4 files with VP9 video; VLC plays them all. DVD disc images always open in VLC. Right-click a video and use Open With to pick a player once."
-            )
-            .font(.caption).foregroundStyle(.secondary)
-        }
+        )
     }
 }
