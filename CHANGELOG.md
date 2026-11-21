@@ -103,6 +103,8 @@ What changed in each version of Silverbox.
 
 ### Fixed
 
+- The inspector's video is the selected game's. When you moved from one
+  game with a video to another, the first game's video stayed.
 - Failed or cancelled installations leave existing games alone and no longer
   appear as installed. Games that share files cannot be installed, removed
   or started over one another, including Windows 98 virtual machines. When

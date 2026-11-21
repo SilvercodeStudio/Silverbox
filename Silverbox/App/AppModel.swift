@@ -149,6 +149,10 @@ final class AppModel {
     var revealSelectionRequest = 0
     /// The selected game's screenshots and videos, shown by the media gallery.
     var galleryItems: [GameMediaItem] = []
+    /// The game whose media `galleryItems` holds. After the selection moves,
+    /// the items of the game before stay until the new ones are read, so
+    /// that the inspector does not flash empty; this says whose they are.
+    var galleryGameID: String?
     var galleryIndex = 0
     var selectedManual: URL?
     /// The selected game's extras (maps, clue books, cards), for Quick Look.

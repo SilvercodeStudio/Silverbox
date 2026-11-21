@@ -125,6 +125,7 @@ extension AppModel {
         galleryIndex = 0
         guard let game = selectedGame, let media = media(for: game) else {
             galleryItems = []
+            galleryGameID = nil
             selectedManual = nil
             selectedExtras = []
             return
@@ -135,6 +136,7 @@ extension AppModel {
             let extras = await media.extras(for: game)
             guard let self, !Task.isCancelled, self.selectedGameID == game.id else { return }
             self.galleryItems = items
+            self.galleryGameID = game.id
             self.selectedManual = manual
             self.selectedExtras = extras
             self.extrasCache[game.id] = GameExtrasEntry(extras: extras, manual: manual)

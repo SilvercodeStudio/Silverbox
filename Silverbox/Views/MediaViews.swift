@@ -27,6 +27,10 @@ struct FullImageView: View {
     }
 }
 
+/// A video with the system's player controls. The player follows `url`: the
+/// gallery keeps this view when the selection moves from one game with a
+/// video to another, and a player made once would go on showing the first
+/// game's video under the second game's name.
 struct GameVideoPlayer: View {
     let url: URL
     @Environment(AppModel.self) private var model
@@ -47,6 +51,10 @@ struct GameVideoPlayer: View {
             .onChange(of: mayOpen) { _, open in
                 player?.pause()
                 player = open ? AVPlayer(url: url) : nil
+            }
+            .onChange(of: url) { _, url in
+                player?.pause()
+                player = mayOpen ? AVPlayer(url: url) : nil
             }
     }
 }
@@ -76,7 +84,9 @@ struct MediaGalleryView: View {
                     let item = items[index]
                     switch item.kind {
                     case .video:
-                        GameVideoPlayer(url: item.url)
+                        // Not for the game before, whose items show until this game's are read:
+                        // its video would be opened from the share only to be dropped.
+                        if model.galleryGameID == game.id { GameVideoPlayer(url: item.url) }
                     case .image:
                         FullImageView(url: item.url, pixelPerfect: pixelPerfect)
                             .padding(framed ? 8 : 0)
