@@ -215,6 +215,9 @@ Done:
   game page, search ranked by word, word start and substring, the VT323
   headlines, a green CRT band with the green icon, the emulator demand
   by the DOSBox policy, and the warning triangle with a dark mark.
+- Back and Forward between the places the window showed, as Silverside
+  has them: toolbar arrows, Command-[ and Command-], mouse buttons 4 and
+  5 (2026-11-20).
 
 Not yet:
 

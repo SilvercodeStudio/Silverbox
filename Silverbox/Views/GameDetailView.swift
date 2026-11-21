@@ -156,7 +156,7 @@ struct RelatedGamesView: View {
                 ForEach(related) { other in
                     GameTileView(game: other, width: 140, isSelected: false)
                         .onTapGesture {
-                            model.selectedGameID = other.id
+                            // Opening the page selects its game, and is a step for Back.
                             model.openedGameID = other.id
                         }
                         .contextMenu { GameContextMenu(game: other) }

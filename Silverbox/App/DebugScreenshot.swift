@@ -14,10 +14,11 @@
     enum DebugScreenshot {
         private static var scheduled = false
 
-        static func scheduleIfRequested() {
+        static func scheduleIfRequested(model: AppModel) {
             guard !scheduled else { return }
             scheduled = true
             resizeMainWindowIfRequested()
+            navigateIfRequested(model: model)
             let path = UserDefaults.standard.string(forKey: "screenshotPath") ?? ""
             // `-keyPresses "down down space"` presses keys first, to test navigation.
             let presses = (UserDefaults.standard.string(forKey: "keyPresses") ?? "")
@@ -47,6 +48,27 @@
                 ) {
                     capture(to: URL(fileURLWithPath: path))
                     NSApp.terminate(nil)
+                }
+            }
+        }
+
+        /// `-navigate "back forward up"`: moves in the window's history after the delay, a step
+        /// every 0.4 seconds: Back, Forward, and `up` for Back to Library. Menu shortcuts do not
+        /// reach an app that is not in front, so `-keyPresses` cannot do this.
+        private static func navigateIfRequested(model: AppModel) {
+            let steps = (UserDefaults.standard.string(forKey: "navigate") ?? "").split(separator: " ")
+            guard !steps.isEmpty else { return }
+            let configured = UserDefaults.standard.double(forKey: "screenshotDelay")
+            for (offset, step) in steps.enumerated() {
+                DispatchQueue.main.asyncAfter(
+                    deadline: .now() + (configured > 0 ? configured : 8) + 0.4 * Double(offset)
+                ) {
+                    switch step {
+                    case "back": model.navigateBack()
+                    case "forward": model.navigateForward()
+                    case "up": model.closeGamePage()
+                    default: break
+                    }
                 }
             }
         }

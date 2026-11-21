@@ -25,6 +25,8 @@ enum KeyPress {
         static let y = Key(code: 16, characters: "y")
         static let one = Key(code: 18, characters: "1")
         static let two = Key(code: 19, characters: "2")
+        static let leftBracket = Key(code: 33, characters: "[")
+        static let rightBracket = Key(code: 30, characters: "]")
 
         init(code: UInt16, characters: String) {
             self.code = code
@@ -54,7 +56,8 @@ enum KeyPress {
             let keys: [String: Key] = [
                 "up": .up, "down": .down, "left": .left, "right": .right, "home": .home, "end": .end,
                 "pageup": .pageUp, "pagedown": .pageDown, "return": .return, "enter": .return, "escape": .escape,
-                "esc": .escape, "space": .space, "d": .d, "y": .y, "1": .one, "2": .two,
+                "esc": .escape, "space": .space, "d": .d, "y": .y, "1": .one, "2": .two, "[": .leftBracket,
+                "]": .rightBracket,
             ]
             return keys[name].map { ($0, modifiers) }
         }

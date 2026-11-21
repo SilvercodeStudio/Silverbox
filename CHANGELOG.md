@@ -32,6 +32,13 @@ What changed in each version of Silverbox.
 - Help › Support Silverbox and the About window's Leave a Tip button open
   a page where you can leave a tip. Silverbox stays free.
 
+- Back and Forward, as in a browser: two arrows in the toolbar,
+  Command-[ and Command-] (or Command-Left and Command-Right), and
+  buttons 4 and 5 of a mouse. They move between the sections, searches
+  and game pages you showed, and select the game you had selected
+  there.
+- A game's right-click menu can show the keys of its commands, such as
+  Command-Down for Open Game Page: turn it on in Settings › General.
 - Add Collection… takes the right folder when you choose one a level
   off: a folder inside a collection, such as `eXo` or `Data`, or the
   folder around one collection. The welcome screen and Settings say so

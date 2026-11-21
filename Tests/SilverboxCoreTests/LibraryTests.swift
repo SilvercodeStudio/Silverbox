@@ -48,6 +48,53 @@ struct LibraryLoaderTests {
     }
 }
 
+@Suite("Navigation history")
+struct NavigationHistoryTests {
+    @Test func goesBackAndForwardLikeABrowser() {
+        var history = NavigationHistory<String>()
+        #expect(!history.canGoBack { _ in true })
+        #expect(history.goBack(from: "a") { _ in true } == nil)
+
+        // a → b → c, then back twice and forward once.
+        history.leave("a")
+        history.leave("b")
+        #expect(history.previous == "b")
+        #expect(history.goBack(from: "c") { _ in true } == "b")
+        #expect(history.goBack(from: "b") { _ in true } == "a")
+        #expect(!history.canGoBack { _ in true })
+        #expect(history.goForward(from: "a") { _ in true } == "b")
+        #expect(history.backPlaces == ["a"])
+        #expect(history.forwardPlaces == ["c"])
+
+        // A new place from here drops what Forward had.
+        history.leave("b")
+        #expect(history.forwardPlaces.isEmpty)
+        #expect(history.backPlaces == ["a", "b"])
+    }
+
+    @Test func passesOverPlacesThatAreGone() {
+        var history = NavigationHistory<String>()
+        for place in ["a", "gone", "b", "gone too"] { history.leave(place) }
+        let exists: (String) -> Bool = { !$0.hasPrefix("gone") }
+        #expect(history.goBack(from: "c", where: exists) == "b")
+        #expect(history.goBack(from: "b", where: exists) == "a")
+        #expect(history.backPlaces.isEmpty)
+        #expect(history.forwardPlaces == ["c", "b"])
+        // Only places that are gone are left: Back has nowhere to go, and the current place stays.
+        var other = NavigationHistory<String>()
+        other.leave("gone")
+        #expect(!other.canGoBack(where: exists))
+        #expect(other.goBack(from: "x", where: exists) == nil)
+        #expect(other.forwardPlaces.isEmpty)
+    }
+
+    @Test func keepsTheNewestPlacesAndNoDoubles() {
+        var history = NavigationHistory<Int>(limit: 3)
+        for place in [1, 2, 2, 3, 4, 5] { history.leave(place) }
+        #expect(history.backPlaces == [3, 4, 5])
+    }
+}
+
 @Suite("Choosing a library folder")
 struct LibraryFolderChoiceTests {
     @Test func takesTheCollectionAroundAFolderInsideIt() {

@@ -17,6 +17,8 @@ The library can be browsed without the mouse. Click a game once, or press Tab un
 | Command-Shift-Y | Quick Look the manual |
 | Command-Option-Y | Quick Look the extras (maps, clue books, reference cards) |
 | Command-Down, Command-Up | Open the game page, back to the library |
+| Command-[, Command-] | Back and Forward |
+| Command-Left, Command-Right | Back and Forward, except while you type in the search field |
 | Command-F | Search games |
 | Command-Return | Play |
 | Command-Shift-Return | Configure… |
@@ -33,6 +35,10 @@ The library can be browsed without the mouse. Click a game once, or press Tab un
 | Command-. | Stop the album |
 | Escape | Close the Quick Look panel or the game page, or clear the search |
 | Command-/ | Keyboard Shortcuts window |
+
+## Back and Forward
+
+Back and Forward move between the places the window showed, as in a browser: the arrows at the left of the toolbar, the keys above, or buttons 4 and 5 of a mouse. A new place begins when you choose another section in the sidebar, open or leave a game page, start or clear a search, or jump to a game with Other Versions. Moving between games in the grid or the list is not a step; each place remembers the game that was selected, and Back selects it again. Back from a game page returns to the list it was opened from, and Forward opens the page again.
 
 The Quick Look panel pages through everything the game has: its images and videos, then the manual, then the extras. Use the arrow keys inside the panel; Space or Escape closes it. Clicking an extra in the inspector opens the same panel at that item.
 

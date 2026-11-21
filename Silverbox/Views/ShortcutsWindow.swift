@@ -42,7 +42,8 @@ enum ShortcutReference {
                 Entry(keys: "Home, End", action: "First or last game"),
                 Entry(keys: "Page Up, Page Down", action: "Jump four rows"),
                 Entry(keys: "⌘F", action: "Search games"),
-                Entry(keys: "⌘↓ ⌘↑", action: "Open the game page, and back"),
+                Entry(keys: "⌘↑", action: "Back to the library from a game page"),
+                Entry(keys: "⌘[ ⌘]", action: "Back and Forward (also ⌘← ⌘→)"),
                 Entry(keys: "Esc", action: "Close the panel or page; clear the search"),
             ]),
         KeyGroup(
@@ -51,6 +52,7 @@ enum ShortcutReference {
                 Entry(keys: "↩", action: "Play, or Install"),
                 Entry(keys: "⌘↩", action: "Play"),
                 Entry(keys: "⇧⌘↩", action: "Configure…"),
+                Entry(keys: "⌘↓", action: "Open the game page"),
                 Entry(keys: "⌘I", action: "Edit game info"),
                 Entry(keys: "⌘D", action: "Add to or remove from Favorites"),
                 Entry(keys: "⌘⌫", action: "Uninstall…"),

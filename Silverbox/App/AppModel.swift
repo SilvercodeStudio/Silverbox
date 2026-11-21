@@ -101,8 +101,25 @@ final class AppModel {
     private(set) var sidebarCounts = SidebarCounts()
     @ObservationIgnored private var sidebarCountsTask: Task<Void, Never>?
 
-    var scope: LibraryScope = .all { didSet { refreshVisibleGames() } }
-    var searchText = "" { didSet { scheduleSearchRefresh() } }
+    var scope: LibraryScope = .all {
+        didSet {
+            if scope != oldValue { leftPlace(place(scope: oldValue)) }
+            refreshVisibleGames()
+        }
+    }
+    var searchText = "" {
+        didSet {
+            // A search is a place of its own; the letters typed into it are not.
+            if searchText.isEmpty != oldValue.isEmpty { leftPlace(place(searchText: oldValue)) }
+            scheduleSearchRefresh()
+        }
+    }
+    /// The places the window showed before this one, and those that Back
+    /// left, as a browser keeps them (`AppModel+History`).
+    var history = NavigationHistory<NavigationPlace>()
+    /// Above 0 while one step changes several things, or Back and Forward
+    /// show a place: the changes inside make no entries of their own.
+    @ObservationIgnored var navigationDepth = 0
     private(set) var visibleGames: [Game] = []
     /// The games of the scope before the search narrows them, for "13 of 517".
     private(set) var scopeGameCount = 0
@@ -116,6 +133,7 @@ final class AppModel {
     /// inspector, media and keyboard commands follow it.
     var openedGameID: String? {
         didSet {
+            if openedGameID != oldValue { leftPlace(place(openedGameID: .some(oldValue))) }
             if let openedGameID, openedGameID != selectedGameID { selectedGameID = openedGameID }
         }
     }

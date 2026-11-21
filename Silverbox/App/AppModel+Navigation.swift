@@ -75,20 +75,23 @@ extension AppModel {
     /// search is cleared, and the scope widens to the game's pack (or all
     /// games) when it does not hold the game. An open game page follows.
     func reveal(_ game: Game) {
-        if !visibleGames.contains(where: { $0.id == game.id }) {
-            searchText = ""
-            let inScope = query?.games(in: scope, overlay: userState).contains { $0.id == game.id } ?? false
-            if !inScope {
-                if let pack = game.eXoPack, (library?.packs.count ?? 0) > 1 {
-                    scope = .pack(pack)
-                } else {
-                    scope = .all
+        // One step for Back, whatever it changes: the search, the section, the page or only the game.
+        navigate {
+            if !visibleGames.contains(where: { $0.id == game.id }) {
+                searchText = ""
+                let inScope = query?.games(in: scope, overlay: userState).contains { $0.id == game.id } ?? false
+                if !inScope {
+                    if let pack = game.eXoPack, (library?.packs.count ?? 0) > 1 {
+                        scope = .pack(pack)
+                    } else {
+                        scope = .all
+                    }
                 }
+                refreshVisibleGames()
             }
-            refreshVisibleGames()
+            selectedGameID = game.id
+            if openedGameID != nil { openedGameID = game.id }
         }
-        selectedGameID = game.id
-        if openedGameID != nil { openedGameID = game.id }
         // After the grid has scrolled to the top of a new scope.
         Task { @MainActor in self.revealSelectionRequest += 1 }
     }
@@ -99,15 +102,16 @@ extension AppModel {
     }
 
     /// Escape, or the controller's back button: closes what is open, in
-    /// order. Returns false when there was nothing to close.
+    /// order. Returns false when there was nothing to close. Back and
+    /// Forward (`navigateBack`) are another thing: they move between places.
     @discardableResult
-    func goBack() -> Bool {
+    func closeTopmost() -> Bool {
         if quickLookURL != nil {
             quickLookURL = nil
             return true
         }
         if openedGameID != nil {
-            openedGameID = nil
+            closeGamePage()
             return true
         }
         if !searchText.isEmpty {

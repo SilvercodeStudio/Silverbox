@@ -96,6 +96,10 @@ struct AppSettings: Codable, Equatable {
     /// False sorts the other way, set by a click on a list column header.
     var sortAscending = true
     var showHiddenGames = false
+    /// Whether a game's right-click menu shows the keys of its commands.
+    /// Off at first, as macOS menus of that kind show none; some people
+    /// like them.
+    var showMenuShortcuts = false
     var inspectorShown = true
     /// Which of the two app icons the Dock and the About window show.
     var appIcon: AppIconVariant = .amber
@@ -135,6 +139,7 @@ struct AppSettings: Codable, Equatable {
         sortOrder = try c.decodeIfPresent(GameSortOrder.self, forKey: .sortOrder) ?? .title
         sortAscending = try c.decodeIfPresent(Bool.self, forKey: .sortAscending) ?? true
         showHiddenGames = try c.decodeIfPresent(Bool.self, forKey: .showHiddenGames) ?? false
+        showMenuShortcuts = try c.decodeIfPresent(Bool.self, forKey: .showMenuShortcuts) ?? false
         inspectorShown = try c.decodeIfPresent(Bool.self, forKey: .inspectorShown) ?? true
         appIcon = try c.decodeIfPresent(AppIconVariant.self, forKey: .appIcon) ?? .amber
         appearance = try c.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
@@ -200,7 +205,7 @@ struct AppSettings: Codable, Equatable {
         case collections, localStorePath, installLocation, showLaunchOptions, emulatorPaths, retroArchCoresPath,
             platformEmulators, emulatorPolicy, launchOptions,
             musicEnabled, musicVolume, musicInBackground, videoPlayerPath, tileSize, viewMode, sortOrder, sortAscending,
-            showHiddenGames,
+            showHiddenGames, showMenuShortcuts,
             inspectorShown,
             appIcon, appearance, remountURLs
     }
@@ -225,6 +230,7 @@ struct AppSettings: Codable, Equatable {
         try c.encode(sortOrder, forKey: .sortOrder)
         try c.encode(sortAscending, forKey: .sortAscending)
         try c.encode(showHiddenGames, forKey: .showHiddenGames)
+        try c.encode(showMenuShortcuts, forKey: .showMenuShortcuts)
         try c.encode(inspectorShown, forKey: .inspectorShown)
         try c.encode(appIcon, forKey: .appIcon)
         try c.encode(appearance, forKey: .appearance)

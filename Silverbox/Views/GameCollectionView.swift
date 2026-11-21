@@ -72,7 +72,7 @@ struct GameGridView: View {
                                     model.selectedGameID = game.id
                                     focused = true
                                 }
-                                .contextMenu { GameContextMenu(game: game) }
+                                .contextMenu { GameContextMenu(game: game, showsKeys: true) }
                                 .onHover { if $0 { model.prefetchExtras(for: game) } }
                                 .id(game.id)
                         }
@@ -118,7 +118,7 @@ struct GameGridView: View {
                 model.quickLookCurrentMedia()
                 return .handled
             }
-            .onKeyPress(.escape) { model.goBack() ? .handled : .ignored }
+            .onKeyPress(.escape) { model.closeTopmost() ? .handled : .ignored }
             .onKeyPress(phases: .down) { press in
                 let modifiers = press.modifiers
                 guard modifiers.contains(.option), modifiers.isDisjoint(with: [.command, .shift, .control]) else {
@@ -148,6 +148,15 @@ struct GameGridView: View {
                 return .handled
             }
             .onAppear { focused = true }
+            // A grid that is new (a game page closed, or Back showed this list) has no tiles at
+            // its first layout, and the scroll to the selection below then does nothing. Scroll
+            // again while the tiles arrive; it changes nothing once the tile is on show.
+            .task {
+                for wait in [80, 150, 250] {
+                    try? await Task.sleep(for: .milliseconds(wait))
+                    if let id = model.selectedGameID { proxy.scrollTo(id) }
+                }
+            }
             .onChange(of: model.scope) {
                 if let first = games.first?.id { proxy.scrollTo(first, anchor: .top) }
             }
@@ -379,7 +388,7 @@ struct GameListView: View {
         }
         .contextMenu(forSelectionType: String.self) { ids in
             if let id = ids.first, let game = model.library?.game(id: id) {
-                GameContextMenu(game: game)
+                GameContextMenu(game: game, showsKeys: true)
             }
         } primaryAction: { ids in
             if let id = ids.first, let game = model.library?.game(id: id) { model.play(game) }
@@ -392,7 +401,7 @@ struct GameListView: View {
             model.quickLookCurrentMedia()
             return .handled
         }
-        .onKeyPress(.escape) { model.goBack() ? .handled : .ignored }
+        .onKeyPress(.escape) { model.closeTopmost() ? .handled : .ignored }
         .onKeyPress(phases: .down) { press in
             let modifiers = press.modifiers
             guard modifiers.contains(.option), modifiers.isDisjoint(with: [.command, .shift, .control]) else {
@@ -460,9 +469,20 @@ struct GameListView: View {
 }
 
 /// The right-click menu for a game, shared by the grid, list and inspector.
+/// A game's menu, for a right-click and for the "…" button. In the
+/// right-click menu, the items show the keys of the same commands in the
+/// menu bar (`AppCommands`), which do the work; keep the two in step.
 struct GameContextMenu: View {
     let game: Game
+    /// True for a right-click menu, where a key beside an item is only
+    /// shown, and only while the setting for it is on. A button's pull-down menu would make the keys work a second
+    /// time, beside the menu bar's, so it shows none.
+    var showsKeys = false
     @Environment(AppModel.self) private var model
+
+    private func key(_ key: KeyEquivalent, _ modifiers: EventModifiers) -> KeyboardShortcut? {
+        showsKeys && model.settings.showMenuShortcuts ? KeyboardShortcut(key, modifiers: modifiers) : nil
+    }
 
     var body: some View {
         let installed = model.isInstalled(game)
@@ -470,7 +490,7 @@ struct GameContextMenu: View {
             game.hasLaunchVersions && installed ? model.launchVariants(for: game) : []
         if game.isEXoGame {
             if installed {
-                Button("Play") { model.play(game) }
+                Button("Play") { model.play(game) }.keyboardShortcut(key(.return, .command))
                 if variants.count > 1 {
                     Menu("Play Version") {
                         ForEach(variants) { variant in
@@ -484,7 +504,7 @@ struct GameContextMenu: View {
                 Button("Install…") { model.pendingInstall = game }
             }
         } else if game.launchKind == .soundtrack {
-            Button("Play") { model.play(game) }
+            Button("Play") { model.play(game) }.keyboardShortcut(key(.return, .command))
             if let player = model.externalPlayer(for: game) {
                 Button("Open in \(player.name)") { model.openAlbum(game, with: player.url) }
             }
@@ -507,28 +527,31 @@ struct GameContextMenu: View {
                 Button("Remove Unpacked Album…") { model.pendingAlbumRemoval = game }
             }
         } else if game.launchKind == .video {
-            Button("Play") { model.play(game) }
+            Button("Play") { model.play(game) }.keyboardShortcut(key(.return, .command))
             VideoOpenWithMenu(game: game)
         } else {
             Button(model.isDocumentItem(game) ? "Open" : "Play") { model.play(game) }
+                .keyboardShortcut(key(.return, .command))
         }
-        Button("Configure…") { model.configure(game) }
+        Button("Configure…") { model.configure(game) }.keyboardShortcut(key(.return, [.command, .shift]))
         if let session = model.launchSession(for: game) {
             Button(session.isRunning ? "Show Launch Log…" : "Show Last Launch Log…") {
                 model.showLaunchLog(for: session)
             }
         }
         Divider()
-        Button("Open Game Page") { model.openedGameID = game.id }
+        Button("Open Game Page") { model.openedGameID = game.id }.keyboardShortcut(key(.downArrow, .command))
         GameExtrasMenu(game: game)
         OtherVersionsMenu(game: game)
         Divider()
         Button(model.isFavorite(game) ? "Remove from Favorites" : "Add to Favorites") { model.toggleFavorite(game) }
-        Button("Edit Game Info…") { model.pendingInfoGame = game }
+            .keyboardShortcut(key("d", .command))
+        Button("Edit Game Info…") { model.pendingInfoGame = game }.keyboardShortcut(key("i", .command))
         Divider()
-        Button("Show in Finder") { model.revealInFinder(game) }
+        Button("Show in Finder") { model.revealInFinder(game) }.keyboardShortcut(key("r", [.command, .shift]))
         if installed, game.isEXoGame {
             Button("Uninstall…") { model.pendingUninstall = game }
+                .keyboardShortcut(key(.delete, .command))
                 .disabled(model.fileOperationBlocker(for: game) != nil)
                 .help(model.fileOperationBlocker(for: game) ?? "")
         }

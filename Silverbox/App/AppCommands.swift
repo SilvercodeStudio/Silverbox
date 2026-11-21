@@ -112,9 +112,16 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
             .disabled(!model.inspectorHasAPlace)
-            Button("Back to Library") { model.openedGameID = nil }
+            Button("Back to Library") { model.closeGamePage() }
                 .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(model.openedGameID == nil)
+            Divider()
+            Button("Back") { model.navigateBack() }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(!model.canNavigateBack)
+            Button("Forward") { model.navigateForward() }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(!model.canNavigateForward)
         }
 
         CommandMenu("Music") {

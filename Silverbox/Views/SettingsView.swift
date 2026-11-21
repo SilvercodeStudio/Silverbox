@@ -90,6 +90,7 @@ struct GeneralSettingsView: View {
             }
             Section("Library view") {
                 Toggle("Show hidden games", isOn: $model.settings.showHiddenGames)
+                Toggle("Show keyboard shortcuts in a game's right-click menu", isOn: $model.settings.showMenuShortcuts)
             }
             Section("Game controller") {
                 if model.gamepad.controllerNames.isEmpty {

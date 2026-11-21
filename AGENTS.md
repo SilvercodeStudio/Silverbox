@@ -407,6 +407,21 @@ inside a path or code span.
   the result by `SearchRank`: a term that is a word of the title, then
   the start of a word ("Ultima" before "Ultimate"), then inside a word,
   then the matches by developer, publisher or another name.
+- Back and Forward. `NavigationHistory` (core) keeps the places the
+  window showed; `AppModel+History` says what a place is
+  (`NavigationPlace`: scope, search, open page, selected game) and when
+  one is left: the observers of `scope` and `openedGameID`, and of
+  `searchText` when a search starts or ends, call `leftPlace`. Moving
+  the selection makes no entry. A step that changes several of these
+  goes in `navigate { }` (the sidebar, `reveal(_:)`), so it is one entry.
+  `navigateBack()` and `navigateForward()` pass over a place whose
+  section or game is gone. The toolbar's arrows, Command-[ and Command-]
+  (Library menu) and `HistoryKeys` (mouse buttons 4 and 5, Command-Left
+  and Command-Right outside a text field) call them.
+  `closeGamePage()` (Escape, Command-Up) is Back when the page was opened
+  from the list on show, so Forward opens it again. `closeTopmost()` is
+  Escape's order of things to close, which is another thing. A grid that
+  is new scrolls to its selection again once its tiles exist.
 - Game page. `GameDetailView` takes the content column (Command-Down, the
   inspector's button). The inspector is hidden beside it
   (`AppModel.inspectorHasAPlace`) and comes back with the library, so the
@@ -532,7 +547,12 @@ inside a path or code span.
   new keyboard behaviour is controller behaviour too. The Quick Look panel
   pages through `AppModel.quickLookItems` (gallery, manual, extras). A new
   shortcut goes in three places: `AppCommands`, `ShortcutReference` (the
-  Keyboard Shortcuts window) and help page 07. Context menus are AppKit
+  Keyboard Shortcuts window) and help page 07, and in `GameContextMenu`
+  when the command is in it: a right-click menu shows the keys
+  (`showsKeys`, and `settings.showMenuShortcuts`, off by default), which
+  the menu bar's commands carry out. The "…"
+  button's menu shows none, because a shortcut in a pull-down `Menu`
+  would work a second time. Context menus are AppKit
   menus and do not change once open, so anything loaded for them (the Extras
   submenu) comes from `AppModel.extrasCache`, filled on hover and selection.
 - App icon. A floppy disk: `Silverbox/AppIcon.icon` (amber) is the Icon
@@ -662,7 +682,10 @@ inside a path or code span.
   `-screenshotScroll 0.5` scrolls the Settings window (any window but the
   main one) that far down before the screenshot; 1 is the end. `-appIcon
   green` (or `amber`) sets the app icon for the run, and `-openPage 1`
-  opens the selected title's game page. A `-libraryPath` folder set up from a
+  opens the selected title's game page. `-navigate "back forward up"`
+  moves in the window's history after the delay (`up` is Back to
+  Library); menu shortcuts do not reach the app from `-keyPresses` while
+  another app is in front. A `-libraryPath` folder set up from a
   download finds the download through its setup record. If the last session closed the main
   window, macOS restores no window and the screenshot never comes; add
   `-ApplePersistenceIgnoreState YES`. Example:

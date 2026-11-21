@@ -43,9 +43,10 @@ struct LibraryWindow: View {
             }
         }
         .frame(minWidth: 1040, minHeight: 640)
+        .background(HistoryKeys(model: model))
         .onAppear {
             #if DEBUG
-                DebugScreenshot.scheduleIfRequested()
+                DebugScreenshot.scheduleIfRequested(model: model)
                 if let id = UserDefaults.standard.string(forKey: "openWindow"), !id.isEmpty {
                     if id == "settings" { openSettings() } else { openWindow(id: id) }
                 }
@@ -141,18 +142,31 @@ struct ContentColumn: View {
         .navigationSubtitle(subtitle)
         .modifier(LibrarySearch(isOn: model.hasGamesToBrowse, searchFocused: $searchFocused))
         .toolbar {
+            // Back and Forward between the places the window showed, as in a browser. Back also
+            // leaves a game page, so the page needs no button of its own.
+            ToolbarItemGroup(placement: .navigation) {
+                if model.hasGamesToBrowse {
+                    Button {
+                        model.navigateBack()
+                    } label: {
+                        Label("Back", systemImage: "chevron.backward")
+                    }
+                    .disabled(!model.canNavigateBack)
+                    .help("Show the place you were before (⌘[ or ⌘←)")
+                    Button {
+                        model.navigateForward()
+                    } label: {
+                        Label("Forward", systemImage: "chevron.forward")
+                    }
+                    .disabled(!model.canNavigateForward)
+                    .help("Show the place you went back from (⌘] or ⌘→)")
+                }
+            }
             // The welcome and a failed load have no games to size, sort or inspect.
             ToolbarItemGroup(placement: .primaryAction) {
                 if !model.hasGamesToBrowse {
                     EmptyView()
                 } else {
-                    if model.openedGame != nil {
-                        Button {
-                            model.openedGameID = nil
-                        } label: {
-                            Label("Back to Library", systemImage: "chevron.left")
-                        }
-                    }
                     if model.settings.viewMode == .grid, model.openedGame == nil {
                         Slider(value: $model.settings.tileSize, in: AppSettings.tileSizeRange) { Text("Tile size") }
                             .frame(width: 110)

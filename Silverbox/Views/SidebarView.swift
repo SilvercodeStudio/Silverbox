@@ -72,8 +72,11 @@ struct SidebarView: View {
             set: { newValue in
                 // A same-value write would still re-sort the visible games.
                 guard let newValue, newValue != model.scope else { return }
-                model.scope = newValue
-                model.openedGameID = nil
+                // One step for Back: the section, and the page that closes with it.
+                model.navigate {
+                    model.scope = newValue
+                    model.openedGameID = nil
+                }
             }
         )
     }

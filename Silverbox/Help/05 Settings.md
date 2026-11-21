@@ -9,7 +9,7 @@ Open Settings with Command-Comma.
 - **Menu music** — on or off, its volume, and whether it keeps playing when another app is in front. MP3 and the other formats macOS plays, Ogg Vorbis, and MOD, S3M, XM and IT tracker modules play; AMF modules and VOC files are listed but skipped.
 - **Videos** — the app that plays videos: the macOS default for MP4 files, unless you choose one. Other… in the list takes any app. QuickTime Player cannot play some videos, such as MP4 files with VP9 video; VLC plays them all. DVD disc images always open in VLC.
 - **Playing** — whether to show the launch options dialog before each game. The dialog offers the game's versions, full screen or a window, the shader or filter, and the emulator, like the menus eXoDOS shows in its console window. Configure in a game's menu opens the same dialog to save choices for that game.
-- **Library view** — whether hidden games appear in the library.
+- **Library view** — whether hidden games appear in the library, and whether a game's right-click menu shows the keyboard shortcuts of its commands (off at first, as is usual on the Mac).
 - **Game controller** — the controllers Silverbox sees. Help › Keyboard Shortcuts shows what each button does, with the names of the connected controller's buttons.
 - **Updates** — check for a new version of Silverbox once a day. At its second launch, Silverbox asks whether to; this box changes the answer. **Check for Updates…** in the Silverbox menu checks at once. An update that arrives while a game runs, or while a game installs, downloads or uninstalls, waits for it to end before Silverbox opens again. A copy built from the source code does not check, and has no Check for Updates….
 
