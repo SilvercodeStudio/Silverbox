@@ -14,7 +14,7 @@ Switch macOS between Light and Dark (System Settings › Appearance) to see both
 
 ## Files
 
-- `index.html`: the home page. `privacy.html` and `license.html`: the privacy and license pages.
+- `index.html`: the home page. `screenshots.html`: the screenshots, in groups, each with a caption. `privacy.html` and `license.html`: the privacy and license pages.
 - `css/tokens.css`: the design tokens as CSS custom properties, from the Silverbox design system (the Claude Design site mockup). Dark is the base; light follows `prefers-color-scheme` (or `data-theme="light"` on `<html>`).
 - `css/site.css`: the design system's components (`sb-` classes) and the page layout. Every color, radius, and font comes from a token.
 - `js/site.js`: the theme button and the image viewer. Each screenshot is a `<picture>` inside `<a class="zoom">`: `href` is the full-size dark image, `data-light` the light one, and the light `<source>` carries `data-theme-light` so the script can follow the chosen theme.
@@ -47,11 +47,13 @@ make site-shots APPEARANCES=dark           # one appearance
 LIBRARY=/Volumes/eXoDOS_ro make site-shots # another collection than yours
 ```
 
-1. It builds the Debug app and starts it in front with the scene's launch arguments, on your own collections: the Ultima search with Ultima V selected (`library`), the welcome with no collection (`-noLibrary 1`), the inspector scrolled to the extras (`details`), the game info sheet (`game-info`), or Settings › Display & Sound (`display-sound`). The main window is 1320 × 840 points unless the scene names a `windowSize`.
-2. Take a region screenshot (Shift-Command-4) a little larger than the main window, with desktop all around it, then quit the app (Command-Q; close a sheet first with Escape). For a scene with `"capture": "window"`, take a screenshot of that window alone instead: Shift-Command-4, Space, then Option-click it. Take them on a Retina display.
+1. It builds the Debug app and starts it in front with the scene's launch arguments, on your own collections: a sidebar section (`-scope eXoDOS`), a search, a selected title, a scrolled inspector, the game page, a sheet, the list view (`-viewMode list`), a Settings tab, or the welcome with no collection (`-noLibrary 1`). The main window is 1320 × 840 points unless the scene names a `windowSize`. A scene's `note` says what to do first, such as right-clicking a game or pressing Play.
+2. Take a region screenshot (Shift-Command-4) a little larger than the main window, with desktop all around it, then quit the app (Command-Q; close a sheet first with Escape). For a scene with `"capture": "window"`, take a screenshot of that window alone instead: Shift-Command-4, Space, then Option-click it. For `"capture": "free"` (a game's window beside Silverbox's), the region is kept as you take it. Take them on a Retina display.
 3. The script finds the new screenshot in the screenshot folder, keeps it in `build/site-shots`, and runs `shot.swift` on it (`--radius 36` for a region capture). Then the dark appearance, and the next scene.
 
-It puts the app's settings back after each run, sets the page's `<img>` heights to the new images', and makes `og-image.jpg`, the link preview, again from the dark library (`tools/og-image.swift`). The captions and alt text stay as they are: check them when a screenshot shows something new. A scene file holds `arguments` (launch arguments, quoted as in a shell), and optionally `capture`, `widths` (default `2400,1200`), `radius` and `windowSize`.
+It puts the app's settings back after each run, sets the pages' `<img>` heights to the new images', and makes `og-image.jpg`, the link preview, again from the dark library (`tools/og-image.swift`). The captions and alt text stay as they are: check them when a screenshot shows something new. A scene file holds `arguments` (launch arguments, quoted as in a shell), and optionally `note`, `capture`, `widths` (default `2400,1200`), `radius` and `windowSize`.
+
+The windows show your user name as `USERNAME` in paths (`-redactPaths`); `REDACT="old=new|old=new"` replaces other words, and `REDACT=` turns it off. `{data}` in a scene's arguments is a fresh scratch data folder for each run, which the windows show as the default one: the `installing` scene installs a game there, and the `soundtrack` scene plays an album without adding it to your play history.
 
 ### By hand
 
@@ -63,12 +65,19 @@ swift docs/site/tools/shot.swift ~/Desktop/capture.png docs/site/images/library-
 
 `--rect X,Y,W,H` crops that rectangle instead, `--trim L,T,R,B` cuts more from each side, and `--widths 1200,600` writes smaller sizes. Make each capture in both appearances, name them `-dark` and `-light`, and write alt text that says what the screenshot shows. The page uses:
 
-| Name | What it shows |
-|---|---|
-| `library` | The main window: the Ultima games in eXoDOS, Ultima V selected |
-| `welcome` | The welcome screen, with every emulator found |
-| `details` | Ultima V's inspector, scrolled to the manual and what came in the box (shown cropped to 4:3, right side) |
-| `game-info` | Ultima V's game info sheet (Command-I) |
-| `display-sound` | Settings › Display & Sound, at 1200 and 600 wide |
-
-The current screenshots come from the design mockup and are older than the app; replace them after the UI polish, before the first release.
+| Name | What it shows | Pages |
+|---|---|---|
+| `library` | The eXoDOS pack as box art, Heroes of Might and Magic selected, in a 1500 × 950 window | both (the home page's hero) |
+| `game-page` | Ultima VII's game page (Command-Down) | screenshots |
+| `list` | Recently Played as a list, without the inspector | screenshots |
+| `other-versions` | Zork I's right-click menu with Other Versions open (taken by hand) | screenshots |
+| `win9x` | The eXoWin9x pack, Marathon 2 selected | screenshots |
+| `details` | Ultima V's inspector, scrolled to the manual and what came in the box (on the home page cropped to 4:3, right side) | both |
+| `soundtrack` | The Origin Soundtrack CD playing in the album bar | screenshots |
+| `playing` | Ultima V running in DOSBox Staging beside Silverbox (taken by hand) | both |
+| `launch-options` | A Mind Forever Voyaging's launch options, with eXoIF's versions | screenshots |
+| `installing` | Wing Commander III installing, with the progress bar | screenshots |
+| `game-info` | Ultima V's game info sheet (Command-I) | screenshots |
+| `welcome` | The welcome screen | both |
+| `emulators` | Settings › Emulators, at 1200 and 600 wide | screenshots |
+| `display-sound` | Settings › Display & Sound, at 1200 and 600 wide | both |

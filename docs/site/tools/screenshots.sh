@@ -10,13 +10,20 @@
 # instead): a search, a selected game, a scrolled inspector, a sheet, a Settings tab. Take a
 # region screenshot (Shift-Command-4) a little larger than the main window, with desktop all
 # around it, then quit the app (Command-Q). With "capture": "window", the script asks for a
-# screenshot of that window alone instead (Shift-Command-4, Space, then Option-click it). The
+# screenshot of that window alone instead (Shift-Command-4, Space, then Option-click it), and
+# with "capture": "free" a region screenshot that is kept as it is taken (a game's window beside
+# Silverbox's). A scene's "note" says what to do first, such as right-clicking a game. The
 # script finds the new screenshot in your screenshot folder, makes the site's images from it with
 # shot.swift, and starts the next one. The app's settings are put back after each run, so a
 # scene changes nothing.
 #
 # The captures are kept in build/site-shots, so a crop can be made again by hand. The <img>
-# heights in the page follow the new images, and the link preview follows the dark library.
+# heights in the pages follow the new images, and the link preview follows the dark library.
+#
+# The paths the windows show have the user's name as USERNAME (REDACT="old=new|old=new" names
+# other words to replace). In a scene's arguments, {data} is a fresh scratch data folder, so an
+# install or a soundtrack played for a scene changes nothing; the windows show it as the default
+# data folder.
 set -euo pipefail
 
 repo=${0:A:h:h:h:h}
@@ -28,7 +35,8 @@ domain=app.getsilverbox.Silverbox
 mkdir -p $keep
 
 # The scenes in the order of the page, then any others.
-order=(library welcome details game-info display-sound)
+order=(library game-page list other-versions win9x details soundtrack launch-options playing installing
+    game-info welcome emulators display-sound)
 all=($order ${${${(f)"$(ls $scene_dir/*.json)"}:t:r}:|order})
 scenes=(${@:-${=SCENES:-$all}})
 appearances=(${=APPEARANCES:-light dark})
@@ -77,27 +85,30 @@ function new_capture {
     done
 }
 
-# Sets the page's <img> height for the image to the new image's, at its largest width.
+# Sets the pages' <img> width and height for the image to the new image's, at its largest width.
 function update_heights {
     local name=$1 width=$2 height
     [[ -f $images/$name-dark-$width.webp ]] || return 0
     height=$(sips -g pixelHeight $images/$name-dark-$width.webp | awk '/pixelHeight/ {print $2}')
     NAME=$name WIDTH=$width HEIGHT=$height perl -i -pe \
         's/height="\d+"/height="$ENV{HEIGHT}"/ if /src="images\/\Q$ENV{NAME}\E-dark-\Q$ENV{WIDTH}\E\.webp"/' \
-        $repo/docs/site/index.html
+        $repo/docs/site/index.html $repo/docs/site/screenshots.html
 }
 
 library=()
 [[ -z ${LIBRARY:-} ]] || library=(-libraryPath $LIBRARY)
+redact=${REDACT-"$USER=USERNAME|Tim Apple=STORAGE"}
 
 echo "Scenes: $scenes"
 for scene in $scenes; do
     capture=$(scene_value $scene capture region)
     widths=$(scene_value $scene widths 2400,1200)
-    # The arguments as a shell would split them, so a quoted title stays one argument.
-    arguments=(${(Q)${(z)$(scene_value $scene arguments)}})
+    note=$(scene_value $scene note)
     if [[ $capture == window ]]; then
         how="a screenshot of that window alone (⇧⌘4, Space, then ⌥-click it)"
+        crop=(--widths $widths)
+    elif [[ $capture == free ]]; then
+        how="a region screenshot (⇧⌘4) of what the scene shows"
         crop=(--widths $widths)
     else
         how="a region screenshot (⇧⌘4) a little larger than the main window, with desktop all around it"
@@ -108,17 +119,32 @@ for scene in $scenes; do
             marker=$scratch/marker
             touch $marker
             sleep 1
-            echo "\n$scene ($appearance): take $how, then quit Silverbox (⌘Q; close a sheet first, Esc)."
+            # A fresh scratch data folder for each run, shown as the default one.
+            data=$scratch/data-$scene-$appearance
+            rm -rf -- $data
+            mkdir -p $data
+            default_data='~/Library/Application Support/Silverbox'
+            redactions="$data=$default_data|/private$data=$default_data${redact:+|$redact}"
+            # The arguments as a shell would split them, so a quoted title stays one argument.
+            raw=$(scene_value $scene arguments)
+            raw=${raw//\{data\}/$data}
+            arguments=(${(Q)${(z)raw}})
+            echo "\n$scene ($appearance): ${note:+$note }Take $how, then quit Silverbox (⌘Q; close a sheet first, Esc)."
             # Through Launch Services, which brings the app to the front (started as a plain
             # process, it stays behind the Terminal); -n for a new copy, -W to wait until it quits.
             open -n -W -a $app --stdout $scratch/app.log --stderr $scratch/app.log \
                 --args -ApplePersistenceIgnoreState YES -appearance $appearance -musicEnabled 0 \
-                -windowSize $(scene_value $scene windowSize 1320x840) $library $arguments || true
+                -windowSize $(scene_value $scene windowSize 1320x840) -redactPaths $redactions $library $arguments || true
             restore_settings
             shot=$(new_capture $marker)
             if [[ -n $shot ]]; then
                 mv $shot $keep/$scene-$appearance.png
-                swift $repo/docs/site/tools/shot.swift $keep/$scene-$appearance.png $images/$scene-$appearance $crop
+                shot_options=($crop)
+                if [[ $capture == free ]]; then
+                    size=($(sips -g pixelWidth -g pixelHeight $keep/$scene-$appearance.png | awk '/pixel/ {print $2}'))
+                    shot_options+=(--rect 0,0,$size[1],$size[2])
+                fi
+                swift $repo/docs/site/tools/shot.swift $keep/$scene-$appearance.png $images/$scene-$appearance $shot_options
                 if [[ $scene-$appearance == library-dark ]]; then
                     swift $repo/docs/site/tools/og-image.swift $images/library-dark-2400.webp $images/og-image.jpg
                 fi

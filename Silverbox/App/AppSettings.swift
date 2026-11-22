@@ -187,6 +187,24 @@ struct AppSettings: Codable, Equatable {
         if let name = defaults.string(forKey: "appIcon"), let icon = AppIconVariant(rawValue: name) {
             settings.appIcon = icon
         }
+        // `-viewMode list -sortOrder releaseYear -sortAscending 0 -tileSize 130 -inspectorShown 0`:
+        // how the library shows, for one of the site's screenshot scenes.
+        if let name = defaults.string(forKey: "viewMode"), let mode = LibraryViewMode(rawValue: name) {
+            settings.viewMode = mode
+        }
+        if let name = defaults.string(forKey: "sortOrder"), let order = GameSortOrder(rawValue: name) {
+            settings.sortOrder = order
+        }
+        if defaults.object(forKey: "sortAscending") != nil {
+            settings.sortAscending = defaults.bool(forKey: "sortAscending")
+        }
+        if defaults.object(forKey: "inspectorShown") != nil {
+            settings.inspectorShown = defaults.bool(forKey: "inspectorShown")
+        }
+        if defaults.double(forKey: "tileSize") > 0 {
+            settings.tileSize = min(
+                max(defaults.double(forKey: "tileSize"), tileSizeRange.lowerBound), tileSizeRange.upperBound)
+        }
         // `-emulatorPath "dosboxX=/tmp/Fake.app|gsplus=/tmp/Other.app"` takes these emulators from
         // other places for this run, to test one that is missing, old or stopped by macOS.
         if let paths = defaults.string(forKey: "emulatorPath"), !paths.isEmpty {

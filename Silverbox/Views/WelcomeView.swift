@@ -87,7 +87,8 @@ struct WelcomeView: View {
                     )
                     HStack(spacing: 10) {
                         Label(
-                            model.localStore.directory.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"),
+                            shownPath(
+                                model.localStore.directory.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")),
                             systemImage: "folder"
                         )
                         .font(Theme.mono)

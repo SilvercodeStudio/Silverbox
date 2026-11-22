@@ -171,7 +171,7 @@ struct LibrarySettingsView: View {
                     Picker("Keep data in", selection: dataFolderBinding) {
                         Text("The default folder").tag(DataFolderChoice.standard)
                         if let custom = model.settings.localStorePath {
-                            Text(custom.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                            Text(shownPath(custom.replacingOccurrences(of: NSHomeDirectory(), with: "~")))
                                 .tag(DataFolderChoice.custom)
                         }
                         Divider()
@@ -272,7 +272,7 @@ struct CollectionEditor: View {
                     GridRow {
                         Text("Folder").foregroundStyle(.secondary)
                         HStack {
-                            Text(collection.rootPath).font(Theme.mono).lineLimit(1).truncationMode(.middle)
+                            Text(shownPath(collection.rootPath)).font(Theme.mono).lineLimit(1).truncationMode(.middle)
                                 .help(collection.rootPath)
                             Spacer()
                             Button("Choose…") { pickingRoot = true }
@@ -310,7 +310,7 @@ struct CollectionEditor: View {
                                 .font(Theme.mono)
                                 .frame(width: 180)
                             Image(systemName: "arrow.right").foregroundStyle(.secondary)
-                            Text(substitution.macPath.isEmpty ? "Choose a folder" : substitution.macPath)
+                            Text(substitution.macPath.isEmpty ? "Choose a folder" : shownPath(substitution.macPath))
                                 .font(Theme.mono).lineLimit(1).truncationMode(.middle)
                                 .foregroundStyle(substitution.macPath.isEmpty ? .secondary : .primary)
                             Spacer()
@@ -464,8 +464,11 @@ struct EmulatorSettingsView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Cores folder").font(.subheadline)
-                Text(setup?.coresDirectory?.path ?? (setup == nil ? "RetroArch is not installed" : "Not found"))
-                    .font(Theme.mono).lineLimit(1).truncationMode(.middle)
+                Text(
+                    setup?.coresDirectory.map { shownPath($0.path) }
+                        ?? (setup == nil ? "RetroArch is not installed" : "Not found")
+                )
+                .font(Theme.mono).lineLimit(1).truncationMode(.middle)
                 if let setup, setup.coresDirectory != nil {
                     let count = setup.installedCores().count
                     Text(

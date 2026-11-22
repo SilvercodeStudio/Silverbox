@@ -28,7 +28,7 @@ struct AlbumBar: View {
                     .font(.system(size: 12, weight: .medium))
                     .lineLimit(1)
             }
-            .frame(minWidth: 160, maxWidth: 320, alignment: .leading)
+            .frame(minWidth: 80, maxWidth: 320, alignment: .leading)
             if player.isActive {
                 HStack(spacing: 2) {
                     TransportButton(systemImage: "backward.fill", help: "Previous track") { player.previous() }
@@ -41,10 +41,11 @@ struct AlbumBar: View {
                     value: Binding(get: { player.position }, set: { player.seek(to: $0) }),
                     in: 0...max(player.duration, 1)
                 )
-                .frame(width: 200)
+                .frame(minWidth: 60, maxWidth: 200)
                 Text("\(Formatters.clock(player.position)) / \(Formatters.clock(player.duration))")
                     .font(Theme.mono)
                     .foregroundStyle(Theme.textTertiary)
+                    .fixedSize()
                 TransportButton(systemImage: "xmark", help: "Stop the album; menu music comes back") {
                     model.stopAlbum()
                 }
@@ -55,7 +56,7 @@ struct AlbumBar: View {
             Image(systemName: "speaker.wave.2")
                 .foregroundStyle(Theme.textTertiary)
             Slider(value: $model.settings.musicVolume, in: 0...1)
-                .frame(width: 100)
+                .frame(minWidth: 50, maxWidth: 100)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

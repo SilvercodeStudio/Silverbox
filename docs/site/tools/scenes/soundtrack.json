@@ -1,0 +1,4 @@
+{
+  "arguments": "-dataPath {data} -scope Soundtracks -tileSize 130 -selectTitle 'Origin Soundtrack CD: Vol. 1' -autoPlay 1",
+  "note": "The album plays aloud; wait until the bar shows a track playing."
+}

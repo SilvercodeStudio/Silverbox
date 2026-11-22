@@ -141,6 +141,9 @@ code { font: 400 0.92em/1.4 var(--font-mono); padding: 1px 5px; border-radius: 5
 /* The hero screenshot overlaps the band's lower edge: half on the CRT ground, half on the page. */
 .hero-shot { position: relative; margin-top: calc(-1 * clamp(72px, 14vw, 210px)); }
 .hero-shot .wrap { max-width: var(--container-shot); }
+.hero-more { margin-top: var(--space-6); text-align: center; font-size: 15px; }
+.hero-more a { color: var(--ink-2); }
+.hero-more a:hover { color: var(--ink); }
 
 .sb-announce { display: inline-flex; align-items: center; gap: 10px; min-height: 36px;
   padding: 4px 16px 4px 4px; border-radius: var(--radius-pill);
@@ -160,6 +163,18 @@ code { font: 400 0.92em/1.4 var(--font-mono); padding: 1px 5px; border-radius: 5
 .prose a, .sb-faq p a { text-decoration: underline; text-decoration-color: var(--ink-3); text-underline-offset: 3px; }
 .prose a:hover, .sb-faq p a:hover { text-decoration-color: currentColor; }
 .prose ul { padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- Page: screenshots ---------- */
+.gallery { max-width: var(--container-shot); margin: 0 auto; padding-block: clamp(48px, 6vw, 72px) 0; display: flex; flex-direction: column; gap: var(--space-9); }
+.gallery-group { display: flex; flex-direction: column; gap: var(--space-8); }
+.gallery-title { font: 650 21px/1.3 var(--font-sans); letter-spacing: -.01em; color: var(--ink); }
+.gallery-item { margin: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+.gallery-item figcaption { max-width: var(--container-text); color: var(--ink-2); font-size: 16px; text-wrap: pretty; }
+.gallery-item figcaption strong { color: var(--ink); font-weight: 600; }
+/* Settings windows sit side by side. --shot-width keeps each at about the scale of the main
+   window above them, so their text is the same size. */
+.gallery-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: var(--space-8) var(--space-7); align-items: start; }
+.gallery-pair .sb-shot { max-width: var(--shot-width, 560px); }
 
 /* ---------- Page: sections ---------- */
 .works-with { padding-top: clamp(48px, 6vw, 72px); }

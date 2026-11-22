@@ -163,19 +163,29 @@ struct GameGridView: View {
             .task {
                 for wait in [80, 150, 250] {
                     try? await Task.sleep(for: .milliseconds(wait))
-                    if let id = model.selectedGameID { proxy.scrollTo(id) }
+                    if let id = model.selectedGameID { proxy.scrollTo(id, anchor: selectionAnchor) }
                 }
             }
             .onChange(of: model.scope) {
                 if let first = games.first?.id { proxy.scrollTo(first, anchor: .top) }
             }
             .onChange(of: model.selectedGameID, initial: true) {
-                if let id = model.selectedGameID { proxy.scrollTo(id) }
+                if let id = model.selectedGameID { proxy.scrollTo(id, anchor: selectionAnchor) }
             }
             .onChange(of: model.revealSelectionRequest) {
                 if let id = model.selectedGameID { proxy.scrollTo(id) }
             }
         }
+    }
+
+    /// Where the selected tile goes when the grid scrolls to it: nowhere in particular (the
+    /// least scroll), or, for a screenshot scene, `-selectionAnchor 0.3` (that far down the grid).
+    private var selectionAnchor: UnitPoint? {
+        #if DEBUG
+            let y = UserDefaults.standard.double(forKey: "selectionAnchor")
+            if y > 0 { return UnitPoint(x: 0.5, y: y) }
+        #endif
+        return nil
     }
 
     /// How many tiles LazyVGrid fits per row with adaptive columns, from the
@@ -345,36 +355,38 @@ struct GameListView: View {
                         .frame(height: 30)
                     Text(game.title)
                     if model.isFavorite(game) {
-                        Image(systemName: "heart.fill").foregroundStyle(Theme.accent).font(.caption)
+                        Image(systemName: "heart.fill").rowColor(Theme.accent).font(.caption)
                     }
                 }
                 .onHover { if $0 { model.prefetchExtras(for: game) } }
             }
-            .width(min: 240, ideal: 360)
+            .width(min: 160, ideal: 300)
             TableColumn("Year", value: \.sortYear) { game in
-                Text(game.releaseYear.map(String.init) ?? "").foregroundStyle(Theme.textSecondary).monospacedDigit()
+                Text(game.releaseYear.map(String.init) ?? "").rowColor(Theme.textSecondary).monospacedDigit()
             }
             .width(52)
             TableColumn("Developer", value: \.sortDeveloper) { game in
-                Text(game.developer ?? "").foregroundStyle(Theme.textSecondary)
+                Text(game.developer ?? "").rowColor(Theme.textSecondary)
             }
+            .width(min: 80, ideal: 150)
             TableColumn("Genre") { game in
-                Text(game.genres.joined(separator: ", ")).foregroundStyle(Theme.textSecondary)
+                Text(game.genres.joined(separator: ", ")).rowColor(Theme.textSecondary)
             }
+            .width(min: 70, ideal: 120)
             TableColumn("Installed") { game in
                 if game.isEXoGame {
                     Image(systemName: model.isInstalled(game) ? "checkmark.circle.fill" : "circle.dotted")
-                        .foregroundStyle(model.isInstalled(game) ? Theme.accent : Theme.textTertiary)
+                        .rowColor(model.isInstalled(game) ? Theme.good : Theme.textTertiary)
                 }
             }
             .width(64)
             TableColumn("Last played") { game in
-                Text(Formatters.date(model.lastPlayed(game))).foregroundStyle(Theme.textSecondary)
+                Text(Formatters.date(model.lastPlayed(game))).rowColor(Theme.textSecondary)
             }
             .width(100)
             TableColumn("Played") { game in
                 Text(model.playCount(game) == 0 ? "" : String(model.playCount(game)))
-                    .foregroundStyle(Theme.textSecondary)
+                    .rowColor(Theme.textSecondary)
                     .monospacedDigit()
             }
             .width(52)
@@ -625,4 +637,25 @@ nonisolated extension Game {
     /// and key paths that are `Sendable`, so not isolated to the main actor.
     var sortYear: Int { releaseYear ?? 0 }
     var sortDeveloper: String { developer ?? "" }
+}
+
+/// A list cell's colour, or the selected row's own text colour: on the accent that marks the
+/// selection, grey text, the amber heart and the green check would not show.
+private struct RowColor: ViewModifier {
+    let color: Color
+    @Environment(\.backgroundProminence) private var prominence
+
+    func body(content: Content) -> some View {
+        if prominence == .increased {
+            content.foregroundStyle(.secondary)
+        } else {
+            content.foregroundStyle(color)
+        }
+    }
+}
+
+extension View {
+    fileprivate func rowColor(_ color: Color) -> some View {
+        modifier(RowColor(color: color))
+    }
 }

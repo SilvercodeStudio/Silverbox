@@ -2,6 +2,7 @@
 <!-- The site's pages, for search engines (robots.txt names this file). Add a new page here. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://getsilverbox.app/</loc></url>
+  <url><loc>https://getsilverbox.app/screenshots.html</loc></url>
   <url><loc>https://getsilverbox.app/privacy.html</loc></url>
   <url><loc>https://getsilverbox.app/license.html</loc></url>
 </urlset>

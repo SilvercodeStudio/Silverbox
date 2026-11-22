@@ -33,7 +33,7 @@ struct SetupSheet: View {
                             : "Add New Packs"
                     )
                     .font(.headline)
-                    Text(download.root.path)
+                    Text(shownPath(download.root.path))
                         .font(Theme.mono)
                         .foregroundStyle(Theme.textSecondary)
                         .lineLimit(1)
@@ -95,7 +95,7 @@ struct SetupSheet: View {
                         .pickerStyle(.radioGroup)
                     } else {
                         LabeledContent("Setup writes to") {
-                            Text(isInPlace ? "The download folder" : target.path)
+                            Text(isInPlace ? "The download folder" : shownPath(target.path))
                                 .multilineTextAlignment(.trailing)
                         }
                     }

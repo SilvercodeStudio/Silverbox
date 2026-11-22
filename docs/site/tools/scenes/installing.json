@@ -1,0 +1,4 @@
+{
+  "arguments": "-dataPath {data} -scope eXoDOS -tileSize 130 -selectTitle 'Wing Commander III: Heart of the Tiger' -keyPresses 'return return'",
+  "note": "The install starts by itself, into a scratch folder; take the screenshot while the bar at the bottom shows its progress, then quit (Quit Anyway)."
+}

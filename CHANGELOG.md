@@ -116,6 +116,10 @@ What changed in each version of Silverbox.
 
 ### Fixed
 
+- The album bar fits a narrower window. Before, a playing soundtrack
+  pushed the sidebar and the inspector partly out of the window.
+- In the list view, the Developer and Genre columns are wide enough to
+  read, and the installed mark is green, as elsewhere.
 - A double click on a game in the grid selects it as well as playing it.
   Before, the game selected earlier stayed selected, and the inspector
   showed that one.

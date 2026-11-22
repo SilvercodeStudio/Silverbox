@@ -1,0 +1,5 @@
+{
+  "arguments": "-scope eXoDOS -tileSize 130 -selectTitle 'Ultima V: Warriors of Destiny'",
+  "capture": "free",
+  "note": "Press Play, and Play again in the launch options. Put DOSBox's window over the right part of Silverbox's, then take a region screenshot around both windows. Quit DOSBox, then Silverbox."
+}

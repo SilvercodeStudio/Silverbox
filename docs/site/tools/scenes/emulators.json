@@ -1,0 +1,5 @@
+{
+  "arguments": "-openWindow settings -settingsTab emulators",
+  "capture": "window",
+  "widths": "1200,600"
+}

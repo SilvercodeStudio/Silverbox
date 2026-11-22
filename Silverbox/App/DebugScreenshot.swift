@@ -52,6 +52,35 @@
             }
         }
 
+        /// `-scope eXoWin9x`: the sidebar section to show at start. It takes `all`, `favorites`,
+        /// `eXoFavorites`, `installed`, `recentlyPlayed`, a pack's name, or the title of any row
+        /// under a collection (`Soundtracks`, `MS-DOS Magazines & Newsletters`, a playlist), the
+        /// first collection's first.
+        static func requestedScope(in library: Library) -> LibraryScope? {
+            guard let name = UserDefaults.standard.string(forKey: "scope"), !name.isEmpty else { return nil }
+            func same(_ other: String) -> Bool { other.caseInsensitiveCompare(name) == .orderedSame }
+            let fixed: [(String, LibraryScope)] = [
+                ("all", .all), ("favorites", .favorites), ("eXoFavorites", .eXoFavorites),
+                ("installed", .installed), ("recentlyPlayed", .recentlyPlayed),
+            ]
+            if let match = fixed.first(where: { same($0.0) }) { return match.1 }
+            if let pack = EXoPack.allCases.first(where: { same($0.rawValue) }) { return .pack(pack) }
+            func row(in nodes: [LibraryNode]) -> LibraryNode? {
+                for node in nodes {
+                    if same(node.title) { return node }
+                    if let child = row(in: node.children) { return child }
+                }
+                return nil
+            }
+            for snapshot in library.snapshots {
+                if let found = row(in: snapshot.tree) {
+                    return .node(collectionID: snapshot.collection.id, ref: found.ref)
+                }
+            }
+            FileHandle.standardError.write(Data("scope: no sidebar row named \(name)\n".utf8))
+            return nil
+        }
+
         /// `-navigate "back forward up"`: moves in the window's history after the delay, a step
         /// every 0.4 seconds: Back, Forward, and `up` for Back to Library. Menu shortcuts do not
         /// reach an app that is not in front, so `-keyPresses` cannot do this.

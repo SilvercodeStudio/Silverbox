@@ -695,7 +695,15 @@ inside a path or code span.
   `-screenshotScroll 0.5` scrolls the Settings window (any window but the
   main one) that far down before the screenshot; 1 is the end. `-appIcon
   green` (or `amber`) sets the app icon for the run, and `-openPage 1`
-  opens the selected title's game page. `-navigate "back forward up"`
+  opens the selected title's game page. `-scope eXoWin9x` shows that
+  sidebar section (`all`, `favorites`, `eXoFavorites`, `installed`,
+  `recentlyPlayed`, a pack, or any row's title, such as `Soundtracks`);
+  `-viewMode list`, `-tileSize 130`, `-sortOrder releaseYear`,
+  `-sortAscending 0` and `-inspectorShown 0` set the view for the run;
+  `-selectionAnchor 0.25` scrolls the grid so the selected tile sits
+  that far down;
+  `-redactPaths "planders=USERNAME|Tim Apple=STORAGE"` replaces those
+  words in the paths the windows show (`shownPath`). `-navigate "back forward up"`
   moves in the window's history after the delay (`up` is Back to
   Library); menu shortcuts do not reach the app from `-keyPresses` while
   another app is in front. A `-libraryPath` folder set up from a

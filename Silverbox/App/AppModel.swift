@@ -633,6 +633,14 @@ final class AppModel {
             self.versionIndex = versions
             self.loadState = .loaded
             self.recordRemountURLs()
+            #if DEBUG
+                // `-scope <section>` for a screenshot scene, with no entry in the history.
+                if let scope = DebugScreenshot.requestedScope(in: library) {
+                    self.navigationDepth += 1
+                    self.scope = scope
+                    self.navigationDepth -= 1
+                }
+            #endif
             self.refreshVisibleGames()
             if ProcessInfo.processInfo.environment["SILVERBOX_LOG"] != nil {
                 let summary = ordered.map { "\($0.collection.name)=\($0.games.count)" }.joined(separator: ", ")

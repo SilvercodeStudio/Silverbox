@@ -1,3 +1,4 @@
 {
-  "arguments": "-searchText ultima -selectTitle 'Ultima V: Warriors of Destiny'"
+  "arguments": "-scope eXoDOS -tileSize 130 -selectTitle 'Heroes of Might and Magic' -selectionAnchor 0.25",
+  "windowSize": "1500x950"
 }

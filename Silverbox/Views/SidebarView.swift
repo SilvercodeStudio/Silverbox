@@ -90,7 +90,7 @@ private struct DataFolderFooter: View {
         Button {
             NSWorkspace.shared.activateFileViewerSelecting([folder])
         } label: {
-            Label(folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"), systemImage: "folder")
+            Label(shownPath(folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")), systemImage: "folder")
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)
                 .lineLimit(1)

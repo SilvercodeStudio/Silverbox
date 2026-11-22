@@ -152,9 +152,10 @@ struct GameInfoSheet: View {
                         LabeledContent("eXoDOS build") { Text(build?.displayName ?? "Unknown") }
                         if let location = model.library?.installedLocation(for: game) {
                             LabeledContent(location.isLocal ? "Installed in local data" : "Installed in library") {
-                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(
-                                    1
-                                ).truncationMode(.middle)
+                                Text(shownPath(location.url.path)).font(Theme.mono).foregroundStyle(Theme.textSecondary)
+                                    .lineLimit(
+                                        1
+                                    ).truncationMode(.middle)
                             }
                         }
                         LabeledContent("Edited config") {
@@ -207,9 +208,10 @@ struct GameInfoSheet: View {
                         }
                         if let location = model.library?.installedLocation(for: game) {
                             LabeledContent(location.isLocal ? "Installed in local data" : "Installed in library") {
-                                Text(location.url.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(
-                                    1
-                                ).truncationMode(.middle)
+                                Text(shownPath(location.url.path)).font(Theme.mono).foregroundStyle(Theme.textSecondary)
+                                    .lineLimit(
+                                        1
+                                    ).truncationMode(.middle)
                             }
                         }
                         if !(model.userState.state(for: game.launchBoxID).launchOverrides?.isEmpty ?? true) {
@@ -306,7 +308,7 @@ struct PathText: View {
     init(_ path: String) { self.path = path }
 
     var body: some View {
-        Text(path.isEmpty ? "—" : WindowsPath.posix(path))
+        Text(path.isEmpty ? "—" : shownPath(WindowsPath.posix(path)))
             .font(Theme.mono)
             .foregroundStyle(Theme.textSecondary)
             .textSelection(.enabled)
@@ -337,7 +339,8 @@ struct UninstallSheet: View {
                 }
             }
             if let plan {
-                Text(plan.installedFolderURL.path).font(Theme.mono).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                Text(shownPath(plan.installedFolderURL.path)).font(Theme.mono).foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
                     .truncationMode(.middle)
                 Toggle("Back up saved games and changed files first", isOn: $backup)
                     .disabled(!plan.archiveExists)
