@@ -4,6 +4,8 @@ What changed in each version of Silverbox.
 
 ## 0.5 (not released yet)
 
+First public release.
+
 ### Added
 
 - The details panel and the game page name the game's collection when
