@@ -9,6 +9,7 @@ import SilverboxCore
 /// so one installed meanwhile shows as found.
 struct WelcomeView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openSettings) private var openSettings
     @State private var showingDataPicker = false
     @State private var showingOtherPacks = false
 
@@ -197,14 +198,17 @@ struct WelcomeView: View {
     private func emulatorRow(_ kind: EmulatorKind, use: String, needed: Bool) -> some View {
         row(
             kind.displayName, use: use, needed: needed, found: model.emulatorInstallation(kind)?.exists == true,
-            website: kind.website)
+            website: kind.website, blocked: model.isBlockedByMacOS(kind) ? kind : nil)
     }
 
-    private func row(_ name: String, use: String, needed: Bool, found: Bool, website: String) -> some View {
+    /// `blocked` names an emulator that is there, but that macOS stops until the user allows it.
+    private func row(
+        _ name: String, use: String, needed: Bool, found: Bool, website: String, blocked: EmulatorKind? = nil
+    ) -> some View {
         HStack(spacing: 10) {
             Group {
                 if found || needed {
-                    StatusGlyph(tone: found ? .good : .warning)
+                    StatusGlyph(tone: found && blocked == nil ? .good : .warning)
                 } else {
                     Image(systemName: "circle.dashed").foregroundStyle(Theme.textTertiary)
                 }
@@ -215,7 +219,14 @@ struct WelcomeView: View {
                 Text(use).font(.caption).foregroundStyle(Theme.textSecondary)
             }
             Spacer()
-            if found {
+            if let blocked {
+                Button("Allow…") {
+                    SettingsState.shared.show(tab: .emulators)
+                    openSettings()
+                }
+                .controlSize(.small)
+                .help(AppModel.blockedHelp(blocked))
+            } else if found {
                 Text("Found").font(.callout).foregroundStyle(Theme.textSecondary)
             } else if let url = URL(string: website) {
                 Link("Get \(name)", destination: url).font(.callout).accentLink()

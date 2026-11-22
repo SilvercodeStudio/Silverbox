@@ -1,12 +1,19 @@
+import AppKit
 import Foundation
 import SilverboxCore
 
 /// What `AppModel.checkEmulators()` found on this Mac: each emulator that is
 /// present with its executable, the files in RetroArch's cores folder,
-/// whether DOSBox Staging has FluidSynth, aria2 for game downloads, and
-/// the Apple IIGS ROM that MAME needs for some eXoAppleIIGS games.
+/// whether DOSBox Staging has FluidSynth, aria2 for game downloads, the
+/// Apple IIGS ROM that MAME needs for some eXoAppleIIGS games, and the
+/// emulators that macOS will stop until the user allows them.
 struct EmulatorCheck: Equatable {
     var executables: [EmulatorKind: String] = [:]
+    /// Present, but macOS will refuse to start it: a download that Apple has
+    /// not notarized and the user has not allowed yet (`Gatekeeper`).
+    var blocked: Set<EmulatorKind> = []
+    /// Marked as a download and not asked about yet; `checkEmulators()` asks.
+    var unassessed: [EmulatorKind: URL] = [:]
     var retroArchCores: [String] = []
     var fluidSynth = false
     var downloader: TorrentDownloader?
@@ -18,6 +25,11 @@ struct EmulatorCheck: Equatable {
         for kind in EmulatorKind.allCases {
             if let installation = settings.emulatorInstallation(kind), installation.exists {
                 executables[kind] = installation.executableURL.path
+                switch Gatekeeper.quickVerdict(app: installation.gatekeeperTarget) {
+                case .allowed: break
+                case .blocked: blocked.insert(kind)
+                case .unknown: unassessed[kind] = installation.gatekeeperTarget
+                }
             }
         }
         if let cores = settings.retroArchSetup?.coresDirectory {
@@ -38,6 +50,43 @@ extension AppModel {
     func checkEmulators() {
         let check = EmulatorCheck(settings)
         if check != emulatorCheck { emulatorCheck = check }
+        // macOS's assessment reads the whole app, so it runs off the main thread, once for
+        // each download that is not allowed yet; the answer is kept, and the next check has it.
+        let unassessed = Array(check.unassessed.values)
+        guard !unassessed.isEmpty, !isAssessingEmulators else { return }
+        isAssessingEmulators = true
+        Task {
+            await Task.detached { for app in unassessed { _ = Gatekeeper.isBlocked(app: app) } }.value
+            isAssessingEmulators = false
+            checkEmulators()
+        }
+    }
+
+    /// True for an emulator that is installed but that macOS will stop at
+    /// its start, until the user allows it in System Settings.
+    func isBlockedByMacOS(_ kind: EmulatorKind) -> Bool { emulatorCheck.blocked.contains(kind) }
+
+    /// What to do about an emulator that macOS stops, for help tags.
+    static func blockedHelp(_ kind: EmulatorKind) -> String {
+        "Apple has not checked \(kind.displayName), so macOS stops it the first time it starts. Allow it once: Settings › Emulators shows how."
+    }
+
+    /// Opens the emulator by itself. macOS then shows its warning, and after
+    /// it the Open Anyway button in System Settings › Privacy & Security.
+    func openEmulatorOnce(_ kind: EmulatorKind) {
+        guard let installation = emulatorInstallation(kind) else { return }
+        NSWorkspace.shared.openApplication(
+            at: installation.gatekeeperTarget, configuration: NSWorkspace.OpenConfiguration())
+    }
+
+    /// System Settings › Privacy & Security, where Open Anyway is.
+    func openPrivacyAndSecurity() {
+        for address in [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Security",
+            "x-apple.systempreferences:com.apple.preference.security?General",
+        ] {
+            if let url = URL(string: address), NSWorkspace.shared.open(url) { return }
+        }
     }
 
     /// `settings.emulatorInstallation(_:)` for views. It reads

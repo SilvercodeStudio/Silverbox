@@ -499,6 +499,19 @@ inside a path or code span.
   (`sidebarCounts.gamesNeeding`, by pack or platform, which follows the
   DOSBox policy and the platform choices; the line's help has the
   breakdown).
+- Gatekeeper. macOS stops a downloaded emulator that Apple has not
+  notarized (DOSBox-X, GSplus) until the user allows it. `Gatekeeper`
+  (core) reads the app's quarantine mark: no mark, or the user-approved
+  flag (0x40) in it, means allowed. Only for a marked app that is not
+  allowed yet does it run `/usr/sbin/spctl --assess`, off the main
+  thread and once for each mark, since a notarized app passes without
+  the flag. `EmulatorCheck.blocked` has the result; views ask
+  `model.isBlockedByMacOS(_:)`. The game's chip says "blocked by macOS",
+  and the emulator's row in Settings has Open <emulator> (macOS shows
+  Open Anyway only after it has stopped the app once) and Privacy &
+  Security…. Silverbox never changes the mark: allowing an app is the
+  user's decision. `-emulatorPath "dosboxX=/tmp/Fake.app"` takes an
+  emulator from another place for a run, to test this.
 - Emulator status. `AppModel.checkEmulators()` records what is installed
   (`EmulatorCheck`) at start, when the app comes to the front and every two
   seconds while Settings › Library, › Emulators, › Display & Sound,

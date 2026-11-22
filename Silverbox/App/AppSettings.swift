@@ -187,6 +187,17 @@ struct AppSettings: Codable, Equatable {
         if let name = defaults.string(forKey: "appIcon"), let icon = AppIconVariant(rawValue: name) {
             settings.appIcon = icon
         }
+        // `-emulatorPath "dosboxX=/tmp/Fake.app|gsplus=/tmp/Other.app"` takes these emulators from
+        // other places for this run, to test one that is missing, old or stopped by macOS.
+        if let paths = defaults.string(forKey: "emulatorPath"), !paths.isEmpty {
+            for pair in paths.split(separator: "|") {
+                let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+                if parts.count == 2, let kind = EmulatorKind(rawValue: parts[0]) {
+                    settings.setEmulatorPath(parts[1], for: kind)
+                }
+            }
+            settings.transient = true
+        }
         return settings
     }
 

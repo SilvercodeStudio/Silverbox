@@ -37,6 +37,12 @@ What changed in each version of Silverbox.
   buttons 4 and 5 of a mouse. They move between the sections, searches
   and game pages you showed, and select the game you had selected
   there.
+- Silverbox says when macOS will stop an emulator: one that you
+  downloaded, that Apple has not checked, and that you have not allowed
+  yet, such as DOSBox-X. The game has a "blocked by macOS" chip, and
+  Settings › Emulators has the two buttons to allow it: open the
+  emulator once, then Privacy & Security. The help's Troubleshooting has
+  the steps.
 - A game's right-click menu can show the keys of its commands, such as
   Command-Down for Open Game Page: turn it on in Settings › General.
 - Add Collection… takes the right folder when you choose one a level
@@ -110,6 +116,9 @@ What changed in each version of Silverbox.
 
 ### Fixed
 
+- A double click on a game in the grid selects it as well as playing it.
+  Before, the game selected earlier stayed selected, and the inspector
+  showed that one.
 - The inspector's video is the selected game's. When you moved from one
   game with a video to another, the first game's video stayed.
 - Failed or cancelled installations leave existing games alone and no longer

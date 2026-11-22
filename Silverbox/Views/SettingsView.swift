@@ -495,13 +495,40 @@ struct EmulatorPathRow: View {
     var body: some View {
         let installation = model.emulatorInstallation(kind)
         let found = installation?.exists == true
+        let blocked = model.isBlockedByMacOS(kind)
+        VStack(alignment: .leading, spacing: 8) {
+            row(installation: installation, found: found, blocked: blocked)
+            if found, blocked {
+                // What to do, in the order to do it. macOS shows Open Anyway only after it has
+                // stopped the app once.
+                HStack(alignment: .firstTextBaseline) {
+                    Text(
+                        "Apple has not checked this app, so macOS stops it the first time. Open it once, then click Open Anyway in Privacy & Security."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    Button("Open \(kind.displayName)") { model.openEmulatorOnce(kind) }
+                    Button("Privacy & Security…") { model.openPrivacyAndSecurity() }
+                }
+                .controlSize(.small)
+            }
+        }
+    }
+
+    private func row(installation: EmulatorInstallation?, found: Bool, blocked: Bool) -> some View {
         HStack(spacing: 10) {
             if let installation, found {
                 let app = EmulatorApp(installation)
                 Image(nsImage: app.icon).resizable().interpolation(.high).frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(app.name + (app.version.map { " \($0)" } ?? ""))
-                    StatusLabel("Ready", tone: .good, textStyle: Theme.textSecondary).font(.caption)
+                    if blocked {
+                        StatusLabel("macOS has not allowed it yet", tone: .warning, textStyle: Theme.textSecondary)
+                            .font(.caption)
+                    } else {
+                        StatusLabel("Ready", tone: .good, textStyle: Theme.textSecondary).font(.caption)
+                    }
                 }
                 .help(installation.executableURL.path)
             } else {

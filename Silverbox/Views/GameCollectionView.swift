@@ -67,11 +67,20 @@ struct GameGridView: View {
                                         SelectedTileReporter(gameID: game.id, model: model)
                                     }
                                 }
-                                .onTapGesture(count: 2) { model.play(game) }
                                 .onTapGesture {
                                     model.selectedGameID = game.id
                                     focused = true
                                 }
+                                // Beside the single click, not in place of it: a double click alone
+                                // would play a game and leave another one selected, and the single
+                                // click would wait to see whether a second one follows.
+                                .simultaneousGesture(
+                                    TapGesture(count: 2).onEnded {
+                                        model.selectedGameID = game.id
+                                        focused = true
+                                        model.play(game)
+                                    }
+                                )
                                 .contextMenu { GameContextMenu(game: game, showsKeys: true) }
                                 .onHover { if $0 { model.prefetchExtras(for: game) } }
                                 .id(game.id)
@@ -468,15 +477,16 @@ struct GameListView: View {
     }
 }
 
-/// The right-click menu for a game, shared by the grid, list and inspector.
-/// A game's menu, for a right-click and for the "…" button. In the
-/// right-click menu, the items show the keys of the same commands in the
-/// menu bar (`AppCommands`), which do the work; keep the two in step.
+/// A game's menu, for a right-click in the grid or the list and for the
+/// inspector's "…" button. In the right-click menu, the items show the keys
+/// of the same commands in the menu bar (`AppCommands`), which do the work;
+/// keep the two in step.
 struct GameContextMenu: View {
     let game: Game
     /// True for a right-click menu, where a key beside an item is only
-    /// shown, and only while the setting for it is on. A button's pull-down menu would make the keys work a second
-    /// time, beside the menu bar's, so it shows none.
+    /// shown, and only while the setting for it is on. A button's pull-down
+    /// menu would make the keys work a second time, beside the menu bar's,
+    /// so it shows none.
     var showsKeys = false
     @Environment(AppModel.self) private var model
 

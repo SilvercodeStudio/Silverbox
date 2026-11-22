@@ -153,12 +153,16 @@ struct GameStatusChips: View {
         case .link: chips.append(Chip(text: "Link", systemImage: "link"))
         case .emulator:
             let resolved = model.resolvedEmulator(for: game)
-            chips.append(
-                resolved.isReady
-                    ? Chip(text: resolved.summary, tone: .good, systemImage: "cpu")
-                    : Chip(
-                        text: problemLabel(resolved), tone: .warning, systemImage: "exclamationmark.triangle.fill",
-                        help: resolved.problem))
+            if resolved.isReady, let kind = resolved.assignment?.emulator, model.isBlockedByMacOS(kind) {
+                chips.append(Self.blockedChip(kind))
+            } else {
+                chips.append(
+                    resolved.isReady
+                        ? Chip(text: resolved.summary, tone: .good, systemImage: "cpu")
+                        : Chip(
+                            text: problemLabel(resolved), tone: .warning,
+                            systemImage: "exclamationmark.triangle.fill", help: resolved.problem))
+            }
             if resolved.isReady, let problem = model.missingFirmware(for: game, resolved: resolved) {
                 chips.append(
                     Chip(
@@ -167,7 +171,10 @@ struct GameStatusChips: View {
             }
         case .scummVM:
             if let installation = model.scummVMInstallation(for: game, variant: nil), installation.exists {
-                chips.append(Chip(text: installation.kind.displayName, tone: .good, systemImage: "cpu"))
+                chips.append(
+                    model.isBlockedByMacOS(installation.kind)
+                        ? Self.blockedChip(installation.kind)
+                        : Chip(text: installation.kind.displayName, tone: .good, systemImage: "cpu"))
             } else {
                 chips.append(
                     Chip(
@@ -219,6 +226,7 @@ struct GameStatusChips: View {
     /// The emulator by name, in good tone when its executable is present.
     private func emulatorChip(_ kind: EmulatorKind) -> Chip {
         if model.emulatorInstallation(kind)?.exists == true {
+            if model.isBlockedByMacOS(kind) { return Self.blockedChip(kind) }
             return Chip(text: kind.displayName, tone: .good, systemImage: "cpu")
         }
         return Chip(
@@ -232,6 +240,13 @@ struct GameStatusChips: View {
         guard let kind = resolved.assignment?.emulator else { return "No Mac emulator" }
         if model.emulatorInstallation(kind)?.exists != true { return "\(kind.displayName) missing" }
         return kind == .retroArch ? "RetroArch core missing" : "\(kind.displayName) not ready"
+    }
+
+    /// The emulator is there, but macOS will stop it until the user allows it.
+    static func blockedChip(_ kind: EmulatorKind) -> Chip {
+        Chip(
+            text: "\(kind.displayName) blocked by macOS", tone: .warning,
+            systemImage: "exclamationmark.triangle.fill", help: AppModel.blockedHelp(kind))
     }
 
     static func missingHelp(_ kind: EmulatorKind) -> String {

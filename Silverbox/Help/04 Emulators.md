@@ -1,5 +1,7 @@
 # Emulators
 
+Silverbox starts each game in a Mac emulator that you install yourself. macOS stops an emulator that Apple has not checked, such as DOSBox-X, the first time it starts; Troubleshooting says how to allow it.
+
 ## DOSBox for eXoDOS, eXoWin3x and eXoDemoScene
 
 eXo runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to the two emulators it supports:

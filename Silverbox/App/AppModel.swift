@@ -69,6 +69,8 @@ final class AppModel {
     /// it through `emulatorInstallation(_:)` and the other lookups that
     /// follow it, so they show an emulator installed while the app is open.
     var emulatorCheck = EmulatorCheck()
+    /// True while a background task asks macOS about downloaded emulators.
+    @ObservationIgnored var isAssessingEmulators = false
 
     struct RomPlatformSummary: Identifiable, Hashable {
         let name: String

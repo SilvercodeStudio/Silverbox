@@ -2,6 +2,8 @@
 
 ## A game does not start, or quits at once
 
+If macOS showed a warning about the emulator, with a Move to Trash button, see "macOS will not open an emulator" below.
+
 Right-click the game and choose **Show Last Launch Log…**: the sheet shows the emulator's output and the command line that started it, with a **Show Log** button in the bar while the game runs. **Copy as Markdown** copies a report with the emulator, command line, config, notes and the end of the log, ready to paste into a bug report. A game that exits with an error opens this sheet by itself. The files are in the local data folder: each game has a log in `Logs`, and the generated configuration is in `Launch` next to it.
 
 ## A collection says its folder is not there
@@ -23,6 +25,19 @@ Box art and screenshots on a network share load slowly the first time. Silverbox
 ## The emulator is not found
 
 Set the emulator's location in Settings › Emulators: DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight, GSplus, RetroArch, Dolphin, MAME or Mednafen. Either the app or the program inside it can be chosen. Emulators in the Applications folder are found without this.
+
+## macOS will not open an emulator
+
+Apple has not checked every emulator. For example, DOSBox-X releases are not currently notarized, which is Apple's check of the binary. The first time such an emulator starts, macOS stops it and says that it could not verify the app, with the buttons Done and Move to Trash. The game does not start. Keep the app, and allow it once.
+
+Silverbox shows when an emulator waits for this: the game has a "blocked by macOS" chip, and Settings › Emulators says "macOS has not allowed it yet" under the emulator, with two buttons for the steps below.
+
+1. Start the emulator once: **Open DOSBox-X** in Settings › Emulators, or Play on a game that uses it. macOS shows its warning; click Done.
+2. Open System Settings › Privacy & Security (the **Privacy & Security…** button) and scroll down to Security. A line there says that the emulator was blocked.
+3. Click Open Anyway, and confirm. macOS can ask for your password or Touch ID, and can open the emulator; quit it.
+4. Start the game in Silverbox again. The warning in Silverbox goes away by itself.
+
+macOS asks once for each copy of an emulator, and again when you install a new version of it. Allow only an emulator that you downloaded from its own website. Silverbox cannot do this for you: it is your decision, and macOS keeps it that way.
 
 ## General MIDI music sounds wrong
 

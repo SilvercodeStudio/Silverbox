@@ -152,6 +152,13 @@ in `/Applications` (or `~/Applications`), or choose them in Settings ›
 Emulators. eXo ships Windows builds of the same emulators; the app does not
 use them.
 
+The first time an emulator starts, macOS can refuse to open it, with a
+warning that offers to move it to the Trash: Apple has not checked every
+emulator, and the DOSBox-X download is one that it has not. Click Done, then
+open System Settings › Privacy & Security, scroll down to Security, and click
+Open Anyway. Silverbox marks such an emulator in Settings › Emulators and on
+its games, and the app's help has the steps (Troubleshooting).
+
 General MIDI music plays through FluidSynth with the eXoDOS Sound Canvas
 SoundFont. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in;
 for an older DOSBox Staging, install it with `brew install fluid-synth`.

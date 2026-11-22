@@ -528,3 +528,73 @@ struct LaunchOverridesTests {
         #expect(base.applying(nil) == base)
     }
 }
+
+@Suite("Gatekeeper")
+struct GatekeeperTests {
+    @Test func readsTheApprovalFlagOfAQuarantineMark() {
+        // A download not opened yet, and the same after the user allowed it.
+        #expect(Gatekeeper.awaitsApproval(mark: "0181;6acedaa5;Chrome;A6695BCB-C51C-42DA-86FD-B85C51C734BE"))
+        #expect(Gatekeeper.awaitsApproval(mark: "0083;65f1a2b3;Safari;"))
+        #expect(!Gatekeeper.awaitsApproval(mark: "01c1;6aced0be;Chrome;8E8F0D24-00B8-4715-8847-F2AF7E2E0DB2"))
+        #expect(!Gatekeeper.awaitsApproval(mark: "01c2;00000000;MacPacker;"))
+        // Not a mark: no reason to warn.
+        #expect(!Gatekeeper.awaitsApproval(mark: ""))
+        #expect(!Gatekeeper.awaitsApproval(mark: "not a mark"))
+    }
+
+    #if os(macOS)
+        /// An app with no signature, as an emulator that Apple has not notarized is to
+        /// Gatekeeper: blocked while its mark says the user has not allowed it.
+        @Test func blocksAMarkedAppThatIsNotNotarized() throws {
+            let folder = try FixtureLibrary.scratchDirectory()
+            defer { try? FileManager.default.removeItem(at: folder) }
+            let app = folder.appendingPathComponent("Fake Emulator.app", isDirectory: true)
+            let macOS = app.appendingPathComponent("Contents/MacOS", isDirectory: true)
+            try FileManager.default.createDirectory(at: macOS, withIntermediateDirectories: true)
+            let executable = macOS.appendingPathComponent("fake")
+            try "#!/bin/sh\nexit 0\n".write(to: executable, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
+            let plist: [String: Any] = [
+                "CFBundleExecutable": "fake", "CFBundleIdentifier": "app.getsilverbox.tests.fake",
+                "CFBundlePackageType": "APPL",
+            ]
+            try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+                .write(to: app.appendingPathComponent("Contents/Info.plist"))
+            func mark(_ value: String) {
+                let bytes = Array(value.utf8)
+                #expect(setxattr(app.path, "com.apple.quarantine", bytes, bytes.count, 0, 0) == 0)
+            }
+            let installation = EmulatorInstallation(kind: .dosboxX, executableURL: executable)
+            #expect(installation.gatekeeperTarget.path == app.path)
+
+            // No mark: an app made on this Mac.
+            #expect(Gatekeeper.quarantineMark(of: app) == nil)
+            #expect(Gatekeeper.quickVerdict(app: app) == .allowed)
+            #expect(!Gatekeeper.isBlocked(app: app))
+
+            // Gatekeeper can be turned off for the whole Mac; then nothing is blocked.
+            let status = Process()
+            status.executableURL = URL(fileURLWithPath: "/usr/sbin/spctl")
+            status.arguments = ["--status"]
+            let pipe = Pipe()
+            status.standardOutput = pipe
+            status.standardError = pipe
+            try status.run()
+            status.waitUntilExit()
+            let enabled = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                .contains("assessments enabled")
+
+            // Downloaded and not allowed yet.
+            mark("0081;65f1a2b3;Silverbox tests;")
+            #expect(Gatekeeper.quarantineMark(of: app) == "0081;65f1a2b3;Silverbox tests;")
+            #expect(Gatekeeper.quickVerdict(app: app) == .unknown)
+            #expect(Gatekeeper.isBlocked(app: app) == enabled)
+            #expect(Gatekeeper.quickVerdict(app: app) == (enabled ? .blocked : .allowed))
+
+            // The user allowed it: macOS sets the flag in the mark.
+            mark("00c1;65f1a2b3;Silverbox tests;")
+            #expect(Gatekeeper.quickVerdict(app: app) == .allowed)
+            #expect(!Gatekeeper.isBlocked(app: app))
+        }
+    #endif
+}
