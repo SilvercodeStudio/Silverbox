@@ -140,9 +140,9 @@
           <p>Silverbox runs eXo's setup itself, so you don't need a Windows PC. A collection already set up on Windows works too.</p>
           <ol class="sb-steps">
             <li class="sb-step"><span class="sb-step__num">1</span><h3 class="sb-step__title">Download an eXo collection</h3><p class="sb-step__text">Get the torrent for eXoDOS or another pack from <a href="https://www.retro-exo.com/index2.html">retro-exo.com</a>, and open it in a BitTorrent client such as qBittorrent or Transmission. The larger packs take a while: the full eXoDOS is about 700 GB. eXoDOS Lite is about 6 GB, because it leaves out the games; Silverbox downloads each one when you install it.</p></li>
-            <li class="sb-step"><span class="sb-step__num">2</span><h3 class="sb-step__title">Add it to Silverbox</h3><p class="sb-step__text">Drag the folder onto the window. Silverbox asks whether to unpack into the download itself, as on Windows, or into a separate local folder that leaves the download as it came.</p></li>
-            <li class="sb-step"><span class="sb-step__num">3</span><h3 class="sb-step__title">Install the emulators</h3><p class="sb-step__text">DOSBox Staging for most eXoDOS games, and the others for the packs you have. Silverbox shows which ones it found, and notices one you install while it is open.</p></li>
-            <li class="sb-step"><span class="sb-step__num">4</span><h3 class="sb-step__title">Pick a game</h3><p class="sb-step__text">Press Play. The first time, Silverbox installs the game from its archive in the background while you go on browsing, downloading it first from a Lite collection. Then it starts the emulator eXo chose for that game, with a config translated from eXo's launch script.</p></li>
+            <li class="sb-step"><span class="sb-step__num">2</span><h3 class="sb-step__title">Add it to Silverbox</h3><p class="sb-step__text">Drag the folder onto the window. Silverbox asks whether to unpack into the download itself, as on Windows, or into a separate local folder that leaves your download untouched.</p></li>
+            <li class="sb-step"><span class="sb-step__num">3</span><h3 class="sb-step__title">Install the emulators</h3><p class="sb-step__text">DOSBox Staging for most eXoDOS games, plus whatever the other packs you have need. Silverbox shows which ones it found, and picks up new ones without a restart.</p></li>
+            <li class="sb-step"><span class="sb-step__num">4</span><h3 class="sb-step__title">Pick a game</h3><p class="sb-step__text">Press Play. The first time, Silverbox installs the game in the background while you keep browsing (for eXoDOS Lite, it downloads the game first). Then it starts the emulator eXo chose for that game, with a config translated from eXo's launch script.</p></li>
           </ol>
         </div>
         <div class="spotlight-media">
@@ -169,8 +169,8 @@
         <div class="spotlight-text">
           <span class="sb-eyebrow">Media and extras</span>
           <h2 id="media-title" class="sb-display spotlight-title">Every manual, map and cluebook, a click away.</h2>
-          <p>Each game shows its box art, title screen, gameplay and video, scaled pixel-perfect, beside its credits and the story behind it. Below them is everything eXo kept from the box: the manual, and the cluebook, map and spellbook that came with it. Quick Look pages through all of it.</p>
-          <p>A game whose emulator isn't installed still shows, with all of it.</p>
+          <p>Each game shows its box art, title screen, gameplay and video, scaled pixel-perfect, along with its credits and description. Below that is everything eXo kept from the box: the manual, plus any cluebook, map or spellbook that came with it. Quick Look pages through all of it.</p>
+          <p>You can browse all of it before you've installed a single emulator.</p>
           <ul class="sb-chips" aria-label="Media for each game">
             <li class="sb-chip">Box front</li>
             <li class="sb-chip">Title screen</li>
@@ -189,7 +189,7 @@
           <span class="sb-eyebrow">Launching</span>
           <h2 id="launch-title" class="sb-display spotlight-title">The right DOSBox for every game.</h2>
           <p>eXoDOS picks a DOSBox build per game: 0.74, ECE, Staging, SVN Daum or DOSBox-X. Silverbox matches each to a Mac build, sending Daum and DOSBox-X games to DOSBox-X and everything else to DOSBox Staging, and translates the game's config from eXo's Windows launch script.</p>
-          <p>Where eXo has more than one version of a game, choose it before the game starts; Silverbox remembers the choice. Want something different? Change the emulator for any game in its info sheet, or edit a copy of its config. Changes are kept in the local data folder; the eXo files are not changed.</p>
+          <p>When eXo has more than one version of a game, pick one before it starts, and Silverbox remembers your choice. Want something different? Change the emulator for any game in its info sheet, or edit a copy of its config. Your changes live in the local data folder; the eXo files stay as they are.</p>
           <div class="panel-line">
             <span class="sb-path">eXo/eXoDOS/!dos/ultima5/dosbox.conf</span>
             <span class="sb-detail">eXoDOS runs it with DOSBox Staging 0.81.1 · Mac emulator: DOSBox Staging</span>
@@ -219,12 +219,12 @@
         <div class="spotlight-text">
           <span class="sb-eyebrow">Sound and picture</span>
           <h2 id="sound-title" class="sb-display spotlight-title">The music the games were written for.</h2>
-          <p>Games set up for the Roland MT-32 use MT-32 emulation with the ROMs that come with eXo. General MIDI plays through FluidSynth and the eXoDOS Sound Canvas SoundFont, as on Windows; DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Where eXo's in-game sound menus pick General MIDI, Silverbox sends them to the same synthesizer.</p>
+          <p>Games set up for the Roland MT-32 use MT-32 emulation with the ROMs that come with eXo. General MIDI plays through FluidSynth and the eXoDOS Sound Canvas SoundFont, as on Windows; DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. When eXo's in-game sound menus pick General MIDI, Silverbox routes that to the same synthesizer.</p>
           <div class="panel-line">
             <span class="sb-status sb-status--ready"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>FluidSynth ready in DOSBox Staging</span>
             <span class="sb-detail">General MIDI games play with the eXoDOS Sound Canvas SoundFont.</span>
           </div>
-          <p>The picture can stay as each game was configured, or take a CRT shader in DOSBox Staging. Start in full screen, and skip the emulator's start-up banner.</p>
+          <p>Keep the picture as each game was configured, or add a CRT shader in DOSBox Staging. You can also start in full screen and skip the emulator's start-up banner.</p>
           <ul class="sb-chips" aria-label="Sound and picture options">
             <li class="sb-chip">Roland MT-32</li>
             <li class="sb-chip">Sound Canvas</li>
@@ -286,7 +286,7 @@
           <article class="sb-card">
             <div class="sb-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
             <h3 class="sb-card__title">Read-only is fine</h3>
-            <p class="sb-card__text">Keep the collection on another drive or a NAS, even one a Windows PC shares. Installs, saves and caches go to a local data folder. A share that went away connects again with one click, and Silverbox lets go of its files when you eject a drive.</p>
+            <p class="sb-card__text">Keep the collection on another drive or a NAS, even one a Windows PC shares. Installs, saves and caches go to a local data folder. If a network share drops, one click reconnects it, and you can eject a drive while Silverbox is open.</p>
           </article>
         </div>
       </div>
@@ -377,11 +377,11 @@
           </details>
           <details>
             <summary>Will it change my eXo folder?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>Only if you ask it to. By default, installed games, save backups, edited configs and caches go to a local data folder, and the eXo folder can be read-only. Setting up inside the download, or installing games in place as eXo does on Windows, are choices you make. eXoDOS Lite games download into the set-up collection: into the eXo folder only if you set it up in place, otherwise into the local copy.</p>
+            <p>Only if you ask it to. By default, installed games, save backups, edited configs and caches go to a local data folder, and the eXo folder can be read-only. Setting up inside the download, or installing games in place as eXo does on Windows, are both opt-in. eXoDOS Lite games download into wherever you set the collection up.</p>
           </details>
           <details>
             <summary>What about eXoDOS Lite?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>Lite leaves out the games and downloads each one when you install it. Silverbox does the same, from the eXoDOS torrent that Lite includes, with <a href="https://aria2.github.io/">aria2</a> (<code>brew install aria2</code>). The first download can take a minute or so to find other computers sharing the torrent; later ones start in seconds.</p>
+            <p>Lite leaves out the games and downloads each one when you install it. Silverbox does the same thing, using the eXoDOS torrent that comes with Lite and <a href="https://aria2.github.io/">aria2</a> (<code>brew install aria2</code>). The first download can take a minute or so to find other people sharing the torrent; after that, downloads start in seconds.</p>
           </details>
           <details>
             <summary>Can I share a collection with a Windows PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
@@ -401,7 +401,7 @@
           </details>
           <details>
             <summary>macOS will not open an emulator. What now?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>Apple has not checked every emulator; the DOSBox-X download is one that it has not. The first time it starts, macOS stops it and offers to move it to the Trash. Click Done, then open System Settings › Privacy &amp; Security, scroll down to Security, and click Open Anyway. After that, the game starts. Silverbox shows which emulator waits for this, with buttons for both steps. Allow only an emulator that you downloaded from its own website.</p>
+            <p>Some emulators, including DOSBox-X, aren't notarized by Apple, so the first time one runs, macOS blocks it and offers to move it to the Trash. Click Done, then open System Settings › Privacy &amp; Security, scroll down to Security, and click Open Anyway. After that, the game starts. Silverbox tells you which emulator needs this, with buttons for both steps. Allow only an emulator that you downloaded from its own website.</p>
           </details>
           <details>
             <summary>Does it need an account, or send anything about me?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
@@ -413,7 +413,7 @@
           </details>
           <details>
             <summary>What does it cost?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-            <p>Nothing. Silverbox is free, and its code is open source under the <a href="license.html">GNU General Public License</a> on <a href="https://github.com/SilvercodeStudio/Silverbox">GitHub</a>. The name and the icon stay with the author.</p>
+            <p>Nothing. Silverbox is free, and its code is open source under the <a href="license.html">GNU General Public License</a> on <a href="https://github.com/SilvercodeStudio/Silverbox">GitHub</a>. The Silverbox name and icon aren't covered by the license.</p>
             <p>If you find it useful, you can <a href="https://silvercode.studio/sponsor?from=silverbox">leave a tip</a>.</p>
           </details>
         </div>

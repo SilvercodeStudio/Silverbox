@@ -28,16 +28,16 @@ Set the emulator's location in Settings › Emulators: DOSBox Staging, DOSBox-X,
 
 ## macOS will not open an emulator
 
-Apple has not checked every emulator. For example, DOSBox-X releases are not currently notarized, which is Apple's check of the binary. The first time such an emulator starts, macOS stops it and says that it could not verify the app, with the buttons Done and Move to Trash. The game does not start. Keep the app, and allow it once.
+Some emulators aren't notarized by Apple; DOSBox-X releases, for example, currently aren't. The first time one of these runs, macOS stops it with a message that it couldn't verify the app, and offers Done and Move to Trash. The game doesn't start. Keep the app; you only need to allow it once.
 
-Silverbox shows when an emulator waits for this: the game has a "blocked by macOS" chip, and Settings › Emulators says "macOS has not allowed it yet" under the emulator, with two buttons for the steps below.
+Silverbox tells you when this is the problem: the game shows a "blocked by macOS" chip, and Settings › Emulators says "macOS has not allowed it yet" under the emulator, with buttons for the steps below.
 
 1. Start the emulator once: **Open DOSBox-X** in Settings › Emulators, or Play on a game that uses it. macOS shows its warning; click Done.
 2. Open System Settings › Privacy & Security (the **Privacy & Security…** button) and scroll down to Security. A line there says that the emulator was blocked.
 3. Click Open Anyway, and confirm. macOS can ask for your password or Touch ID, and can open the emulator; quit it.
 4. Start the game in Silverbox again. The warning in Silverbox goes away by itself.
 
-macOS asks once for each copy of an emulator, and again when you install a new version of it. Allow only an emulator that you downloaded from its own website. Silverbox cannot do this for you: it is your decision, and macOS keeps it that way.
+macOS asks once for each copy of an emulator, and again when you install a new version. Only allow an emulator that you downloaded from its own website. Silverbox can't do this step for you; only you can allow it.
 
 ## General MIDI music sounds wrong
 
@@ -53,13 +53,13 @@ RetroArch cores are downloaded inside RetroArch (Online Updater › Core Downloa
 
 ## A game in RetroArch crashes, or shows nothing
 
-Many RetroArch cores need BIOS or ROM files from the original computer or console, which no one may ship: Hatari (Atari ST) needs `tos.img`, for example. They go in RetroArch's system folder (RetroArch › Settings › Directory › System/BIOS). For a game from a LaunchBox library, Silverbox copies the files the core needs from the library's own RetroArch (`Emulators\RetroArch\system` on Windows) into that folder when they are missing there; it never replaces a file. When neither has a file the core needs, the game shows **BIOS missing**; rest the pointer on it for the file's name. Open **Show Last Launch Log…** for RetroArch's own messages: a core that finds no BIOS usually says which file it wants.
+Many RetroArch cores need BIOS or ROM files from the original computer or console, which can't legally be shared: Hatari (Atari ST) needs `tos.img`, for example. They go in RetroArch's system folder (RetroArch › Settings › Directory › System/BIOS). For a game from a LaunchBox library, Silverbox copies the files the core needs from the library's own RetroArch (`Emulators\RetroArch\system` on Windows) into that folder when they are missing there; it never replaces a file. When neither has a file the core needs, the game shows **BIOS missing**; hover over it to see the file's name. Open **Show Last Launch Log…** for RetroArch's own messages: a core that finds no BIOS usually says which file it wants.
 
 RetroArch sends the keyboard to its own controls. For a computer game that needs typing, turn on Game Focus in RetroArch; its key is Scroll Lock, which Mac keyboards lack, so choose another in RetroArch › Settings › Input › Hotkeys. Escape quits RetroArch.
 
 ## Menu music does not play
 
-Ogg Vorbis tracks and MOD, S3M, XM and IT modules play through decoders built into Silverbox. AMF modules and VOC sound files are listed but skipped, and the music bar says so. Tracks in other formats (PSM, DSM) are not listed at all. If a track in a supported format stays silent, check the volume in the music bar and that menu music is on in Settings › General.
+Ogg Vorbis tracks and MOD, S3M, XM and IT modules play through decoders built into Silverbox. AMF modules and VOC sound files are listed but skipped, and the music bar shows that. Tracks in other formats (PSM, DSM) are not listed at all. If a track in a supported format stays silent, check the volume in the music bar and that menu music is on in Settings › General.
 
 ## Report a problem
 
@@ -98,4 +98,4 @@ Elsewhere:
 
 Silverbox changes a collection only when you ask: a game download or "Install in place" puts the game in the collection, and setting up a download in place writes the setup there.
 
-To remove Silverbox, quit it, move it to the Trash, and delete the `Silverbox` folder in Application Support, the local data folder if you moved it, and the preferences file and cache folder above. Your collections stay as they are. Keep the local data folder if you may install Silverbox again: it has your installed games and save backups.
+To remove Silverbox, quit it, move it to the Trash, and delete the `Silverbox` folder in Application Support, the local data folder if you moved it, and the preferences file and cache folder above. Your collections aren't touched. Keep the local data folder if you may install Silverbox again: it has your installed games and save backups.

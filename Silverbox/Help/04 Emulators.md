@@ -1,15 +1,15 @@
 # Emulators
 
-Silverbox starts each game in a Mac emulator that you install yourself. macOS stops an emulator that Apple has not checked, such as DOSBox-X, the first time it starts; Troubleshooting says how to allow it.
+Silverbox starts each game in a Mac emulator that you install yourself. Some emulators, such as DOSBox-X, aren't notarized by Apple, so macOS blocks them the first time they run; Troubleshooting explains how to allow them.
 
 ## DOSBox for eXoDOS, eXoWin3x and eXoDemoScene
 
-eXo runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to the two emulators it supports:
+eXo runs each game with a specific DOSBox build: DOSBox 0.74, DOSBox ECE, DOSBox Staging, DOSBox SVN Daum or DOSBox-X. On the Mac, Silverbox maps these to two emulators:
 
 - **DOSBox Staging** for games set up for DOSBox 0.74, ECE and Staging. This is the default.
 - **DOSBox-X** for games set up for SVN Daum and DOSBox-X.
 
-Settings › Emulators lets you choose where each emulator is installed, and whether to follow the eXoDOS build or always use one emulator. Each game can be overridden in its launch options or in Edit Game Info.
+In Settings › Emulators you can say where each emulator is installed, and whether to follow eXoDOS's choice or always use one emulator. You can override this for any game in its launch options or in Edit Game Info.
 
 ## Windows 98 for eXoWin9x games
 
@@ -22,7 +22,7 @@ You cannot choose another emulator for these games. Get 86Box from https://86box
 
 ## ScummVM for eXoScummVM games
 
-eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for every game and version (`eXo/util/scummvm.txt`) and small files in each version's folder for its platform, picture and sound options; Silverbox reads them as eXo's launcher does. eXo ships several Windows builds of ScummVM because some games broke in newer releases; the Mac uses the one ScummVM you have.
+eXoScummVM games run in **ScummVM**. eXo keeps a list of the ScummVM id for every game and version (`eXo/util/scummvm.txt`), plus small files in each version's folder for its platform, picture and sound options, and Silverbox reads them the same way eXo's launcher does. eXo ships several Windows builds of ScummVM because some games broke in newer releases; on the Mac, Silverbox uses the one ScummVM you have.
 
 Five games need engines that ScummVM's release builds leave out until they are finished: In Cold Blood, The Adventures of Robin Hood, Star Trek: 25th Anniversary, Lost Eden and Ultima I. Choose a daily build from https://buildbot.scummvm.org as "ScummVM daily build" in Settings › Emulators; it is used only for games the release build cannot run.
 
@@ -39,7 +39,7 @@ eXo's launcher for interactive fiction picks an emulator by the name of each ver
 | Atari 8-bit | atari800 | Uses the OS and BASIC ROMs eXo ships with Altirra, copied to `RetroArch/system` in the local data folder; RetroArch's own system folder is not changed. |
 | Amiga | PUAE | Needs the Kickstart 1.3 ROM, `kick34005.A500`, in RetroArch's system folder. Versions that use FS-UAE configurations are not supported. |
 
-A version whose core is not installed says so; install it from RetroArch's Online Updater › Core Downloader. These RetroArch versions are not yet tested with many games. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
+If a version's core isn't installed, the launch options tell you which one to get from RetroArch's Online Updater › Core Downloader. These RetroArch versions haven't been tested with many games yet. Versions for other computers (BBC Micro, TRS-80, Dragon, Oric, TI-99 and more), for MAME, mainframes and Windows programs are not supported yet.
 
 ## GSplus for eXoAppleIIGS games
 

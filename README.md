@@ -65,13 +65,7 @@ Silverbox does **not** include the actual eXo project downloads, or any Mac emul
 and grab the torrent file for the eXo collection that you're
 interested in. Note: some of these collections, particularly
 eXoDOS, are very large and may take a long time to download.
-
-eXoDOS also comes as "Lite": about 6 GB instead of about 700 GB, because
-it leaves out the games and downloads each one when you install it.
-Silverbox does the same with [aria2](https://aria2.github.io/)
-(`brew install aria2`), from the eXoDOS torrent that Lite includes. The
-first download can take a minute or so to find other computers sharing the
-torrent; later ones start in seconds.
+(Tip: see eXoDOS Lite below if you don't want to download 700 GB up front.)
 
 Currently, Silverbox supports the following collections:
 
@@ -106,6 +100,15 @@ app, or click Add Collection… on the welcome screen (or in Settings ›
 Library). For a download that is not set up yet, Silverbox asks whether to
 unpack the required files inside the download folder, or in a separate local
 folder. If you choose the latter, your eXo download is not changed.
+
+### What about eXoDOS Lite?
+
+eXoDOS also comes as "Lite": about 6 GB instead of about 700 GB. It leaves
+out the games themselves and downloads each one when you install it.
+Silverbox does the same thing, using [aria2](https://aria2.github.io/)
+(`brew install aria2`) and the eXoDOS torrent that comes with Lite. The
+first download can take a minute or so to find other people sharing the
+torrent; after that, downloads start in seconds.
 
 ### Can I share eXo files with a Windows install?
 
@@ -153,12 +156,12 @@ in `/Applications` (or `~/Applications`), or choose them in Settings ›
 Emulators. eXo ships Windows builds of the same emulators; the app does not
 use them.
 
-The first time an emulator starts, macOS can refuse to open it, with a
-warning that offers to move it to the Trash: Apple has not checked every
-emulator, and the DOSBox-X download is one that it has not. Click Done, then
-open System Settings › Privacy & Security, scroll down to Security, and click
-Open Anyway. Silverbox marks such an emulator in Settings › Emulators and on
-its games, and the app's help has the steps (Troubleshooting).
+Some emulators, including DOSBox-X, aren't notarized by Apple, so the first
+time one runs, macOS blocks it and offers to move it to the Trash. Click
+Done, then open System Settings › Privacy & Security, scroll down to
+Security, and click Open Anyway. Silverbox tells you when an emulator is
+blocked like this, and the app's help walks through the steps
+(Troubleshooting).
 
 General MIDI music plays through FluidSynth with the eXoDOS Sound Canvas
 SoundFont. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in;
@@ -184,10 +187,10 @@ for an older DOSBox Staging, install it with `brew install fluid-synth`.
 
 With the right Mac emulators installed, nearly every game in the DOS and
 Windows packs, the demo scene pack and the ScummVM pack can start. The
-exceptions are a few games in some packs, whole systems in eXoIF, and the
-eXoAppleIIGS games that eXo runs in MAME until you add one ROM file. "Can
-start" means a Mac emulator is known to load the game.
-Each game has not been played through.
+exceptions are a few games here and there, some whole computer systems in
+eXoIF, and the eXoAppleIIGS games that eXo runs in MAME, until you add one
+ROM file. "Can start" means a Mac emulator is known to load the game; not
+every game has been played through.
 
 | Pack                 | Games | Can start                                                  | Notes                                                                                                                                                                                                                                                                           |
 | -------------------- | ----- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -200,29 +203,24 @@ Each game has not been played through.
 | eXoAppleIIGS         | 460   | About 84% (all with a ROM file)                            | GSplus, with eXo's settings; a sample of games boot. The 74 games that eXo runs in MAME need the Apple IIGS character ROM, which you supply.                                                                                                                                    |
 
 Many eXoIF games come in versions for several computers, and a game counts
-when any of its versions can start. Where a version needs a RetroArch core or
-ROM that is not installed, the launch options say which.
+when any of its versions can start. If a version needs a RetroArch core or
+ROM that you haven't installed, the launch options tell you which one.
 
 ## Where your data goes
 
-A collection can be read-only (an external drive or a network share).
-Silverbox changes your eXo download only when you ask it to: when you set
-up the download in place, or install games in place. eXoDOS Lite games
-download into the set-up collection: the download folder itself after an
-in-place setup, otherwise the collection's copy in the local data folder.
-Installed games, save backups, edited configs, unpacked soundtracks and
-caches are kept in a local data folder, by default
-`~/Library/Application Support/Silverbox`, which Settings can point at
-another drive; favorites, play history and settings stay in Application
-Support. Installing games in place inside `eXo/eXoDOS`, as eXoDOS does on
-Windows, is available in Settings.
+Silverbox doesn't change your eXo download unless you ask it to, so the
+collection can even live on a read-only drive or network share. Installed
+games, save backups, edited configs and caches go in a separate local data
+folder: by default `~/Library/Application Support/Silverbox`, and you can
+move it to another drive in Settings. Your favorites, play history and
+settings always stay on the Mac itself.
 
-Installations are unpacked in a temporary folder and become available only
-when they finish. Operations that would change the same game or virtual
-machine cannot run together. New save backups are kept separately for each
-installation under `Saves/Installations`; older backups remain available
-for restore. Favorites and play history keep one previous readable copy,
-and a damaged file is preserved before recovery.
+If you'd rather have the Windows layout, you can set up a download in place
+and install games inside `eXo/eXoDOS`, as eXo does on Windows. eXoDOS Lite
+games download into wherever you set the collection up.
+
+When you uninstall a game, Silverbox offers to back up your saved games and
+gives them back the next time you install it.
 
 **Updates.** The released app checks for a new version once a day, if you
 agree, and installs it with [Sparkle](https://sparkle-project.org). The
@@ -279,9 +277,9 @@ and a note on its origin:
 
 macOS plays the other music formats itself.
 
-The app also includes [Sparkle](https://sparkle-project.org) (MIT, with the
-licenses of the code it includes), which installs its updates. It is a
-Swift package of the app target only.
+The app also includes [Sparkle](https://sparkle-project.org) (MIT, plus the
+licenses of the code it bundles), which handles updates. Only the app uses
+it, not the core library.
 
 The headlines of the About window and the welcome are in
 [VT323](https://github.com/phoikoi/VT323), a font by Peter Hull under the
