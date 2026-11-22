@@ -2,7 +2,7 @@
 
 What changed in each version of Silverbox.
 
-## 0.5 (not released yet)
+## 0.9 (2026-11-22)
 
 First public release.
 
