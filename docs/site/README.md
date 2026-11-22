@@ -22,6 +22,9 @@ Switch macOS between Light and Dark (System Settings › Appearance) to see both
 - `tools/`: `screenshots.sh` and `scenes/` (`make site-shots`), `shot.swift`, which crops a window screenshot to the window's edge and writes the WebP images the pages use, and `og-image.swift`, the link preview (see below).
 - `appcast.xml`: Sparkle's update feed, which `make dist` writes and signs. Never edit it by hand (`docs/internal/Releasing.md`).
 - `CNAME`: the custom domain. `.nojekyll`: Pages serves the files as they are.
+- `index.html`'s `application/ld+json` block: what the app is (schema.org `SoftwareApplication`), for search engines. It names no version, so a release does not change it; Google's Rich Results Test checks it. Keep its description the same as the page's `description` meta tag.
+- `index.html`'s `msvalidate.01` meta tag: verifies the site in Bing Webmaster Tools. Keep it.
+- `sitemap.xml`: the pages, for search engines; add a new page to it. `robots.txt`: lets crawlers in, keeps them out of `tools/` and this README, and names the sitemap.
 
 The license page carries the text of the repository's `NOTICE` and links to `LICENSE`; keep them the same.
 

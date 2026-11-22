@@ -1,0 +1,7 @@
+# Every page may be crawled. The screenshot tools and this folder's README are published with
+# the site, but are not pages.
+User-agent: *
+Disallow: /tools/
+Disallow: /README.md
+
+Sitemap: https://getsilverbox.app/sitemap.xml

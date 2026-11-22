@@ -12,13 +12,14 @@ screenshots, manuals, music and videos), and starts each game in a Mac
 emulator such as DOSBox Staging, DOSBox-X, 86Box, ScummVM, Spatterlight or
 GSplus, with the settings eXo uses on Windows.
 
-The games, media and emulators are not part of this project.
+The games, media and emulators are not part of this project and must be
+obtained separately.
 
 See also:
 
 - [getsilverbox.app](https://getsilverbox.app), the official site.
 - [silvercode.studio](https://silvercode.studio), the studio that makes
-  Silverbox, and its other apps.
+  Silverbox and [Silverside](https://silverside.app), a CD ripping app for Mac.
 - [CHANGELOG.md](CHANGELOG.md), the changes in each version.
 
 ## FAQ
@@ -97,11 +98,11 @@ itself and one or more eXo collection downloads. However, to actually play
 the games, you will need to download one or more additional emulators for Mac
 depending on which titles you want to play.
 
-See the [Emulators](#emulators) section below for exactly what Mac emulators
-you need to play which titles.
+  See the [Emulators](#emulators) section below for exactly what Mac emulators
+  you need to play which titles.
 
 4. Launch Silverbox and drag one of your eXo folders from the Finder to the
-app, or click Add Collection… on the welcome screen (later, in Settings ›
+app, or click Add Collection… on the welcome screen (or in Settings ›
 Library). For a download that is not set up yet, Silverbox asks whether to
 unpack the required files inside the download folder, or in a separate local
 folder. If you choose the latter, your eXo download is not changed.
@@ -304,28 +305,7 @@ GPL; see [CONTRIBUTING.md](CONTRIBUTING.md).
 Silverbox is free. If you find it useful, you can
 [leave a tip](https://silvercode.studio/sponsor?from=silverbox).
 
-## To do
-
-What changed in each version is in [CHANGELOG.md](CHANGELOG.md); the
-milestones, with what is done and what is not, are in
-[docs/internal/Milestones.md](docs/internal/Milestones.md).
-
-- A round of testing and UI polish, then the first public release.
-- Exercise the new file safeguards with real running games: overlapping
-  Windows 98 launch attempts and quitting with an active game or job. The
-  automated tests cover reservations, interrupted installs, backup failures
-  and recovery of favorites and play history.
-- Launch console, computer and arcade games for real with RetroArch, Dolphin,
-  MAME and Mednafen. The planner and the emulator assignments exist; nothing
-  has been played yet.
-- More eXo packs. eXoWin3x, eXoDemoScene, eXoScummVM and eXoAppleIIGS
-  launch, and eXoIF launches its story-file, MS-DOS and most
-  8-bit versions (about 1,500 of 2,331 games). Still to do: eXoIF's BBC
-  Micro, TRS-80, Dragon/CoCo, Oric and TI-99 versions (MAME or native
-  emulators).
-  Later: the eXoScummVM hint files (UHS).
-
-Later:
+## Possible future features
 
 - Couch mode: a full-screen, controller-first view on top of the grid and
   the controller input that exist today, and perhaps a tvOS app built on it.
