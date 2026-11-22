@@ -457,7 +457,7 @@ nonisolated extension LaunchPlanner {
             )
         }
         notes += missing.map {
-            "eXo names a disk the game does not have, \($0.lastPathComponent); its drive is left empty."
+            "eXo's settings list a disk the game doesn't have, \($0.lastPathComponent); its drive is left empty."
         }
         return notes
     }

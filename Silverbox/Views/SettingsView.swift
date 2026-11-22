@@ -382,7 +382,7 @@ struct EmulatorSettingsView: View {
                     ForEach(EmulatorPolicy.allCases) { Text($0.displayName).tag($0) }
                 }
                 Text(
-                    "eXoDOS names a DOSBox build for each game. “Match” runs its Daum and DOSBox-X games in DOSBox-X, and the rest in DOSBox Staging."
+                    "eXoDOS picks a DOSBox build for each game. “Match” runs its Daum and DOSBox-X games in DOSBox-X, and the rest in DOSBox Staging."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }

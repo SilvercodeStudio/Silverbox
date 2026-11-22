@@ -45,7 +45,7 @@ If a version's core isn't installed, the launch options tell you which one to ge
 
 eXo keeps a list of the emulator for each Apple IIGS game (`eXo/util/appleIIGS.txt`): GSplus for most, GSport for ten and MAME for 74. **GSplus** runs the GSplus and GSport games, with the ROM in the collection's `eXo/emulators/GSPlus` folder. Get GSplus from https://github.com/digarok/gsplus and set its location in Settings › Emulators if it is not in the Applications folder.
 
-**MAME** runs the other 74, as eXo's script starts them: the disks each game's `exception.bat` names, eXo's MAME settings and the Apple IIGS's saved Control Panel settings, copied to the local data folder's `MAME` folder the first time. MAME reads ROMs from `MAME/roms` there first, then from eXo's set in `eXo/emulators/MAME/roms`. eXo's set is for MAME 0.245; current MAME also needs `344s0047.bin`, which you add in Settings › Emulators.
+**MAME** runs the other 74, as eXo's script starts them: the disks listed in each game's `exception.bat`, eXo's MAME settings and the Apple IIGS's saved Control Panel settings, copied to the local data folder's `MAME` folder the first time. MAME reads ROMs from `MAME/roms` there first, then from eXo's set in `eXo/emulators/MAME/roms`. eXo's set is for MAME 0.245; current MAME also needs `344s0047.bin`, which you add in Settings › Emulators.
 
 ## How a game is configured
 
@@ -55,7 +55,7 @@ Silverbox reads the game's `dosbox.conf` (eXoWin9x: `Play.conf` or `Play.cfg`; e
 
 Games set up for the Roland MT-32 use the emulated MT-32 with the ROM files in the collection's `eXo/mt32` folder.
 
-General MIDI games use the collection's Sound Canvas SoundFont through FluidSynth when it is available. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Older versions of DOSBox Staging load it from a separately installed library; install it with Homebrew (`brew install fluid-synth`). Without FluidSynth, General MIDI plays through the macOS synthesizer. Settings › Display & Sound and Settings › Emulators say which one your DOSBox Staging uses. Playing Games › Music in games says which games this affects.
+General MIDI games use the collection's Sound Canvas SoundFont through FluidSynth when it is available. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Older versions of DOSBox Staging load it from a separately installed library; install it with Homebrew (`brew install fluid-synth`). Without FluidSynth, General MIDI plays through the macOS synthesizer. Settings › Display & Sound and Settings › Emulators show which one your DOSBox Staging uses. See Playing Games › Music in games for which games this affects.
 
 ## Consoles, computers and arcade
 

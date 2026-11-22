@@ -21,7 +21,7 @@ Below that are the local data folder (the default, the one you chose, or Other�
 
 ## Emulators
 
-This tab shows each emulator Silverbox found, with its icon and version; hover over one to see where it is. A missing emulator says how many of your games need it (hover over the number for the breakdown) and links to where you can get it. Choose… takes the app or the program inside it, and Silverbox picks up an emulator you install while the tab is open.
+This tab shows each emulator Silverbox found, with its icon and version; hover over one to see where it is. A missing emulator shows how many of your games need it (hover over the number for the breakdown) and links to where you can get it. Choose… takes the app or the program inside it, and Silverbox picks up an emulator you install while the tab is open.
 
 - **DOSBox Staging and DOSBox-X**, and which one to use by default: the build eXo picks for each game, or always one of them. DOSBox Staging also shows whether it can use FluidSynth.
 - **86Box**, for the eXoWin9x games that need it.

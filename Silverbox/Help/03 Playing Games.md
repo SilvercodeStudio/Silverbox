@@ -67,7 +67,7 @@ DOS games make their music in one of a few ways, chosen in the game's setup prog
 
 - **Sound Blaster or AdLib** music is synthesized by DOSBox itself. Most DOS games use it.
 - **Roland MT-32** music plays through DOSBox's MT-32 emulation, with the ROM files in the collection's `eXo/mt32` folder.
-- **General MIDI** (also called Sound Canvas) plays through FluidSynth with the eXoDOS Sound Canvas SoundFont, as on Windows. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Without it, General MIDI plays through the macOS synthesizer, which sounds different. Settings › Display & Sound says which one your DOSBox Staging uses, and lets you choose.
+- **General MIDI** (also called Sound Canvas) plays through FluidSynth with the eXoDOS Sound Canvas SoundFont, as on Windows. DOSBox-X and DOSBox Staging 0.83 or later have FluidSynth built in. Without it, General MIDI plays through the macOS synthesizer, which sounds different. Settings › Display & Sound shows which one your DOSBox Staging uses, and lets you choose.
 
 This applies to every game that runs in DOSBox: eXoDOS, eXoWin3x, eXoDemoScene, eXoWin9x in DOSBox-X, and the MS-DOS versions of eXoIF games. eXo's in-game sound menus write a General MIDI setting that DOSBox Staging doesn't accept, so Silverbox quietly fixes that line in the game's files to use the device you chose. ScummVM games use ScummVM's own music settings. The menu music you hear while browsing is not MIDI and does not use the SoundFont.
 

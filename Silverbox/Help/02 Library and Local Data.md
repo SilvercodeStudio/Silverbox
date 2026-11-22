@@ -14,7 +14,7 @@ Favorites holds the games you mark with the heart (Command-D). Each copy of a ga
 
 The same game is often in several packs or collections: many Infocom games are in eXoDOS, eXoScummVM and eXoIF, and some eXoDOS games also have a CD-ROM or Windows 95 release. **Other Versions** in a game's context menu lists them, with the pack or platform of each, and choosing one jumps straight to it. Games count as versions of each other when their titles match and they share a developer or publisher, so two different games that happen to share a title, such as Deadline, stay apart.
 
-Add a collection with Add Collection… on the welcome screen or in Settings › Library, or drop the folder onto the window from the Finder. Don't worry about picking exactly the right folder: if you choose one inside a collection, such as `eXo` or `Data`, or the folder that contains it, Silverbox finds the collection. A folder set up on Windows works as is. Settings › Library lists each collection with what was found in it, and lets you rename it, turn it off or choose its folder again. If a collection's folder is missing, it says so; choose the folder again if you moved or renamed it. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
+Add a collection with Add Collection… on the welcome screen or in Settings › Library, or drop the folder onto the window from the Finder. Don't worry about picking exactly the right folder: if you choose one inside a collection, such as `eXo` or `Data`, or the folder that contains it, Silverbox finds the collection. A folder set up on Windows works as is. Settings › Library lists each collection with what was found in it, and lets you rename it, turn it off or choose its folder again. It also warns you when a collection's folder is missing; choose the folder again if you moved or renamed it. If a library's game files live elsewhere than its metadata, for example a `Games` folder copied to a NAS or paths on a Windows drive letter, add a path substitution to the collection: a Windows prefix mapped to a folder on this Mac.
 
 ## Setting up an eXo download
 
@@ -52,7 +52,7 @@ Everything bulky that Silverbox writes goes to one folder. By default it's `~/Li
 - `MediaIndex` and `LibraryCache` — caches that Rescan Library rebuilds.
 - `BitTorrent` — aria2's list of peers to ask, which lets the next game download start sooner.
 
-Favorites, play history and the settings stay in `~/Library/Application Support/Silverbox` on this Mac, so they are there even when the drive is not. If the chosen folder is missing when the app starts, it says so; installed games and caches on it wait until the drive is back.
+Favorites, play history and the settings stay in `~/Library/Application Support/Silverbox` on this Mac, so they are there even when the drive is not. If the chosen folder is missing when Silverbox starts, you'll get a warning; installed games and caches on it wait until the drive is back.
 
 ## Installing in place
 

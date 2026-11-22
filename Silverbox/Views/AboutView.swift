@@ -53,7 +53,7 @@ struct AboutView: View {
                 stats
                 eXoCredit
                 Text(
-                    "Games run in DOSBox Staging, DOSBox-X, ScummVM, RetroArch and the other emulators that Acknowledgments names."
+                    "Games run in DOSBox Staging, DOSBox-X, ScummVM, RetroArch and the other emulators listed in Acknowledgments."
                 )
                 .font(.callout)
                 .foregroundStyle(Theme.textSecondary)
