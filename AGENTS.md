@@ -481,8 +481,10 @@ inside a path or code span.
   on its yellow (the yellow alone is too pale on a light window). Use
   these for status, never `.red` or `.orange`, and never
   `Label(…).foregroundStyle(Theme.warning)`. `GameStatusChips`
-  in the inspector header says whether the game is installed, which
-  emulator runs it and whether that emulator is present. Keep chip text to
+  in the inspector header names the game's collection (when more than
+  one is loaded) and its platform (outside the eXo packs), and says
+  whether the game is installed, which emulator runs it and whether that
+  emulator is present. Keep chip text to
   a few words and put the whole reason in its `help`; a control that is
   disabled says why in `.help` too.
 - Focus. Windows and sheets open with `.withoutInitialFocus()`

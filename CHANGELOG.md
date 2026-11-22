@@ -6,6 +6,9 @@ What changed in each version of Silverbox.
 
 ### Added
 
+- The details panel and the game page name the game's collection when
+  you have more than one, and its platform outside the eXo packs, so two
+  copies of a game are easy to tell apart in All Games.
 - eXoDOS Lite: installing a game that the collection leaves out downloads
   it first, from the eXoDOS torrent that Lite includes, as eXo does on
   Windows. Downloads need aria2 (`brew install aria2`); the welcome screen

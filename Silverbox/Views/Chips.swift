@@ -123,9 +123,10 @@ struct ChipRow<Content: View>: View {
     }
 }
 
-/// What a game needs before it plays, and what it is: installed,
-/// the emulator that will run it and whether that emulator is present, or
-/// the kind of item it is when it is not a game to launch.
+/// What a game needs before it plays, and what it is: its collection and
+/// platform, installed, the emulator that will run it and whether that
+/// emulator is present, or the kind of item it is when it is not a game to
+/// launch.
 struct GameStatusChips: View {
     let game: Game
     @Environment(AppModel.self) private var model
@@ -141,6 +142,7 @@ struct GameStatusChips: View {
 
     private func chips() -> [Chip] {
         var chips: [Chip] = []
+        if let origin = originChip() { chips.append(origin) }
         let installed = model.isInstalled(game)
         // A game that is not installed has the Install button beside these chips, which says so.
         if game.isEXoGame, installed, !model.isDocumentItem(game) {
@@ -221,6 +223,19 @@ struct GameStatusChips: View {
             chips.append(Chip(text: "eXo Favorite", systemImage: "star"))
         }
         return chips
+    }
+
+    /// Where this copy of the game comes from: its collection, when more than one is loaded, and
+    /// its platform outside the eXo packs, where two copies can differ only by it ("Amiga" and
+    /// "Atari ST").
+    private func originChip() -> Chip? {
+        let collection = (model.library?.snapshots.count ?? 0) > 1 ? model.snapshot(for: game)?.collection.name : nil
+        let platform = game.eXoPack == nil && !game.platform.isEmpty ? game.platform : nil
+        let parts = [collection, platform].compactMap { $0 }
+        guard !parts.isEmpty else { return nil }
+        let help = [collection.map { "In the \($0) collection." }, platform.map { "Platform: \($0)." }]
+            .compactMap { $0 }.joined(separator: " ")
+        return Chip(text: parts.joined(separator: " · "), systemImage: "books.vertical", help: help)
     }
 
     /// The emulator by name, in good tone when its executable is present.
