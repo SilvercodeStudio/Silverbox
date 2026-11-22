@@ -145,6 +145,8 @@ code { font: 400 0.92em/1.4 var(--font-mono); padding: 1px 5px; border-radius: 5
 .hero-more a { color: var(--ink-2); }
 .hero-more a:hover { color: var(--ink); }
 
+/* An announcement pill for the hero, above the eyebrow: <a class="sb-announce" href="…">
+   <span class="sb-announce__tag">Tag</span> <span>Text</span></a>. Not on the page now. */
 .sb-announce { display: inline-flex; align-items: center; gap: 10px; min-height: 36px;
   padding: 4px 16px 4px 4px; border-radius: var(--radius-pill);
   background: var(--chip); border: 1px solid var(--line);
